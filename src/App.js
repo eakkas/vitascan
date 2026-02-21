@@ -138,7 +138,8 @@ const STYLES = `
 
   .results-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; gap: 20px; flex-wrap: wrap; }
   .results-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
-  .results-meta { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .results-meta { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cached-badge { font-size: 10px; background: rgba(82,122,72,0.12); border: 1px solid rgba(82,122,72,0.25); color: var(--ok); padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
 
   .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 40px; }
   .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center; }
@@ -299,25 +300,36 @@ function MarkerCard({ marker }) {
   );
 }
 
-// ── API helpers ───────────────────────────────────────────────────────────────
+// ── Cache helpers ─────────────────────────────────────────────────────────────
 
-function buildContentBlock(base64Data, mediaType) {
-  if (mediaType === "application/pdf") {
-    return {
-      type: "document",
-      source: { type: "base64", media_type: "application/pdf", data: base64Data }
-    };
-  }
-  return {
-    type: "image",
-    source: { type: "base64", media_type: mediaType, data: base64Data }
-  };
+var CACHE_KEY = "vitascan_cache";
+
+async function hashFile(base64Data) {
+  var buf = new TextEncoder().encode(base64Data);
+  var hashBuf = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hashBuf)).map(function(b) { return b.toString(16).padStart(2, "0"); }).join("");
 }
+
+function loadFromCache(hash) {
+  try {
+    var store = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+    return store[hash] || null;
+  } catch (e) { return null; }
+}
+
+function saveToCache(hash, result) {
+  try {
+    var store = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+    store[hash] = result;
+    localStorage.setItem(CACHE_KEY, JSON.stringify(store));
+  } catch (e) { /* quota exceeded — fail silently */ }
+}
+
+// ── API helpers ───────────────────────────────────────────────────────────────
 
 function repairJSON(raw) {
   var s = raw.replace(/```json/g, "").replace(/```/g, "").trim();
   try { return JSON.parse(s); } catch (e1) {
-    // Trim to last closing brace and re-balance brackets
     var lastBrace = s.lastIndexOf("}");
     if (lastBrace !== -1) { s = s.slice(0, lastBrace + 1); }
     var opens  = (s.match(/\[/g) || []).length - (s.match(/\]/g) || []).length;
@@ -335,25 +347,22 @@ async function analyzeReport(base64Data, mediaType) {
     "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
     "Rules: extract ALL visible markers. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
 
-  var response = await fetch("https://api.anthropic.com/v1/messages", {
+  var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey;
+
+  var response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 8000,
-      system: systemPrompt,
-      messages: [{
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{
         role: "user",
-        content: [
-          buildContentBlock(base64Data, mediaType),
-          { type: "text", text: "Analyze this blood test report and return the JSON." }
+        parts: [
+          { inline_data: { mime_type: mediaType, data: base64Data } },
+          { text: "Analyze this blood test report and return the JSON." }
         ]
-      }]
+      }],
+      generationConfig: { maxOutputTokens: 8000 }
     })
   });
 
@@ -363,11 +372,11 @@ async function analyzeReport(base64Data, mediaType) {
     var msg = (data.error && data.error.message) ? data.error.message : JSON.stringify(data);
     throw new Error("API error " + response.status + ": " + msg);
   }
-  if (!data.content || data.content.length === 0) {
+  if (!data.candidates || data.candidates.length === 0) {
     throw new Error("Empty response from API");
   }
 
-  var raw = data.content.map(function(b) { return b.text || ""; }).join("");
+  var raw = data.candidates[0].content.parts.map(function(p) { return p.text || ""; }).join("");
   return repairJSON(raw);
 }
 
@@ -379,6 +388,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("markers");
   const [dragOver,  setDragOver]  = useState(false);
   const [error,     setError]     = useState(null);
+  const [fromCache, setFromCache] = useState(false);
 
   const handleFile = useCallback(async function(file) {
     if (!file) return;
@@ -392,8 +402,19 @@ export default function App() {
         reader.readAsDataURL(file);
       });
       var mediaType = file.type === "application/pdf" ? "application/pdf" : (file.type || "image/jpeg");
+      var hash = await hashFile(base64);
+      var cached = loadFromCache(hash);
+      if (cached) {
+        setResults(cached);
+        setFromCache(true);
+        setActiveTab("markers");
+        setStage("results");
+        return;
+      }
       var data = await analyzeReport(base64, mediaType);
+      saveToCache(hash, data);
       setResults(data);
+      setFromCache(false);
       setActiveTab("markers");
       setStage("results");
     } catch (e) {
@@ -475,6 +496,7 @@ export default function App() {
                     {results.patientName && results.patientName !== "Unknown" ? results.patientName + " · " : ""}
                     {results.reportDate  && results.reportDate  !== "Unknown" ? results.reportDate  + " · " : ""}
                     {counts.total} markers analyzed
+                    {fromCache && <span className="cached-badge">cached</span>}
                   </div>
                 </div>
                 <button className="btn btn-ghost" onClick={function() { setStage("upload"); setResults(null); }}>
