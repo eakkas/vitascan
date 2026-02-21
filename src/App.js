@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,7 +20,7 @@ const STYLES = `
     --dim: rgba(140,115,90,0.18);
   }
 
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+  body { background: var(--bg); color: var(--text); font-family: 'Open Sans', sans-serif; }
 
   .app {
     min-height: 100vh;
@@ -43,11 +43,12 @@ const STYLES = `
     background: rgba(254,232,217,0.88);
   }
 
-  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: var(--text); }
+  .logo { font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: var(--text); }
   .logo span { color: var(--accent); }
 
   .badge {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 600;
     font-size: 10px;
     background: rgba(237,163,90,0.15);
     border: 1px solid rgba(237,163,90,0.3);
@@ -62,7 +63,7 @@ const STYLES = `
   .upload-section { text-align: center; padding: 80px 40px; }
 
   .upload-title {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-size: 42px;
     font-weight: 800;
     letter-spacing: -1.5px;
@@ -75,7 +76,7 @@ const STYLES = `
     -webkit-text-fill-color: transparent;
   }
 
-  .upload-sub { color: var(--muted); font-size: 16px; margin-bottom: 48px; font-weight: 400; }
+  .upload-sub { color: var(--muted); font-size: 16px; margin-bottom: 48px; font-weight: 300; }
 
   .drop-zone {
     border: 1.5px dashed rgba(237,163,90,0.4);
@@ -110,7 +111,7 @@ const STYLES = `
     font-size: 24px;
   }
   .drop-label { font-size: 16px; color: var(--text); font-weight: 500; margin-bottom: 8px; }
-  .drop-hint { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .drop-hint { font-size: 13px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 300; }
   .file-input { display: none; }
 
   .btn {
@@ -118,7 +119,7 @@ const STYLES = `
     padding: 12px 28px; border-radius: 10px;
     font-size: 14px; font-weight: 500; cursor: pointer;
     border: none; transition: all 0.2s ease;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Open Sans', sans-serif;
   }
   .btn-ghost { background: rgba(58,37,24,0.06); color: var(--muted); border: 1px solid var(--border); }
   .btn-ghost:hover { background: rgba(58,37,24,0.1); color: var(--text); }
@@ -133,31 +134,46 @@ const STYLES = `
     margin: 0 auto 24px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  .loading-sub { color: var(--muted); font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+  .loading-text { font-family: 'Open Sans', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .loading-sub { color: var(--muted); font-size: 14px; font-family: 'Open Sans', sans-serif; font-weight: 300; }
 
   .results-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; gap: 20px; flex-wrap: wrap; }
-  .results-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
-  .results-meta { font-size: 13px; color: var(--muted); font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .results-title { font-family: 'Open Sans', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .results-meta { font-size: 13px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 300; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .cached-badge { font-size: 10px; background: rgba(82,122,72,0.12); border: 1px solid rgba(82,122,72,0.25); color: var(--ok); padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
 
   .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 40px; }
   .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center; }
-  .summary-card .s-num { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-  .summary-card .s-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; }
+  .summary-card .s-num { font-family: 'Open Sans', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+  .summary-card .s-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'Open Sans', sans-serif; font-weight: 600; }
   .c-ok .s-num { color: var(--ok); }
   .c-warn .s-num { color: var(--warn); }
   .c-danger .s-num { color: var(--danger); }
   .c-total .s-num { color: var(--accent); }
 
   .section-title {
-    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
     margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
   }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .markers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .health-section { margin-bottom: 40px; }
+  .health-section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .health-section-emoji { font-size: 18px; line-height: 1; }
+  .health-section-label { font-family: 'Open Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+  .health-section-alert {
+    font-family: 'Open Sans', sans-serif; font-size: 10px; font-weight: 600;
+    background: rgba(184,72,56,0.1); color: var(--danger);
+    border: 1px solid rgba(184,72,56,0.22); padding: 2px 9px;
+    border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  .markers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 8px; }
 
   .marker-card {
     background: var(--surface); border: 1px solid var(--border);
@@ -173,10 +189,10 @@ const STYLES = `
 
   .marker-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
   .marker-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-  .marker-category { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .marker-category { font-size: 11px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 600; letter-spacing: 0.3px; }
   .marker-value { text-align: right; }
-  .marker-value .val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; line-height: 1; }
-  .marker-value .unit { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .marker-value .val { font-family: 'Open Sans', sans-serif; font-size: 22px; font-weight: 800; line-height: 1; }
+  .marker-value .unit { font-size: 11px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 600; }
   .status-ok .val { color: var(--ok); }
   .status-high .val { color: var(--danger); }
   .status-low .val { color: var(--warn); }
@@ -192,20 +208,20 @@ const STYLES = `
   .status-ok .range-bar-marker { background: var(--ok); color: var(--ok); }
   .status-high .range-bar-marker { background: var(--danger); color: var(--danger); }
   .status-low .range-bar-marker { background: var(--warn); color: var(--warn); }
-  .range-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .range-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 400; }
 
   .status-pill {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 3px 10px; border-radius: 20px; font-size: 11px;
     font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Open Sans', sans-serif;
   }
   .pill-ok   { background: rgba(82,122,72,0.12);  color: var(--ok);     border: 1px solid rgba(82,122,72,0.25); }
   .pill-high { background: rgba(184,72,56,0.1);   color: var(--danger); border: 1px solid rgba(184,72,56,0.22); }
   .pill-low  { background: rgba(201,123,40,0.1);  color: var(--warn);   border: 1px solid rgba(201,123,40,0.22); }
 
   .insights-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 32px; }
-  .insights-panel h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .insights-panel h3 { font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
   .insight-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
   .insight-icon.blue { background: rgba(237,163,90,0.14); }
   .insight-icon.teal { background: rgba(202,220,174,0.5); }
@@ -232,7 +248,7 @@ const STYLES = `
   .tab {
     padding: 8px 20px; border-radius: 9px; font-size: 13px; font-weight: 500;
     cursor: pointer; border: none; background: transparent; color: var(--muted);
-    font-family: 'Inter', sans-serif; transition: all 0.2s;
+    font-family: 'Open Sans', sans-serif; transition: all 0.2s;
   }
   .tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
 
@@ -300,6 +316,128 @@ function MarkerCard({ marker }) {
   );
 }
 
+// ── Marker sections ───────────────────────────────────────────────────────────
+
+var MARKER_SECTIONS = [
+  {
+    id: "cardiovascular", label: "Heart & Cardiovascular", emoji: "❤️",
+    keywords: ["cholesterol", "ldl", "hdl", "triglyceride", "vldl", "lipoprotein",
+      "apolipoprotein", "apob", "apoa", "apo b", "apo a", "homocysteine",
+      "bnp", "nt-probnp", "troponin", "creatine kinase", "ck-mb", "ck mb",
+      "hs-crp", "hscrp", "c-reactive protein", "non-hdl", "cardiac", "d-dimer"]
+  },
+  {
+    id: "liver", label: "Liver Health", emoji: "🫁",
+    keywords: ["alt", "alanine aminotransferase", "sgpt", "ast", "aspartate aminotransferase",
+      "sgot", "alp", "alkaline phosphatase", "ggt", "gamma-glutamyl", "gamma glutamyl",
+      "bilirubin", "albumin", "total protein", "globulin", "a/g ratio", "ag ratio",
+      "prothrombin", "inr", "lactate dehydrogenase", "ldh"]
+  },
+  {
+    id: "kidney", label: "Kidney Health", emoji: "🫘",
+    keywords: ["creatinine", "bun", "blood urea nitrogen", "urea", "egfr", "gfr",
+      "uric acid", "cystatin", "microalbumin", "uacr", "renal", "bun/creatinine"]
+  },
+  {
+    id: "blood_sugar", label: "Blood Sugar & Metabolic", emoji: "🩸",
+    keywords: ["glucose", "hba1c", "hemoglobin a1c", "haemoglobin a1c", "glycated hemoglobin",
+      "insulin", "homa", "c-peptide", "c peptide", "fructosamine", "blood sugar"]
+  },
+  {
+    id: "blood_count", label: "Complete Blood Count", emoji: "🔬",
+    keywords: ["wbc", "white blood cell", "white blood count", "rbc", "red blood cell",
+      "red blood count", "hemoglobin", "haemoglobin", "hematocrit", "haematocrit",
+      "mcv", "mch", "mchc", "rdw", "platelet", "plt", "mpv",
+      "neutrophil", "lymphocyte", "monocyte", "eosinophil", "basophil", "reticulocyte"]
+  },
+  {
+    id: "thyroid", label: "Thyroid", emoji: "🦋",
+    keywords: ["tsh", "thyroid stimulating", "thyrotropin", "free t4", "ft4", "thyroxine",
+      "free t3", "ft3", "triiodothyronine", "anti-tpo", "anti tpo", "thyroid peroxidase",
+      "anti-tg", "thyroglobulin", "reverse t3", "rt3", "thyroid"]
+  },
+  {
+    id: "vitamins", label: "Vitamins & Minerals", emoji: "💊",
+    keywords: ["vitamin d", "25-oh", "25 oh", "vitamin b12", "b12", "cobalamin",
+      "folate", "folic acid", "vitamin b6", "pyridoxine", "vitamin c", "ascorbic",
+      "vitamin a", "retinol", "vitamin e", "tocopherol", "vitamin k",
+      "ferritin", "tibc", "transferrin saturation", "zinc", "magnesium",
+      "selenium", "copper", "phosphorus", "phosphate", "iodine"]
+  },
+  {
+    id: "electrolytes", label: "Electrolytes", emoji: "⚡",
+    keywords: ["sodium", "potassium", "chloride", "bicarbonate", "co2", "carbon dioxide",
+      "anion gap", "osmolality", "osmolarity"]
+  },
+  {
+    id: "hormones", label: "Hormones", emoji: "⚗️",
+    keywords: ["testosterone", "estradiol", "estrogen", "oestradiol", "progesterone",
+      "fsh", "follicle stimulating", "lh", "luteinizing", "luteinising",
+      "prolactin", "dhea", "cortisol", "shbg", "sex hormone binding",
+      "igf", "growth hormone", "psa", "prostate specific", "amh", "anti-mullerian",
+      "androstenedione", "dihydrotestosterone", "dht", "parathyroid", "pth"]
+  },
+  {
+    id: "inflammation", label: "Inflammation & Immunity", emoji: "🛡️",
+    keywords: ["crp", "c-reactive protein", "esr", "erythrocyte sedimentation",
+      "interleukin", "il-6", "tnf", "procalcitonin", "pct",
+      "complement", "immunoglobulin", "igg", "iga", "igm",
+      "ana", "antinuclear", "rheumatoid factor", "anti-ccp"]
+  },
+  {
+    id: "bone", label: "Bone Health", emoji: "🦴",
+    keywords: ["calcium", "osteocalcin", "ctx", "c-telopeptide", "bone density",
+      "deoxypyridinoline", "p1np", "bone alkaline"]
+  },
+  {
+    id: "iron", label: "Iron Studies", emoji: "🔩",
+    keywords: ["iron", "serum iron", "tibc", "transferrin", "ferritin", "saturation"]
+  },
+];
+
+function categorizeMarkers(markers) {
+  var sections = {};
+  var other = [];
+
+  markers.forEach(function(marker) {
+    var name = marker.name.toLowerCase();
+    var matched = false;
+
+    for (var i = 0; i < MARKER_SECTIONS.length; i++) {
+      var section = MARKER_SECTIONS[i];
+      if (section.keywords.some(function(kw) { return name.includes(kw); })) {
+        if (!sections[section.id]) {
+          sections[section.id] = { id: section.id, label: section.label, emoji: section.emoji, markers: [] };
+        }
+        sections[section.id].markers.push(marker);
+        matched = true;
+        break;
+      }
+    }
+
+    if (!matched) other.push(marker);
+  });
+
+  var ordered = MARKER_SECTIONS
+    .filter(function(s) { return sections[s.id]; })
+    .map(function(s) { return sections[s.id]; });
+
+  if (other.length > 0) {
+    ordered.push({ id: "other", label: "Other Markers", emoji: "📋", markers: other });
+  }
+
+  // Within each section sort: high → low → ok
+  var statusOrder = { high: 0, low: 1, ok: 2 };
+  ordered.forEach(function(section) {
+    section.markers.sort(function(a, b) {
+      return (statusOrder[getStatus(a.value, a.low, a.high)] || 0) -
+             (statusOrder[getStatus(b.value, b.low, b.high)] || 0);
+    });
+  });
+
+  return ordered;
+}
+
 // ── Cache helpers ─────────────────────────────────────────────────────────────
 
 var CACHE_KEY = "vitascan_cache";
@@ -342,13 +480,13 @@ function repairJSON(raw) {
 
 async function analyzeReport(base64Data, mediaType) {
   var systemPrompt =
-    "You are a clinical health data analyst. Extract all blood markers from the uploaded lab report. " +
+    "You are a clinical health data analyst. Extract every single lab marker from the uploaded report without skipping any. " +
     "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
     "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
-    "Rules: extract ALL visible markers. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
+    "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
 
   var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
-  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey;
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
   var response = await fetch(url, {
     method: "POST",
@@ -362,7 +500,7 @@ async function analyzeReport(base64Data, mediaType) {
           { text: "Analyze this blood test report and return the JSON." }
         ]
       }],
-      generationConfig: { maxOutputTokens: 8000 }
+      generationConfig: { maxOutputTokens: 16000, thinkingConfig: { thinkingBudget: 0 } }
     })
   });
 
@@ -523,26 +661,21 @@ export default function App() {
 
               {activeTab === "markers" && (
                 <>
-                  {counts.high > 0 && (
-                    <>
-                      <div className="section-title">Needs Attention</div>
-                      <div className="markers-grid">
-                        {markers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "high"; }).map(function(m, i) { return <MarkerCard key={i} marker={m} />; })}
+                  {categorizeMarkers(markers).map(function(section) {
+                    var abnormal = section.markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; }).length;
+                    return (
+                      <div key={section.id} className="health-section">
+                        <div className="health-section-header">
+                          <span className="health-section-emoji">{section.emoji}</span>
+                          <span className="health-section-label">{section.label}</span>
+                          {abnormal > 0 && <span className="health-section-alert">{abnormal} out of range</span>}
+                        </div>
+                        <div className="markers-grid">
+                          {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} />; })}
+                        </div>
                       </div>
-                    </>
-                  )}
-                  {counts.low > 0 && (
-                    <>
-                      <div className="section-title">Below Range</div>
-                      <div className="markers-grid">
-                        {markers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low"; }).map(function(m, i) { return <MarkerCard key={i} marker={m} />; })}
-                      </div>
-                    </>
-                  )}
-                  <div className="section-title">Within Normal Range</div>
-                  <div className="markers-grid">
-                    {markers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok"; }).map(function(m, i) { return <MarkerCard key={i} marker={m} />; })}
-                  </div>
+                    );
+                  })}
                 </>
               )}
 
