@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { supabase } from './supabase';
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -197,7 +198,28 @@ const STYLES = `
   .status-high .val { color: var(--danger); }
   .status-low .val { color: var(--warn); }
 
-  .range-bar-wrap { margin-bottom: 10px; }
+  .marker-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .info-btn {
+    background: none; border: none; cursor: pointer; font-size: 16px;
+    color: var(--muted); padding: 2px 4px; border-radius: 6px;
+    transition: all 0.15s; line-height: 1; opacity: 0.7;
+  }
+  .info-btn:hover  { opacity: 1; color: var(--accent); }
+  .info-btn-active { opacity: 1; color: var(--accent); }
+  .info-panel {
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    animation: fadeIn 0.18s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .info-block { margin-bottom: 10px; }
+  .info-block:last-child { margin-bottom: 0; }
+  .info-block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+  .info-block-text  { font-size: 12px; line-height: 1.65; color: var(--text); font-weight: 400; }
+  .info-loading { font-size: 12px; color: var(--muted); font-style: italic; }
+  .info-error   { font-size: 12px; color: var(--danger); cursor: pointer; }
+
+  .range-bar-wrap { margin-bottom: 6px; }
   .range-bar-track { height: 6px; background: var(--dim); border-radius: 10px; position: relative; margin-bottom: 4px; }
   .range-bar-ok { position: absolute; top: 0; height: 100%; background: rgba(82,122,72,0.18); border-radius: 2px; }
   .range-bar-marker {
@@ -252,12 +274,222 @@ const STYLES = `
   }
   .tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
 
+  /* ── Auth screen ── */
+  .auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(237,163,90,0.14) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 90% 80%, rgba(202,220,174,0.25) 0%, transparent 50%);
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(58,37,24,0.08);
+  }
+
+  .auth-logo {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .auth-logo span { color: var(--accent); }
+
+  .auth-tagline {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: white;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3c4043;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-google:hover { background: #f8f9fa; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .auth-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.6);
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .auth-error { font-size: 13px; color: var(--danger); margin-top: 14px; }
+  .auth-success {
+    font-size: 14px; color: var(--ok); margin-top: 14px; line-height: 1.6;
+    background: rgba(82,122,72,0.08); border: 1px solid rgba(82,122,72,0.2);
+    border-radius: 10px; padding: 14px 16px;
+  }
+
+  /* ── Header user area ── */
+  .header-right { display: flex; align-items: center; gap: 8px; }
+
+  .header-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .header-email {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .icon-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .icon-btn:hover { background: rgba(58,37,24,0.06); color: var(--text); }
+
+  /* ── History view ── */
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+  }
+  .report-card:hover { border-color: rgba(237,163,90,0.5); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+
+  .report-card-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+  .report-card-date { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 300; }
+  .report-card-stats { display: flex; gap: 16px; }
+  .report-stat { text-align: center; }
+  .report-stat-num { font-size: 22px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+  .report-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .report-stat.s-ok .report-stat-num { color: var(--ok); }
+  .report-stat.s-high .report-stat-num { color: var(--danger); }
+  .report-stat.s-low .report-stat-num { color: var(--warn); }
+  .report-stat.s-total .report-stat-num { color: var(--accent); }
+
+  .history-empty {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--muted);
+  }
+  .history-empty-icon { font-size: 48px; margin-bottom: 20px; }
+  .history-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .history-empty-sub { font-size: 14px; font-weight: 300; }
+
   @media (max-width: 600px) {
     .header { padding: 16px 20px; }
+    .header-email { display: none; }
     .main { padding: 32px 16px; }
     .upload-title { font-size: 28px; }
     .drop-zone { padding: 40px 20px; }
     .markers-grid { grid-template-columns: 1fr; }
+    .auth-card { padding: 36px 24px; }
   }
 `;
 
@@ -298,6 +530,23 @@ function RangeBar({ value, low, high, status }) {
 function MarkerCard({ marker }) {
   const { name, value, unit, low, high, category } = marker;
   const status = getStatus(value, low, high);
+  const [expanded,    setExpanded]    = useState(false);
+  const [info,        setInfo]        = useState(() => loadMarkerInfo(name));
+  const [loadingInfo, setLoadingInfo] = useState(false);
+  const [infoError,   setInfoError]   = useState(null);
+
+  function handleInfoClick(e) {
+    e.stopPropagation();
+    if (expanded) { setExpanded(false); return; }
+    setExpanded(true);
+    if (info) return;
+    setLoadingInfo(true);
+    setInfoError(null);
+    fetchMarkerInfo(name)
+      .then(function(data) { setInfo(data); setLoadingInfo(false); })
+      .catch(function()    { setInfoError("Could not load info. Tap to retry."); setLoadingInfo(false); });
+  }
+
   return (
     <div className={"marker-card status-" + status}>
       <div className="marker-top">
@@ -311,7 +560,28 @@ function MarkerCard({ marker }) {
         </div>
       </div>
       <RangeBar value={value} low={low} high={high} status={status} />
-      <StatusPill status={status} />
+      <div className="marker-footer">
+        <StatusPill status={status} />
+        <button className={"info-btn" + (expanded ? " info-btn-active" : "")} onClick={handleInfoClick} title="What is this marker?">ⓘ</button>
+      </div>
+      {expanded && (
+        <div className="info-panel">
+          {loadingInfo && <div className="info-loading">Loading…</div>}
+          {infoError   && <div className="info-error" onClick={handleInfoClick}>{infoError}</div>}
+          {info && !loadingInfo && (
+            <>
+              <div className="info-block">
+                <div className="info-block-label">What is this?</div>
+                <div className="info-block-text">{info.what}</div>
+              </div>
+              <div className="info-block">
+                <div className="info-block-label">What does it mean?</div>
+                <div className="info-block-text">{info.implications}</div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -463,6 +733,73 @@ function saveToCache(hash, result) {
   } catch (e) { /* quota exceeded — fail silently */ }
 }
 
+// ── Marker info helpers ───────────────────────────────────────────────────────
+
+var MARKER_INFO_KEY = "vitascan_marker_info";
+
+function loadMarkerInfo(name) {
+  try {
+    var store = JSON.parse(localStorage.getItem(MARKER_INFO_KEY) || "{}");
+    return store[name.toLowerCase()] || null;
+  } catch (e) { return null; }
+}
+
+function saveMarkerInfo(name, info) {
+  try {
+    var store = JSON.parse(localStorage.getItem(MARKER_INFO_KEY) || "{}");
+    store[name.toLowerCase()] = info;
+    localStorage.setItem(MARKER_INFO_KEY, JSON.stringify(store));
+  } catch (e) { /* quota exceeded — fail silently */ }
+  // Fire-and-forget upsert to Supabase
+  supabase.from('marker_info').upsert({
+    name: name.toLowerCase(),
+    what: info.what,
+    implications: info.implications,
+  }).then(function() {}).catch(function() {});
+}
+
+async function fetchMarkerInfo(name) {
+  // 1. localStorage first
+  var cached = loadMarkerInfo(name);
+  if (cached) return cached;
+
+  // 2. Supabase fallback
+  try {
+    var { data: sbData } = await supabase
+      .from('marker_info')
+      .select('what, implications')
+      .eq('name', name.toLowerCase())
+      .single();
+    if (sbData) {
+      saveMarkerInfo(name, sbData); // populate localStorage
+      return sbData;
+    }
+  } catch (e) { /* continue to AI */ }
+
+  // 3. AI API
+  var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+
+  var response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{
+        role: "user",
+        parts: [{ text: "Explain the blood test marker \"" + name + "\" in simple, patient-friendly language. Return ONLY a JSON object with no markdown: {\"what\": \"1-2 sentences on what this marker measures\", \"implications\": \"1-2 sentences on what high or low levels may indicate\"}." }]
+      }],
+      generationConfig: { maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } }
+    })
+  });
+
+  var data = await response.json();
+  if (!response.ok || !data.candidates || !data.candidates[0]) throw new Error("Failed");
+  var raw = data.candidates[0].content.parts.map(function(p) { return p.text || ""; }).join("");
+  var info = JSON.parse(raw.replace(/```json/g, "").replace(/```/g, "").trim());
+  saveMarkerInfo(name, info); // saves to localStorage + Supabase
+  return info;
+}
+
 // ── API helpers ───────────────────────────────────────────────────────────────
 
 function repairJSON(raw) {
@@ -521,6 +858,7 @@ async function analyzeReport(base64Data, mediaType) {
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  // ── Core stage state ──
   const [stage,     setStage]     = useState("upload");
   const [results,   setResults]   = useState(null);
   const [activeTab, setActiveTab] = useState("markers");
@@ -528,6 +866,84 @@ export default function App() {
   const [error,     setError]     = useState(null);
   const [fromCache, setFromCache] = useState(false);
 
+  // ── Auth state ──
+  const [user,        setUser]        = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authMode,    setAuthMode]    = useState("login"); // "login" | "magic_sent"
+  const [authEmail,   setAuthEmail]   = useState("");
+  const [authError,   setAuthError]   = useState(null);
+  const [authBusy,    setAuthBusy]    = useState(false);
+
+  // ── Report history state ──
+  const [history,        setHistory]        = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // ── Session bootstrap ──
+  useEffect(function() {
+    supabase.auth.getSession().then(function({ data: { session } }) {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+    var { data: { subscription } } = supabase.auth.onAuthStateChange(function(_event, session) {
+      setUser(session?.user ?? null);
+    });
+    return function() { subscription.unsubscribe(); };
+  }, []);
+
+  // ── Load history when user signs in ──
+  useEffect(function() {
+    if (user) {
+      loadHistory();
+    } else {
+      setHistory([]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // ── History loader ──
+  async function loadHistory() {
+    setHistoryLoading(true);
+    try {
+      var { data } = await supabase
+        .from('reports')
+        .select('id, created_at, patient_name, report_date, markers, lifestyle, interpretation')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      setHistory(data || []);
+    } catch (e) {
+      // fail silently — history is non-critical
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
+  // ── Auth handlers ──
+  async function handleGoogleSignIn() {
+    setAuthBusy(true);
+    setAuthError(null);
+    var { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    if (err) { setAuthError(err.message); setAuthBusy(false); }
+  }
+
+  async function handleMagicLink(e) {
+    e.preventDefault();
+    if (!authEmail.trim()) return;
+    setAuthBusy(true);
+    setAuthError(null);
+    var { error: err } = await supabase.auth.signInWithOtp({ email: authEmail.trim() });
+    setAuthBusy(false);
+    if (err) { setAuthError(err.message); }
+    else     { setAuthMode("magic_sent"); }
+  }
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setStage("upload");
+    setResults(null);
+    setHistory([]);
+  }
+
+  // ── File handler ──
   const handleFile = useCallback(async function(file) {
     if (!file) return;
     setError(null);
@@ -551,6 +967,22 @@ export default function App() {
       }
       var data = await analyzeReport(base64, mediaType);
       saveToCache(hash, data);
+
+      // Save to Supabase (fire-and-forget — don't block UI on this)
+      if (user) {
+        supabase.from('reports').upsert({
+          user_id: user.id,
+          file_hash: hash,
+          patient_name: data.patientName,
+          report_date: data.reportDate,
+          markers: data.markers,
+          lifestyle: data.lifestyle,
+          interpretation: data.interpretation,
+        }).then(function() {
+          loadHistory();
+        }).catch(function() {});
+      }
+
       setResults(data);
       setFromCache(false);
       setActiveTab("markers");
@@ -560,7 +992,8 @@ export default function App() {
       setError(e.message || "Could not analyze the report. Please try again.");
       setStage("upload");
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const onDrop = useCallback(function(e) {
     e.preventDefault();
@@ -569,6 +1002,21 @@ export default function App() {
     if (file) handleFile(file);
   }, [handleFile]);
 
+  // ── History card click ──
+  function handleHistoryItem(item) {
+    setResults({
+      patientName:    item.patient_name,
+      reportDate:     item.report_date,
+      markers:        item.markers || [],
+      lifestyle:      item.lifestyle || [],
+      interpretation: item.interpretation || "",
+    });
+    setFromCache(false);
+    setActiveTab("markers");
+    setStage("results");
+  }
+
+  // ── Derived counts ──
   var markers   = (results && results.markers)   || [];
   var lifestyle = (results && results.lifestyle) || [];
 
@@ -579,13 +1027,105 @@ export default function App() {
     low:   markers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low";  }).length,
   };
 
+  // ── Render: loading spinner (auth bootstrap) ──
+  if (authLoading) {
+    return (
+      <>
+        <style>{STYLES}</style>
+        <div className="app">
+          <div className="loading-state" style={{ paddingTop: 120 }}>
+            <div className="pulse-ring" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── Render: auth screen ──
+  if (!user) {
+    return (
+      <>
+        <style>{STYLES}</style>
+        <div className="auth-screen">
+          <div className="auth-card">
+            <div className="auth-logo">vita<span>scan</span></div>
+            <div className="auth-tagline">Your blood work, decoded.</div>
+
+            {authMode === "magic_sent" ? (
+              <>
+                <div className="auth-success">
+                  ✉️ Check your inbox!<br />
+                  We sent a sign-in link to <strong>{authEmail}</strong>.<br />
+                  Click the link to continue.
+                </div>
+                <button
+                  className="btn btn-ghost"
+                  style={{ marginTop: 20, width: "100%", justifyContent: "center" }}
+                  onClick={function() { setAuthMode("login"); setAuthEmail(""); setAuthError(null); }}
+                >
+                  Use a different email
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="btn-google" onClick={handleGoogleSignIn} disabled={authBusy}>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <div className="auth-divider">or</div>
+
+                <form onSubmit={handleMagicLink}>
+                  <input
+                    className="auth-input"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={authEmail}
+                    onChange={function(e) { setAuthEmail(e.target.value); }}
+                    required
+                  />
+                  <button className="btn-primary" type="submit" disabled={authBusy || !authEmail.trim()}>
+                    {authBusy ? "Sending…" : "Send magic link"}
+                  </button>
+                </form>
+
+                {authError && <div className="auth-error">{authError}</div>}
+              </>
+            )}
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ── Render: authenticated app ──
+  var avatarLetter = (user.email || "?")[0].toUpperCase();
+
   return (
     <>
       <style>{STYLES}</style>
       <div className="app">
         <header className="header">
           <div className="logo">vita<span>scan</span></div>
-          <span className="badge">Phase 1 — Prototype</span>
+          <div className="header-right">
+            <button
+              className="icon-btn"
+              title="Report history"
+              onClick={function() { setStage("history"); }}
+            >
+              🕐
+            </button>
+            <div className="header-avatar" title={user.email}>{avatarLetter}</div>
+            <span className="header-email">{user.email}</span>
+            <button className="btn btn-ghost" style={{ padding: "8px 16px" }} onClick={handleSignOut}>
+              Sign out
+            </button>
+          </div>
         </header>
 
         <main className="main">
@@ -613,7 +1153,7 @@ export default function App() {
                 />
               </div>
               {error && <p style={{ color: "var(--danger)", marginTop: 20, fontSize: 14 }}>{error}</p>}
-              <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>Your report is processed securely and never stored.</p>
+              <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>Your report is processed securely and saved to your account.</p>
             </div>
           )}
 
@@ -622,6 +1162,77 @@ export default function App() {
               <div className="pulse-ring" />
               <div className="loading-text">Analyzing your report</div>
               <div className="loading-sub">Extracting markers · Interpreting results · Generating guidance</div>
+            </div>
+          )}
+
+          {stage === "history" && (
+            <div className="history-view">
+              <div className="history-header">
+                <div>
+                  <div className="results-title">Report History</div>
+                  <div className="results-meta">{history.length} report{history.length !== 1 ? "s" : ""} saved</div>
+                </div>
+                <button className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
+                  + New Report
+                </button>
+              </div>
+
+              {historyLoading && (
+                <div className="loading-state" style={{ padding: "40px 0" }}>
+                  <div className="pulse-ring" />
+                </div>
+              )}
+
+              {!historyLoading && history.length === 0 && (
+                <div className="history-empty">
+                  <div className="history-empty-icon">🧬</div>
+                  <div className="history-empty-text">No reports yet</div>
+                  <div className="history-empty-sub">Upload your first lab report to get started.</div>
+                </div>
+              )}
+
+              {!historyLoading && history.length > 0 && (
+                <div className="history-grid">
+                  {history.map(function(item) {
+                    var itemMarkers = item.markers || [];
+                    var itemCounts = {
+                      total: itemMarkers.length,
+                      ok:    itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok"; }).length,
+                      high:  itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "high"; }).length,
+                      low:   itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low"; }).length,
+                    };
+                    var dateLabel = item.report_date && item.report_date !== "Unknown"
+                      ? item.report_date
+                      : new Date(item.created_at).toLocaleDateString();
+                    return (
+                      <div key={item.id} className="report-card" onClick={function() { handleHistoryItem(item); }}>
+                        <div className="report-card-name">
+                          {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : "Lab Report"}
+                        </div>
+                        <div className="report-card-date">{dateLabel}</div>
+                        <div className="report-card-stats">
+                          <div className="report-stat s-total">
+                            <div className="report-stat-num">{itemCounts.total}</div>
+                            <div className="report-stat-label">Total</div>
+                          </div>
+                          <div className="report-stat s-ok">
+                            <div className="report-stat-num">{itemCounts.ok}</div>
+                            <div className="report-stat-label">Normal</div>
+                          </div>
+                          <div className="report-stat s-high">
+                            <div className="report-stat-num">{itemCounts.high}</div>
+                            <div className="report-stat-label">High</div>
+                          </div>
+                          <div className="report-stat s-low">
+                            <div className="report-stat-num">{itemCounts.low}</div>
+                            <div className="report-stat-label">Low</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -637,9 +1248,14 @@ export default function App() {
                     {fromCache && <span className="cached-badge">cached</span>}
                   </div>
                 </div>
-                <button className="btn btn-ghost" onClick={function() { setStage("upload"); setResults(null); }}>
-                  Upload New Report
-                </button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>
+                    History
+                  </button>
+                  <button className="btn btn-ghost" onClick={function() { setStage("upload"); setResults(null); }}>
+                    New Report
+                  </button>
+                </div>
               </div>
 
               <div className="summary-cards">
