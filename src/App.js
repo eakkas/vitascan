@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from './supabase';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContainer } from "recharts";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -226,6 +227,7 @@ const STYLES = `
     position: absolute; top: -3px; width: 12px; height: 12px;
     border-radius: 50%; transform: translateX(-50%);
     border: 2px solid var(--bg); box-shadow: 0 0 8px currentColor;
+    z-index: 2;
   }
   .status-ok .range-bar-marker { background: var(--ok); color: var(--ok); }
   .status-high .range-bar-marker { background: var(--danger); color: var(--danger); }
@@ -482,6 +484,42 @@ const STYLES = `
   .history-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
   .history-empty-sub { font-size: 14px; font-weight: 300; }
 
+  /* ── Profile screen ── */
+  .profile-screen { max-width: 560px; margin: 0 auto; }
+  .form-group { margin-bottom: 24px; }
+  .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; display: block; }
+  .form-input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.6); font-family: 'Open Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--muted); }
+  .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .radio-option { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.15s; user-select: none; }
+  .radio-option:hover { border-color: rgba(237,163,90,0.5); color: var(--text); }
+  .radio-option.selected { border-color: var(--accent); background: rgba(237,163,90,0.1); color: var(--text); }
+  .radio-option input { display: none; }
+  .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+  .checkbox-option { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.15s; user-select: none; }
+  .checkbox-option:hover { border-color: rgba(237,163,90,0.5); color: var(--text); }
+  .checkbox-option.selected { border-color: var(--accent); background: rgba(237,163,90,0.1); color: var(--text); }
+  .checkbox-option input { display: none; }
+  .profile-actions { display: flex; gap: 12px; margin-top: 32px; }
+  .profile-error { font-size: 13px; color: var(--danger); margin-top: 12px; }
+
+  /* ── Trends screen ── */
+  .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; color: var(--muted); transition: all 0.15s; font-family: 'Open Sans', sans-serif; text-transform: capitalize; }
+  .chip:hover { border-color: rgba(237,163,90,0.5); color: var(--text); }
+  .chip.chip-active { border-color: var(--accent); background: rgba(237,163,90,0.12); color: var(--text); font-weight: 600; }
+  .trend-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+  .trend-chart-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; text-transform: capitalize; }
+  .trend-chart-unit { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+  .trends-empty { text-align: center; padding: 80px 40px; color: var(--muted); }
+  .trends-empty-icon { font-size: 48px; margin-bottom: 20px; }
+  .trends-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .trends-empty-sub { font-size: 14px; font-weight: 300; }
+
+  /* ── Optimal ranges ── */
+  .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.35); border-radius: 2px; z-index: 1; }
+
   @media (max-width: 600px) {
     .header { padding: 16px 20px; }
     .header-email { display: none; }
@@ -507,21 +545,37 @@ function StatusPill({ status }) {
   return <span className={"status-pill " + cls}>{label}</span>;
 }
 
-function RangeBar({ value, low, high, status }) {
+function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
   const min     = low * 0.5;
   const max     = high * 1.5;
   const range   = max - min;
   const pct     = Math.min(Math.max(((value - min) / range) * 100, 4), 96);
   const okLeft  = ((low  - min) / range) * 100;
   const okWidth = ((high - low) / range) * 100;
+
+  var hasOptimal = optimalLow !== null && optimalLow !== undefined
+    && optimalHigh !== null && optimalHigh !== undefined;
+  var optLeft  = hasOptimal ? ((optimalLow  - min) / range) * 100 : 0;
+  var optWidth = hasOptimal ? ((optimalHigh - optimalLow) / range) * 100 : 0;
+
   return (
     <div className="range-bar-wrap">
       <div className="range-bar-track">
         <div className="range-bar-ok" style={{ left: okLeft + "%", width: okWidth + "%" }} />
+        {hasOptimal && (
+          <div className="range-bar-optimal" style={{ left: optLeft + "%", width: optWidth + "%" }} />
+        )}
         <div className={"range-bar-marker status-" + status} style={{ left: pct + "%" }} />
       </div>
       <div className="range-labels">
-        <span>{low}</span><span>Normal range</span><span>{high}</span>
+        <span>{low}</span>
+        <span>
+          Normal
+          {hasOptimal && (
+            <> · <span style={{ color: "var(--accent)" }}>Optimal</span></>
+          )}
+        </span>
+        <span>{high}</span>
       </div>
     </div>
   );
@@ -530,6 +584,7 @@ function RangeBar({ value, low, high, status }) {
 function MarkerCard({ marker }) {
   const { name, value, unit, low, high, category } = marker;
   const status = getStatus(value, low, high);
+  var optimal = getOptimalRange(name);
   const [expanded,    setExpanded]    = useState(false);
   const [info,        setInfo]        = useState(() => loadMarkerInfo(name));
   const [loadingInfo, setLoadingInfo] = useState(false);
@@ -559,7 +614,9 @@ function MarkerCard({ marker }) {
           <div className="unit">{unit}</div>
         </div>
       </div>
-      <RangeBar value={value} low={low} high={high} status={status} />
+      <RangeBar value={value} low={low} high={high} status={status}
+        optimalLow={optimal ? optimal.low : null}
+        optimalHigh={optimal ? optimal.high : null} />
       <div className="marker-footer">
         <StatusPill status={status} />
         <button className={"info-btn" + (expanded ? " info-btn-active" : "")} onClick={handleInfoClick} title="What is this marker?">ⓘ</button>
@@ -664,6 +721,153 @@ var MARKER_SECTIONS = [
     keywords: ["iron", "serum iron", "tibc", "transferrin", "ferritin", "saturation"]
   },
 ];
+
+var CONDITION_OPTIONS = ["Diabetes","Hypertension","High Cholesterol","Thyroid Disorder","Anemia","Other"];
+
+var OPTIMAL_RANGES = {
+  "glucose":                          { low: 70,   high: 90   },
+  "hba1c":                            { low: 4.6,  high: 5.4  },
+  "hemoglobin a1c":                   { low: 4.6,  high: 5.4  },
+  "haemoglobin a1c":                  { low: 4.6,  high: 5.4  },
+  "insulin":                          { low: 2,    high: 6    },
+  "homa":                             { low: 0,    high: 1.0  },
+  "ldl":                              { low: 40,   high: 100  },
+  "hdl":                              { low: 60,   high: 100  },
+  "triglyceride":                     { low: 50,   high: 100  },
+  "non-hdl":                          { low: 0,    high: 130  },
+  "cholesterol":                      { low: 150,  high: 200  },
+  "homocysteine":                     { low: 6,    high: 9    },
+  "hs-crp":                           { low: 0,    high: 0.5  },
+  "hscrp":                            { low: 0,    high: 0.5  },
+  "c-reactive protein":               { low: 0,    high: 0.5  },
+  "tsh":                              { low: 1.0,  high: 2.5  },
+  "free t4":                          { low: 1.0,  high: 1.5  },
+  "ft4":                              { low: 1.0,  high: 1.5  },
+  "free t3":                          { low: 3.2,  high: 4.0  },
+  "ft3":                              { low: 3.2,  high: 4.0  },
+  "vitamin d":                        { low: 40,   high: 65   },
+  "25-oh":                            { low: 40,   high: 65   },
+  "vitamin b12":                      { low: 500,  high: 1200 },
+  "b12":                              { low: 500,  high: 1200 },
+  "folate":                           { low: 10,   high: 25   },
+  "folic acid":                       { low: 10,   high: 25   },
+  "ferritin":                         { low: 50,   high: 150  },
+  "magnesium":                        { low: 2.0,  high: 2.5  },
+  "zinc":                             { low: 90,   high: 130  },
+  "alt":                              { low: 0,    high: 25   },
+  "alanine aminotransferase":         { low: 0,    high: 25   },
+  "sgpt":                             { low: 0,    high: 25   },
+  "ast":                              { low: 0,    high: 22   },
+  "aspartate aminotransferase":       { low: 0,    high: 22   },
+  "sgot":                             { low: 0,    high: 22   },
+  "ggt":                              { low: 0,    high: 16   },
+  "creatinine":                       { low: 0.7,  high: 1.0  },
+  "uric acid":                        { low: 3.0,  high: 5.5  },
+  "bun":                              { low: 7,    high: 15   },
+  "hemoglobin":                       { low: 13.5, high: 17.0 },
+  "haemoglobin":                      { low: 13.5, high: 17.0 },
+  "hematocrit":                       { low: 40,   high: 50   },
+  "haematocrit":                      { low: 40,   high: 50   },
+  "wbc":                              { low: 4.5,  high: 7.5  },
+  "white blood":                      { low: 4.5,  high: 7.5  },
+  "sodium":                           { low: 136,  high: 142  },
+  "potassium":                        { low: 4.0,  high: 4.5  },
+  "calcium":                          { low: 9.0,  high: 10.0 },
+  "testosterone":                     { low: 600,  high: 900  },
+  "dhea":                             { low: 150,  high: 350  },
+  "cortisol":                         { low: 10,   high: 18   },
+  "esr":                              { low: 0,    high: 10   },
+};
+
+function getProfileText(profile) {
+  if (!profile) return null;
+  var conditions = (profile.conditions && profile.conditions.length > 0)
+    ? profile.conditions.join(", ") : "none reported";
+  return "Patient profile: " + (profile.full_name || "Unknown") +
+    ", age " + (profile.age || "unknown") +
+    ", biological sex " + (profile.biological_sex || "not specified") +
+    ". Known conditions: " + conditions +
+    ". Use this to personalise interpretation and flag markers especially relevant for this patient.";
+}
+
+function getOptimalRange(markerName) {
+  var name = markerName.toLowerCase();
+  var keys = Object.keys(OPTIMAL_RANGES);
+  for (var i = 0; i < keys.length; i++) {
+    if (name.includes(keys[i])) return OPTIMAL_RANGES[keys[i]];
+  }
+  return null;
+}
+
+function getTrendMarkers(history) {
+  var counts = {};
+  history.forEach(function(report) {
+    var markers = report.markers || [];
+    var seen = {};
+    markers.forEach(function(m) {
+      var key = m.name.toLowerCase();
+      if (!seen[key]) {
+        counts[key] = (counts[key] || 0) + 1;
+        seen[key] = true;
+      }
+    });
+  });
+  return Object.keys(counts)
+    .filter(function(k) { return counts[k] >= 2; })
+    .sort(function(a, b) { return counts[b] - counts[a]; });
+}
+
+function getTrendData(history, markerName) {
+  var points = [];
+  var nameLower = markerName.toLowerCase();
+  // history is sorted newest-first; reverse for chronological order
+  var sorted = history.slice().reverse();
+  sorted.forEach(function(report) {
+    var markers = report.markers || [];
+    var match = markers.find(function(m) { return m.name.toLowerCase() === nameLower; });
+    if (match) {
+      var dateStr = report.report_date && report.report_date !== "Unknown"
+        ? report.report_date
+        : new Date(report.created_at).toLocaleDateString();
+      points.push({
+        date: dateStr,
+        rawDate: report.created_at || report.report_date,
+        value: match.value,
+        low: match.low,
+        high: match.high,
+        unit: match.unit,
+        status: getStatus(match.value, match.low, match.high),
+      });
+    }
+  });
+  return points;
+}
+
+function TrendDot(props) {
+  var { cx, cy, payload } = props;
+  if (cx === undefined || cy === undefined) return null;
+  var colorMap = { ok: "#527A48", high: "#B84838", low: "#C97B28" };
+  var fill = colorMap[payload && payload.status] || colorMap.ok;
+  return <circle cx={cx} cy={cy} r={5} fill={fill} stroke="var(--bg)" strokeWidth={2} />;
+}
+
+function TrendTooltip(props) {
+  var { active, payload } = props;
+  if (!active || !payload || !payload.length) return null;
+  var d = payload[0].payload;
+  return (
+    <div style={{
+      background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10,
+      padding: "10px 14px", fontSize: 13, boxShadow: "0 4px 16px rgba(0,0,0,0.08)"
+    }}>
+      <div style={{ fontWeight: 700, marginBottom: 4, color: "var(--text)" }}>{d.date}</div>
+      <div style={{ color: "var(--text)" }}>{d.value} {d.unit}</div>
+      <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 2 }}>
+        Ref: {d.low} – {d.high} {d.unit}
+      </div>
+    </div>
+  );
+}
 
 function categorizeMarkers(markers) {
   var sections = {};
@@ -815,8 +1019,9 @@ function repairJSON(raw) {
   }
 }
 
-async function analyzeReport(base64Data, mediaType) {
-  var systemPrompt =
+async function analyzeReport(base64Data, mediaType, profileText) {
+  var profilePrefix = profileText ? profileText + "\n\n" : "";
+  var systemPrompt = profilePrefix +
     "You are a clinical health data analyst. Extract every single lab marker from the uploaded report without skipping any. " +
     "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
     "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
@@ -878,6 +1083,18 @@ export default function App() {
   const [history,        setHistory]        = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // ── Profile state ──
+  const [profile,       setProfile]       = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError,  setProfileError]  = useState(null);
+  const [profileForm,   setProfileForm]   = useState({
+    full_name: "", age: "", biological_sex: "", conditions: [],
+  });
+
+  // ── Trends state ──
+  const [selectedTrendMarker, setSelectedTrendMarker] = useState(null);
+
   // ── Session bootstrap ──
   useEffect(function() {
     supabase.auth.getSession().then(function({ data: { session } }) {
@@ -899,6 +1116,66 @@ export default function App() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // ── Load profile when user signs in ──
+  useEffect(function() {
+    if (user) { loadProfile(); }
+    else { setProfile(null); setProfileLoaded(false); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // ── Profile loader ──
+  async function loadProfile() {
+    try {
+      var { data, error: err } = await supabase
+        .from('profiles')
+        .select('full_name, age, biological_sex, conditions')
+        .eq('user_id', user.id)
+        .single();
+      if (err || !data) {
+        setProfile(null);
+        setStage("profile");
+      } else {
+        setProfile(data);
+        setProfileForm({
+          full_name:      data.full_name      || "",
+          age:            data.age            ? String(data.age) : "",
+          biological_sex: data.biological_sex || "",
+          conditions:     data.conditions     || [],
+        });
+      }
+    } catch (e) {
+      setProfile(null);
+      setStage("profile");
+    } finally {
+      setProfileLoaded(true);
+    }
+  }
+
+  // ── Profile save ──
+  async function saveProfile(e) {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileError(null);
+    var payload = {
+      user_id:        user.id,
+      full_name:      profileForm.full_name.trim() || null,
+      age:            profileForm.age ? parseInt(profileForm.age, 10) : null,
+      biological_sex: profileForm.biological_sex || null,
+      conditions:     profileForm.conditions,
+      updated_at:     new Date().toISOString(),
+    };
+    try {
+      var { error: err } = await supabase.from('profiles').upsert(payload);
+      if (err) throw err;
+      setProfile(payload);
+      setStage("upload");
+    } catch (e2) {
+      setProfileError(e2.message || "Could not save profile.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   // ── History loader ──
   async function loadHistory() {
@@ -941,6 +1218,8 @@ export default function App() {
     setStage("upload");
     setResults(null);
     setHistory([]);
+    setProfile(null);
+    setProfileLoaded(false);
   }
 
   // ── File handler ──
@@ -965,7 +1244,8 @@ export default function App() {
         setStage("results");
         return;
       }
-      var data = await analyzeReport(base64, mediaType);
+      var profileText = getProfileText(profile);
+      var data = await analyzeReport(base64, mediaType, profileText);
       saveToCache(hash, data);
 
       // Save to Supabase (fire-and-forget — don't block UI on this)
@@ -993,7 +1273,7 @@ export default function App() {
       setStage("upload");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, profile]);
 
   const onDrop = useCallback(function(e) {
     e.preventDefault();
@@ -1103,6 +1383,20 @@ export default function App() {
     );
   }
 
+  // ── Render: profile loading spinner (wait for profile check before showing app) ──
+  if (!profileLoaded) {
+    return (
+      <>
+        <style>{STYLES}</style>
+        <div className="app">
+          <div className="loading-state" style={{ paddingTop: 120 }}>
+            <div className="pulse-ring" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
   // ── Render: authenticated app ──
   var avatarLetter = (user.email || "?")[0].toUpperCase();
 
@@ -1113,6 +1407,31 @@ export default function App() {
         <header className="header">
           <div className="logo">vita<span>scan</span></div>
           <div className="header-right">
+            {profile && (
+              <button
+                className="icon-btn"
+                title="Edit profile"
+                onClick={function() {
+                  setProfileForm({
+                    full_name:      profile.full_name      || "",
+                    age:            profile.age            ? String(profile.age) : "",
+                    biological_sex: profile.biological_sex || "",
+                    conditions:     profile.conditions     || [],
+                  });
+                  setProfileError(null);
+                  setStage("profile");
+                }}
+              >
+                👤
+              </button>
+            )}
+            <button
+              className="icon-btn"
+              title="Trends"
+              onClick={function() { setStage("trends"); }}
+            >
+              📈
+            </button>
             <button
               className="icon-btn"
               title="Report history"
@@ -1129,6 +1448,95 @@ export default function App() {
         </header>
 
         <main className="main">
+
+          {stage === "profile" && (
+            <div className="profile-screen">
+              <div style={{ marginBottom: 32 }}>
+                <div className="results-title">Your Profile</div>
+                <div className="results-meta">Help us personalise your results</div>
+              </div>
+              <form onSubmit={saveProfile}>
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    placeholder="e.g. Alex Johnson"
+                    value={profileForm.full_name}
+                    onChange={function(e) { setProfileForm(function(f) { return Object.assign({}, f, { full_name: e.target.value }); }); }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Age</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="1"
+                    max="120"
+                    placeholder="e.g. 35"
+                    style={{ maxWidth: 140 }}
+                    value={profileForm.age}
+                    onChange={function(e) { setProfileForm(function(f) { return Object.assign({}, f, { age: e.target.value }); }); }}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Biological Sex</label>
+                  <div className="radio-group">
+                    {["Male", "Female", "Other"].map(function(opt) {
+                      return (
+                        <label key={opt} className={"radio-option" + (profileForm.biological_sex === opt ? " selected" : "")}>
+                          <input
+                            type="radio"
+                            name="biological_sex"
+                            value={opt}
+                            checked={profileForm.biological_sex === opt}
+                            onChange={function() { setProfileForm(function(f) { return Object.assign({}, f, { biological_sex: opt }); }); }}
+                          />
+                          {opt}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Known Conditions</label>
+                  <div className="checkbox-group">
+                    {CONDITION_OPTIONS.map(function(opt) {
+                      var checked = profileForm.conditions.indexOf(opt) !== -1;
+                      return (
+                        <label key={opt} className={"checkbox-option" + (checked ? " selected" : "")}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={function() {
+                              setProfileForm(function(f) {
+                                var next = checked
+                                  ? f.conditions.filter(function(c) { return c !== opt; })
+                                  : f.conditions.concat(opt);
+                                return Object.assign({}, f, { conditions: next });
+                              });
+                            }}
+                          />
+                          {opt}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+                {profileError && <div className="profile-error">{profileError}</div>}
+                <div className="profile-actions">
+                  <button className="btn-primary" type="submit" disabled={profileSaving} style={{ width: "auto", padding: "12px 32px" }}>
+                    {profileSaving ? "Saving…" : "Save Profile"}
+                  </button>
+                  {profile !== null && (
+                    <button type="button" className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
 
           {stage === "upload" && (
             <div className="upload-section">
@@ -1233,6 +1641,107 @@ export default function App() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {stage === "trends" && (
+            <div>
+              <div className="history-header">
+                <div>
+                  <div className="results-title">Marker Trends</div>
+                  <div className="results-meta">Track changes across reports over time</div>
+                </div>
+                <button className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
+                  + New Report
+                </button>
+              </div>
+
+              {history.length < 2 ? (
+                <div className="trends-empty">
+                  <div className="trends-empty-icon">📈</div>
+                  <div className="trends-empty-text">Not enough data yet</div>
+                  <div className="trends-empty-sub">Upload at least 2 reports to see trends</div>
+                </div>
+              ) : (function() {
+                var trendMarkers = getTrendMarkers(history);
+                if (trendMarkers.length === 0) {
+                  return (
+                    <div className="trends-empty">
+                      <div className="trends-empty-icon">📊</div>
+                      <div className="trends-empty-text">No shared markers found</div>
+                      <div className="trends-empty-sub">No markers appear in 2 or more reports yet</div>
+                    </div>
+                  );
+                }
+                var activeName = selectedTrendMarker && trendMarkers.indexOf(selectedTrendMarker) !== -1
+                  ? selectedTrendMarker : trendMarkers[0];
+                var trendData = getTrendData(history, activeName);
+                var samplePoint = trendData[0] || {};
+                var yValues = trendData.map(function(d) { return d.value; });
+                var allLow  = trendData.map(function(d) { return d.low; });
+                var allHigh = trendData.map(function(d) { return d.high; });
+                var yMin = Math.min.apply(null, yValues.concat(allLow))  * 0.85;
+                var yMax = Math.max.apply(null, yValues.concat(allHigh)) * 1.15;
+                var refLow  = allLow[0]  || samplePoint.low;
+                var refHigh = allHigh[0] || samplePoint.high;
+                return (
+                  <>
+                    <div className="chip-list">
+                      {trendMarkers.map(function(name) {
+                        return (
+                          <button
+                            key={name}
+                            className={"chip" + (name === activeName ? " chip-active" : "")}
+                            onClick={function() { setSelectedTrendMarker(name); }}
+                          >
+                            {name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="trend-chart-wrap">
+                      <div className="trend-chart-title">{activeName}</div>
+                      <div className="trend-chart-unit">{samplePoint.unit || ""}</div>
+                      <ResponsiveContainer width="100%" height={280}>
+                        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                          <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }} />
+                          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }} width={50} />
+                          <Tooltip content={<TrendTooltip />} />
+                          {refLow !== undefined && refHigh !== undefined && (
+                            <ReferenceArea y1={refLow} y2={refHigh} fill="rgba(82,122,72,0.10)" strokeOpacity={0} />
+                          )}
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke="var(--accent)"
+                            strokeWidth={2}
+                            dot={<TrendDot />}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                      <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+                          <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#527A48" /></svg>
+                          Normal
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+                          <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#B84838" /></svg>
+                          High
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+                          <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#C97B28" /></svg>
+                          Low
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+                          <div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />
+                          Lab range
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
