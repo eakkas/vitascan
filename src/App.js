@@ -603,7 +603,8 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
 }
 
 function MarkerCard({ marker, unitSystem }) {
-  const { name, value, unit, low, high, category } = marker;
+  const { name, value, unit, low, high } = marker;
+  var category = getMarkerCategory(name);
   var dispVal  = displayConvert(value, name, unitSystem);
   var dispLow  = displayConvert(low,   name, unitSystem);
   var dispHigh = displayConvert(high,  name, unitSystem);
@@ -815,6 +816,17 @@ function getProfileText(profile) {
     ", biological sex " + (profile.biological_sex || "not specified") +
     ". Known conditions: " + conditions +
     ". Use this to personalise interpretation and flag markers especially relevant for this patient.";
+}
+
+function getMarkerCategory(markerName) {
+  var lower = markerName.toLowerCase();
+  for (var i = 0; i < MARKER_SECTIONS.length; i++) {
+    var section = MARKER_SECTIONS[i];
+    if (section.keywords.some(function(kw) { return lower.includes(kw); })) {
+      return section.label;
+    }
+  }
+  return null;
 }
 
 function getOptimalRange(markerName) {
