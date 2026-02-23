@@ -1405,6 +1405,7 @@ export default function App() {
   // ── Report history state ──
   const [history,        setHistory]        = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [normalizing,    setNormalizing]    = useState(false);
 
   // ── Profile state ──
   const [profile,       setProfile]       = useState(null);
@@ -1524,6 +1525,27 @@ export default function App() {
       // fail silently — history is non-critical
     } finally {
       setHistoryLoading(false);
+    }
+  }
+
+  // ── Re-normalize all stored reports ──
+  async function renormalizeAll() {
+    setNormalizing(true);
+    try {
+      for (var i = 0; i < history.length; i++) {
+        var report = history[i];
+        var normalizedMarkers = normalizeMarkers(report.markers || []);
+        var normalizedDate    = normalizeDate(report.report_date);
+        await supabase
+          .from('reports')
+          .update({ markers: normalizedMarkers, report_date: normalizedDate })
+          .eq('id', report.id);
+      }
+      await loadHistory();
+    } catch (e) {
+      console.error("Renormalize failed:", e);
+    } finally {
+      setNormalizing(false);
     }
   }
 
@@ -2036,7 +2058,12 @@ export default function App() {
                   <div className="results-title">Marker Debug Table</div>
                   <div className="results-meta">{history.length} report{history.length !== 1 ? "s" : ""} · all canonical values in stored unit</div>
                 </div>
-                <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>← Back</button>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button className="btn btn-ghost" disabled={normalizing} onClick={renormalizeAll}>
+                    {normalizing ? "Re-normalizing…" : "Re-normalize All"}
+                  </button>
+                  <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>← Back</button>
+                </div>
               </div>
               {history.length === 0 ? (
                 <div className="history-empty">
