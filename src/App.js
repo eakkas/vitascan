@@ -152,6 +152,11 @@ const STYLES = `
   .c-warn .s-num { color: var(--warn); }
   .c-danger .s-num { color: var(--danger); }
   .c-total .s-num { color: var(--accent); }
+  .summary-ratio-bar { height: 4px; border-radius: 4px; background: var(--dim); margin-top: 14px; overflow: hidden; display: flex; }
+  .summary-ratio-fill { height: 100%; border-radius: 4px; }
+  .c-ok .summary-ratio-fill    { background: var(--ok); }
+  .c-danger .summary-ratio-fill { background: var(--danger); }
+  .c-warn .summary-ratio-fill  { background: var(--warn); }
 
   .section-title {
     font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 700;
@@ -218,7 +223,7 @@ const STYLES = `
   .info-block-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
   .info-block-text  { font-size: 12px; line-height: 1.65; color: var(--text); font-weight: 400; }
   .info-loading { font-size: 12px; color: var(--muted); font-style: italic; }
-  .info-error   { font-size: 12px; color: var(--danger); cursor: pointer; }
+  .info-error   { font-size: 12px; color: var(--danger); cursor: pointer; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
 
   .range-bar-wrap { margin-bottom: 6px; }
   .range-bar-track { height: 6px; background: var(--dim); border-radius: 10px; position: relative; margin-bottom: 4px; }
@@ -251,6 +256,10 @@ const STYLES = `
   .insight-icon.teal { background: rgba(202,220,174,0.5); }
   .insight-text { font-size: 14px; line-height: 1.7; color: var(--muted); }
 
+  .tab-empty { text-align: center; padding: 48px 20px; }
+  .tab-empty-icon { font-size: 36px; margin-bottom: 14px; }
+  .tab-empty-text { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .tab-empty-sub  { font-size: 13px; color: var(--muted); font-weight: 300; }
   .lifestyle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 16px; }
   .lifestyle-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
   .lifestyle-emoji { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
@@ -467,6 +476,8 @@ const STYLES = `
   .report-card-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
   .report-card-date { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 300; }
   .report-card-stats { display: flex; gap: 16px; }
+  .report-ratio-bar { display: flex; height: 4px; border-radius: 4px; overflow: hidden; background: var(--dim); margin-top: 16px; }
+  .report-ratio-bar div { height: 100%; }
   .report-stat { text-align: center; }
   .report-stat-num { font-size: 22px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
   .report-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
@@ -654,7 +665,7 @@ function MarkerCard({ marker, unitSystem }) {
       {expanded && (
         <div className="info-panel">
           {loadingInfo && <div className="info-loading">Loading…</div>}
-          {infoError   && <div className="info-error" onClick={handleInfoClick}>{infoError}</div>}
+          {infoError   && <div className="info-error" onClick={handleInfoClick}><span>↺</span> Could not load info — tap to retry</div>}
           {info && !loadingInfo && (
             <>
               <div className="info-block">
@@ -677,44 +688,44 @@ function MarkerCard({ marker, unitSystem }) {
 
 var MARKER_SECTIONS = [
   {
-    id: "cardiovascular", label: "Heart & Cardiovascular", emoji: "❤️",
+    id: "cardiovascular", label: "Heart & Cardiovascular", emoji: "❤️", color: "#B84838",
     keywords: ["cholesterol", "ldl", "hdl", "triglyceride", "vldl", "lipoprotein",
       "apolipoprotein", "apob", "apoa", "apo b", "apo a", "homocysteine",
       "bnp", "nt-probnp", "troponin", "creatine kinase", "ck-mb", "ck mb",
       "hs-crp", "hscrp", "c-reactive protein", "non-hdl", "cardiac", "d-dimer"]
   },
   {
-    id: "liver", label: "Liver Health", emoji: "🫁",
+    id: "liver", label: "Liver Health", emoji: "🫁", color: "#A06830",
     keywords: ["alt", "alanine aminotransferase", "sgpt", "ast", "aspartate aminotransferase",
       "sgot", "alp", "alkaline phosphatase", "ggt", "gamma-glutamyl", "gamma glutamyl",
       "bilirubin", "albumin", "total protein", "globulin", "a/g ratio", "ag ratio",
       "prothrombin", "inr", "lactate dehydrogenase", "ldh"]
   },
   {
-    id: "kidney", label: "Kidney Health", emoji: "🫘",
+    id: "kidney", label: "Kidney Health", emoji: "🫘", color: "#4A9E80",
     keywords: ["creatinine", "bun", "blood urea nitrogen", "urea", "egfr", "gfr",
       "uric acid", "cystatin", "microalbumin", "uacr", "renal", "bun/creatinine"]
   },
   {
-    id: "blood_sugar", label: "Blood Sugar & Metabolic", emoji: "🩸",
+    id: "blood_sugar", label: "Blood Sugar & Metabolic", emoji: "🩸", color: "#C97B28",
     keywords: ["glucose", "hba1c", "hemoglobin a1c", "haemoglobin a1c", "glycated hemoglobin",
       "insulin", "homa", "c-peptide", "c peptide", "fructosamine", "blood sugar"]
   },
   {
-    id: "blood_count", label: "Complete Blood Count", emoji: "🔬",
+    id: "blood_count", label: "Complete Blood Count", emoji: "🔬", color: "#B84860",
     keywords: ["wbc", "white blood cell", "white blood count", "rbc", "red blood cell",
       "red blood count", "hemoglobin", "haemoglobin", "hematocrit", "haematocrit",
       "mcv", "mch", "mchc", "rdw", "platelet", "plt", "mpv",
       "neutrophil", "lymphocyte", "monocyte", "eosinophil", "basophil", "reticulocyte"]
   },
   {
-    id: "thyroid", label: "Thyroid", emoji: "🦋",
+    id: "thyroid", label: "Thyroid", emoji: "🦋", color: "#5080B0",
     keywords: ["tsh", "thyroid stimulating", "thyrotropin", "free t4", "ft4", "thyroxine",
       "free t3", "ft3", "triiodothyronine", "anti-tpo", "anti tpo", "thyroid peroxidase",
       "anti-tg", "thyroglobulin", "reverse t3", "rt3", "thyroid"]
   },
   {
-    id: "vitamins", label: "Vitamins & Minerals", emoji: "💊",
+    id: "vitamins", label: "Vitamins & Minerals", emoji: "💊", color: "#5A8A3A",
     keywords: ["vitamin d", "25-oh", "25 oh", "vitamin b12", "b12", "cobalamin",
       "folate", "folic acid", "vitamin b6", "pyridoxine", "vitamin c", "ascorbic",
       "vitamin a", "retinol", "vitamin e", "tocopherol", "vitamin k",
@@ -722,12 +733,12 @@ var MARKER_SECTIONS = [
       "selenium", "copper", "phosphorus", "phosphate", "iodine"]
   },
   {
-    id: "electrolytes", label: "Electrolytes", emoji: "⚡",
+    id: "electrolytes", label: "Electrolytes", emoji: "⚡", color: "#6E78C0",
     keywords: ["sodium", "potassium", "chloride", "bicarbonate", "co2", "carbon dioxide",
       "anion gap", "osmolality", "osmolarity"]
   },
   {
-    id: "hormones", label: "Hormones", emoji: "⚗️",
+    id: "hormones", label: "Hormones", emoji: "⚗️", color: "#8B5EA0",
     keywords: ["testosterone", "estradiol", "estrogen", "oestradiol", "progesterone",
       "fsh", "follicle stimulating", "lh", "luteinizing", "luteinising",
       "prolactin", "dhea", "cortisol", "shbg", "sex hormone binding",
@@ -735,19 +746,19 @@ var MARKER_SECTIONS = [
       "androstenedione", "dihydrotestosterone", "dht", "parathyroid", "pth"]
   },
   {
-    id: "inflammation", label: "Inflammation & Immunity", emoji: "🛡️",
+    id: "inflammation", label: "Inflammation & Immunity", emoji: "🛡️", color: "#3A8FA8",
     keywords: ["crp", "c-reactive protein", "esr", "erythrocyte sedimentation",
       "interleukin", "il-6", "tnf", "procalcitonin", "pct",
       "complement", "immunoglobulin", "igg", "iga", "igm",
       "ana", "antinuclear", "rheumatoid factor", "anti-ccp"]
   },
   {
-    id: "bone", label: "Bone Health", emoji: "🦴",
+    id: "bone", label: "Bone Health", emoji: "🦴", color: "#6A8090",
     keywords: ["calcium", "osteocalcin", "ctx", "c-telopeptide", "bone density",
       "deoxypyridinoline", "p1np", "bone alkaline"]
   },
   {
-    id: "iron", label: "Iron Studies", emoji: "🔩",
+    id: "iron", label: "Iron Studies", emoji: "🔩", color: "#B07840",
     keywords: ["iron", "serum iron", "tibc", "transferrin", "ferritin", "saturation"]
   },
 ];
@@ -2040,6 +2051,13 @@ export default function App() {
                                   <div className="report-stat-label">Low</div>
                                 </div>
                               </div>
+                              {itemCounts.total > 0 && (
+                                <div className="report-ratio-bar">
+                                  <div style={{ width: (itemCounts.ok   / itemCounts.total * 100) + "%", background: "var(--ok)"     }}></div>
+                                  <div style={{ width: (itemCounts.high / itemCounts.total * 100) + "%", background: "var(--danger)" }}></div>
+                                  <div style={{ width: (itemCounts.low  / itemCounts.total * 100) + "%", background: "var(--warn)"   }}></div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -2269,10 +2287,32 @@ export default function App() {
               </div>
 
               <div className="summary-cards">
-                <div className="summary-card c-total"><div className="s-num">{counts.total}</div><div className="s-label">Markers</div></div>
-                <div className="summary-card c-ok">   <div className="s-num">{counts.ok}</div>   <div className="s-label">Normal</div></div>
-                <div className="summary-card c-danger"><div className="s-num">{counts.high}</div> <div className="s-label">High</div></div>
-                <div className="summary-card c-warn">  <div className="s-num">{counts.low}</div>  <div className="s-label">Low</div></div>
+                <div className="summary-card c-total">
+                  <div className="s-num">{counts.total}</div>
+                  <div className="s-label">Markers</div>
+                  {counts.total > 0 && (
+                    <div className="summary-ratio-bar">
+                      <div style={{ width: (counts.ok   / counts.total * 100) + "%", background: "var(--ok)",     height: "100%" }}></div>
+                      <div style={{ width: (counts.high / counts.total * 100) + "%", background: "var(--danger)", height: "100%" }}></div>
+                      <div style={{ width: (counts.low  / counts.total * 100) + "%", background: "var(--warn)",   height: "100%" }}></div>
+                    </div>
+                  )}
+                </div>
+                <div className="summary-card c-ok">
+                  <div className="s-num">{counts.ok}</div>
+                  <div className="s-label">Normal</div>
+                  <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.ok / counts.total * 100) + "%" : "0%" }}></div></div>
+                </div>
+                <div className="summary-card c-danger">
+                  <div className="s-num">{counts.high}</div>
+                  <div className="s-label">High</div>
+                  <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.high / counts.total * 100) + "%" : "0%" }}></div></div>
+                </div>
+                <div className="summary-card c-warn">
+                  <div className="s-num">{counts.low}</div>
+                  <div className="s-label">Low</div>
+                  <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.low / counts.total * 100) + "%" : "0%" }}></div></div>
+                </div>
               </div>
 
               <div className="tabs">
@@ -2291,9 +2331,9 @@ export default function App() {
                     var abnormal = section.markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; }).length;
                     return (
                       <div key={section.id} className="health-section">
-                        <div className="health-section-header">
-                          <span className="health-section-emoji">{section.emoji}</span>
-                          <span className="health-section-label">{section.label}</span>
+                        <div className="health-section-header" style={{ borderBottomColor: section.color || "var(--border)" }}>
+                          <span className="health-section-emoji" style={{ background: section.color ? section.color + "18" : "transparent", borderRadius: 8, padding: "4px 6px" }}>{section.emoji}</span>
+                          <span className="health-section-label" style={{ color: section.color || "var(--text)" }}>{section.label}</span>
                           {abnormal > 0 && <span className="health-section-alert">{abnormal} out of range</span>}
                         </div>
                         <div className="markers-grid">
@@ -2308,29 +2348,47 @@ export default function App() {
               {activeTab === "insights" && (
                 <div className="insights-panel">
                   <h3><div className="insight-icon blue">🔬</div>Clinical Interpretation</h3>
-                  {results.interpretation && results.interpretation.split("\n").filter(Boolean).map(function(p, i) {
-                    return <p key={i} className="insight-text" style={{ marginBottom: 14 }}>{p}</p>;
-                  })}
+                  {results.interpretation && results.interpretation.trim() ? (
+                    results.interpretation.split("\n").filter(Boolean).map(function(p, i) {
+                      return <p key={i} className="insight-text" style={{ marginBottom: 14 }}>{p}</p>;
+                    })
+                  ) : (
+                    <div className="tab-empty">
+                      <div className="tab-empty-icon">🔬</div>
+                      <div className="tab-empty-text">No interpretation available</div>
+                      <div className="tab-empty-sub">Re-upload this report to generate a clinical summary</div>
+                    </div>
+                  )}
                 </div>
               )}
 
               {activeTab === "lifestyle" && (
                 <div className="insights-panel">
                   <h3><div className="insight-icon teal">🌿</div>Lifestyle and Nutrition Guidance</h3>
-                  <p className="insight-text" style={{ marginBottom: 20 }}>Personalized recommendations based on your results:</p>
-                  <div className="lifestyle-grid">
-                    {lifestyle.map(function(item, i) {
-                      return (
-                        <div key={i} className="lifestyle-item">
-                          <span className="lifestyle-emoji">{item.emoji}</span>
-                          <div>
-                            <div className="lifestyle-label">{item.label}</div>
-                            <div className="lifestyle-desc">{item.desc}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {lifestyle.length > 0 ? (
+                    <>
+                      <p className="insight-text" style={{ marginBottom: 20 }}>Personalized recommendations based on your results:</p>
+                      <div className="lifestyle-grid">
+                        {lifestyle.map(function(item, i) {
+                          return (
+                            <div key={i} className="lifestyle-item">
+                              <span className="lifestyle-emoji">{item.emoji}</span>
+                              <div>
+                                <div className="lifestyle-label">{item.label}</div>
+                                <div className="lifestyle-desc">{item.desc}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="tab-empty">
+                      <div className="tab-empty-icon">🌿</div>
+                      <div className="tab-empty-text">No recommendations available</div>
+                      <div className="tab-empty-sub">Re-upload this report to generate lifestyle guidance</div>
+                    </div>
+                  )}
                 </div>
               )}
 
