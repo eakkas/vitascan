@@ -852,7 +852,7 @@ var CANONICAL_MAP = [
   // ── Thyroid ──
   { keywords: ["free t4", "ft4", "thyroxine, free", "t4, free"],   canonical: "Free T4" },
   { keywords: ["free t3", "ft3", "triiodothyronine, free", "t3, free"], canonical: "Free T3" },
-  { keywords: ["reverse t3", "rt3"],                                canonical: "Reverse T3" },
+  { keywords: ["reverse t3", "t3 reverse", "rt3"],                  canonical: "Reverse T3" },
   { keywords: ["tsh", "thyroid stimulating", "thyrotropin"],        canonical: "TSH" },
   { keywords: ["anti-tpo", "anti tpo", "thyroid peroxidase"],       canonical: "Anti-TPO" },
   { keywords: ["thyroglobulin"],                                     canonical: "Thyroglobulin" },
