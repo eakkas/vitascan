@@ -551,6 +551,35 @@ const STYLES = `
   .trends-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
   .trends-empty-sub { font-size: 14px; font-weight: 300; }
 
+  /* ── Domain cards ── */
+  .domain-cards { display: flex; gap: 12px; overflow-x: auto; margin-bottom: 28px; padding-bottom: 4px; scrollbar-width: none; }
+  .domain-cards::-webkit-scrollbar { display: none; }
+  .domain-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; cursor: pointer; flex-shrink: 0; min-width: 130px;
+    transition: all 0.2s; position: relative; overflow: hidden; text-align: left;
+  }
+  .domain-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
+  .domain-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+  .domain-card.dc-active { border-color: rgba(237,163,90,0.6); background: rgba(237,163,90,0.07); }
+  .domain-card-emoji { font-size: 18px; margin-bottom: 6px; display: block; }
+  .domain-card-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
+  .domain-card-count { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .domain-card-bar { display: flex; height: 3px; border-radius: 3px; overflow: hidden; background: var(--dim); }
+  .domain-card-bar div { height: 100%; }
+  .domain-card-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
+  .dc-status-ok   { color: var(--ok); }
+  .dc-status-warn { color: var(--warn); }
+  .dc-status-all  { color: var(--danger); }
+
+  /* ── Chip dots for out-of-range ── */
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; flex-shrink: 0; }
+  .chip-dot-high { background: var(--danger); }
+  .chip-dot-low  { background: var(--warn); }
+
+  /* ── Chip section divider ── */
+  .chip-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 4px 2px 2px; align-self: center; white-space: nowrap; }
+
   /* ── Optimal ranges ── */
   .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.55); border-left: 2px solid rgba(237,163,90,0.9); border-right: 2px solid rgba(237,163,90,0.9); z-index: 1; }
 
@@ -1505,6 +1534,7 @@ export default function App() {
 
   // ── Trends state ──
   const [selectedTrendMarker, setSelectedTrendMarker] = useState(null);
+  const [selectedTrendDomain, setSelectedTrendDomain] = useState(null); // null = All
 
   // ── Sync toast ──
   const [syncToast, setSyncToast] = useState(null); // null | "saved" | "error"
@@ -2316,19 +2346,41 @@ export default function App() {
                     </div>
                   );
                 }
-                // Sort chips by MARKER_SECTIONS order, Other last
-                var sectionOrderMap = {};
-                MARKER_SECTIONS.forEach(function(s, i) { sectionOrderMap[s.label] = i; });
-                var sortedMarkers = trendMarkers.slice().sort(function(a, b) {
-                  var catA = getMarkerCategory(a) || "Other";
-                  var catB = getMarkerCategory(b) || "Other";
-                  var iA = sectionOrderMap[catA] !== undefined ? sectionOrderMap[catA] : 999;
-                  var iB = sectionOrderMap[catB] !== undefined ? sectionOrderMap[catB] : 999;
-                  return iA - iB;
+                // Pre-compute latest status for every trending marker (one pass per marker)
+                var markerLatestStatus = {};
+                trendMarkers.forEach(function(name) {
+                  var pts = getTrendData(history, name, unitSystem);
+                  var latest = pts[pts.length - 1];
+                  markerLatestStatus[name] = latest ? latest.status : "ok";
                 });
 
-                var activeName = selectedTrendMarker && trendMarkers.indexOf(selectedTrendMarker) !== -1
-                  ? selectedTrendMarker : sortedMarkers[0];
+                // Build domain summary cards (only domains with 1+ trending markers)
+                var domainSummaries = MARKER_SECTIONS.map(function(s) {
+                  var dm = trendMarkers.filter(function(n) { return getMarkerCategory(n) === s.label; });
+                  if (dm.length === 0) return null;
+                  var outOfRange = dm.filter(function(n) { return markerLatestStatus[n] !== "ok"; }).length;
+                  var okCount = dm.length - outOfRange;
+                  return { id: s.id, label: s.label, emoji: s.emoji, color: s.color, markers: dm, total: dm.length, outOfRange: outOfRange, okCount: okCount };
+                }).filter(Boolean);
+
+                // Markers filtered by selected domain; sorted out-of-range first within each domain group
+                var visibleMarkers = (selectedTrendDomain
+                  ? trendMarkers.filter(function(n) { return getMarkerCategory(n) === selectedTrendDomain; })
+                  : trendMarkers
+                ).slice().sort(function(a, b) {
+                  var aOut = markerLatestStatus[a] !== "ok" ? 0 : 1;
+                  var bOut = markerLatestStatus[b] !== "ok" ? 0 : 1;
+                  if (aOut !== bOut) return aOut - bOut;
+                  // secondary: section order
+                  var catA = getMarkerCategory(a) || "Other";
+                  var catB = getMarkerCategory(b) || "Other";
+                  var secIdx = {};
+                  MARKER_SECTIONS.forEach(function(s, i) { secIdx[s.label] = i; });
+                  return (secIdx[catA] || 999) - (secIdx[catB] || 999);
+                });
+
+                var activeName = (selectedTrendMarker && visibleMarkers.indexOf(selectedTrendMarker) !== -1)
+                  ? selectedTrendMarker : visibleMarkers[0];
                 var trendData = getTrendData(history, activeName, unitSystem);
                 var samplePoint = trendData[trendData.length - 1] || {};
                 var yValues = trendData.map(function(d) { return d.value; });
@@ -2360,18 +2412,82 @@ export default function App() {
 
                 return (
                   <>
-                    <div className="chip-list">
-                      {sortedMarkers.map(function(name) {
+                    {/* Domain summary cards */}
+                    <div className="domain-cards">
+                      <button
+                        className={"domain-card" + (selectedTrendDomain === null ? " dc-active" : "")}
+                        style={{ "--dc-color": "var(--accent)" }}
+                        onClick={function() { setSelectedTrendDomain(null); setSelectedTrendMarker(null); }}
+                      >
+                        <span className="domain-card-emoji">📊</span>
+                        <div className="domain-card-label">All Domains</div>
+                        <div className="domain-card-count">{trendMarkers.length} markers</div>
+                        <div className="domain-card-bar">
+                          <div style={{ width: (trendMarkers.filter(function(n) { return markerLatestStatus[n] === "ok"; }).length / trendMarkers.length * 100) + "%", background: "var(--ok)" }} />
+                          <div style={{ width: (trendMarkers.filter(function(n) { return markerLatestStatus[n] !== "ok"; }).length / trendMarkers.length * 100) + "%", background: "var(--danger)" }} />
+                        </div>
+                      </button>
+                      {domainSummaries.map(function(d) {
+                        var isActive = selectedTrendDomain === d.label;
+                        var statusCls = d.outOfRange === 0 ? "dc-status-ok" : d.outOfRange === d.total ? "dc-status-all" : "dc-status-warn";
+                        var statusText = d.outOfRange === 0 ? "All normal" : d.outOfRange + " out of range";
                         return (
                           <button
-                            key={name}
-                            className={"chip" + (name === activeName ? " chip-active" : "")}
-                            onClick={function() { setSelectedTrendMarker(name); }}
+                            key={d.id}
+                            className={"domain-card" + (isActive ? " dc-active" : "")}
+                            style={{ "--dc-color": d.color }}
+                            onClick={function() {
+                              setSelectedTrendDomain(isActive ? null : d.label);
+                              setSelectedTrendMarker(null);
+                            }}
                           >
-                            {name}
+                            <span className="domain-card-emoji">{d.emoji}</span>
+                            <div className="domain-card-label">{d.label}</div>
+                            <div className="domain-card-count">{d.total} marker{d.total !== 1 ? "s" : ""}</div>
+                            <div className="domain-card-bar">
+                              <div style={{ width: (d.okCount / d.total * 100) + "%", background: "var(--ok)" }} />
+                              <div style={{ width: (d.outOfRange / d.total * 100) + "%", background: d.outOfRange === d.total ? "var(--danger)" : "var(--warn)" }} />
+                            </div>
+                            <div className={"domain-card-status " + statusCls}>{statusText}</div>
                           </button>
                         );
                       })}
+                    </div>
+
+                    {/* Chip list — out-of-range first, grouped by section when showing all */}
+                    <div className="chip-list" style={{ marginBottom: 24 }}>
+                      {(function() {
+                        if (selectedTrendDomain) {
+                          // Single domain: flat list, out-of-range first
+                          return visibleMarkers.map(function(name) {
+                            var st = markerLatestStatus[name];
+                            return (
+                              <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
+                                {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
+                                {name}
+                              </button>
+                            );
+                          });
+                        }
+                        // All domains: inject section labels as dividers
+                        var rendered = [];
+                        var lastSection = null;
+                        visibleMarkers.forEach(function(name) {
+                          var cat = getMarkerCategory(name) || "Other";
+                          if (cat !== lastSection) {
+                            rendered.push(<span key={"sec-" + cat} className="chip-section-label">{cat}</span>);
+                            lastSection = cat;
+                          }
+                          var st = markerLatestStatus[name];
+                          rendered.push(
+                            <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
+                              {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
+                              {name}
+                            </button>
+                          );
+                        });
+                        return rendered;
+                      })()}
                     </div>
 
                     <div className="trend-stats">
