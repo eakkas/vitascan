@@ -552,7 +552,7 @@ const STYLES = `
   .trends-empty-sub { font-size: 14px; font-weight: 300; }
 
   /* ── Optimal ranges ── */
-  .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.35); border-radius: 2px; z-index: 1; }
+  .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.55); border-left: 2px solid rgba(237,163,90,0.9); border-right: 2px solid rgba(237,163,90,0.9); z-index: 1; }
 
   /* ── Sync toast ── */
   .sync-toast {
