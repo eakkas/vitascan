@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { supabase } from './supabase';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContainer } from "recharts";
 
@@ -488,6 +488,8 @@ const STYLES = `
   .debug-cell-high { color: var(--danger); font-weight: 600; }
   .debug-cell-low  { color: var(--warn);   font-weight: 600; }
   .debug-cell-none { color: var(--muted);  }
+  .debug-section-header { background: rgba(237,163,90,0.12) !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); padding: 10px 16px; }
+  .debug-table tr.debug-section-row:hover td { background: rgba(237,163,90,0.12); }
 
   .year-divider {
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
@@ -2048,12 +2050,21 @@ export default function App() {
                   var db = b.report_date ? new Date(b.report_date) : new Date(b.created_at);
                   return da - db;
                 });
-                // Rows: all unique canonical marker names, sorted alphabetically
+                // Rows: all unique canonical marker names grouped by section
                 var markerSet = {};
                 cols.forEach(function(report) {
                   (report.markers || []).forEach(function(m) { markerSet[normalizeMarkerName(m.name)] = true; });
                 });
-                var markerNames = Object.keys(markerSet).sort();
+                var allMarkerNames = Object.keys(markerSet).sort();
+                // Group by section
+                var sectionLabels = MARKER_SECTIONS.map(function(s) { return s.label; }).concat(["Other"]);
+                var sectionMap = {};
+                sectionLabels.forEach(function(label) { sectionMap[label] = []; });
+                allMarkerNames.forEach(function(name) {
+                  var cat = getMarkerCategory(name) || "Other";
+                  if (!sectionMap[cat]) sectionMap[cat] = [];
+                  sectionMap[cat].push(name);
+                });
                 return (
                   <div className="debug-wrap">
                     <table className="debug-table">
@@ -2073,21 +2084,30 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody>
-                        {markerNames.map(function(name) {
+                        {sectionLabels.filter(function(label) { return sectionMap[label] && sectionMap[label].length > 0; }).map(function(label) {
                           return (
-                            <tr key={name}>
-                              <td className="col-marker">{name}</td>
-                              {cols.map(function(r) {
-                                var m = (r.markers || []).find(function(x) { return normalizeMarkerName(x.name) === name; });
-                                if (!m) return <td key={r.id} className="debug-cell-none">—</td>;
-                                var status = getStatus(m.value, m.low, m.high);
+                            <React.Fragment key={label}>
+                              <tr className="debug-section-row">
+                                <td className="debug-section-header" colSpan={cols.length + 1}>{label}</td>
+                              </tr>
+                              {sectionMap[label].map(function(name) {
                                 return (
-                                  <td key={r.id} className={"debug-cell-" + status} title={"ref: " + m.low + "–" + m.high + " " + m.unit}>
-                                    {m.value} {m.unit}
-                                  </td>
+                                  <tr key={name}>
+                                    <td className="col-marker">{name}</td>
+                                    {cols.map(function(r) {
+                                      var m = (r.markers || []).find(function(x) { return normalizeMarkerName(x.name) === name; });
+                                      if (!m) return <td key={r.id} className="debug-cell-none">—</td>;
+                                      var status = getStatus(m.value, m.low, m.high);
+                                      return (
+                                        <td key={r.id} className={"debug-cell-" + status} title={"ref: " + m.low + "–" + m.high + " " + m.unit}>
+                                          {m.value} {m.unit}
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
                                 );
                               })}
-                            </tr>
+                            </React.Fragment>
                           );
                         })}
                       </tbody>
