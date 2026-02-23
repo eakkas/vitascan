@@ -1038,7 +1038,7 @@ function convertToPreferred(value, rawUnit, canonicalName) {
   if (unitLower === norm.preferred.toLowerCase()) return { value: value, unit: norm.preferred };
   var factor = norm.alts[unitLower];
   if (factor !== undefined) {
-    return { value: Math.round(value * factor * 1000) / 1000, unit: norm.preferred };
+    return { value: parseFloat((value * factor).toFixed(2)), unit: norm.preferred };
   }
   return { value: value, unit: rawUnit };
 }
@@ -1077,10 +1077,7 @@ function displayConvert(value, canonicalName, unitSystem) {
   if (unitSystem !== "si") return value;
   var norm = UNIT_NORMS[canonicalName];
   if (!norm || !norm.si) return value;
-  var converted = value * norm.si.factor;
-  // Round to at most 4 significant figures
-  var magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(converted) || 1)) - 3);
-  return Math.round(converted / magnitude) * magnitude;
+  return parseFloat((value * norm.si.factor).toFixed(2));
 }
 
 // Returns the display unit string for the given unit system.
