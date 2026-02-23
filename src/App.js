@@ -799,13 +799,225 @@ function getOptimalRange(markerName) {
   return null;
 }
 
+// ── Marker normalisation ──────────────────────────────────────────────────────
+// Entries are checked in order — most specific MUST come before general catch-alls.
+
+var CANONICAL_MAP = [
+  // ── Testosterone family ──
+  { keywords: ["free testosterone", "testosterone, free", "testosterone free"], canonical: "Free Testosterone" },
+  { keywords: ["bioavailable testosterone"],                                     canonical: "Bioavailable Testosterone" },
+  { keywords: ["testosterone"],                                                  canonical: "Testosterone" },
+
+  // ── Thyroid ──
+  { keywords: ["free t4", "ft4", "thyroxine, free", "t4, free"],   canonical: "Free T4" },
+  { keywords: ["free t3", "ft3", "triiodothyronine, free", "t3, free"], canonical: "Free T3" },
+  { keywords: ["reverse t3", "rt3"],                                canonical: "Reverse T3" },
+  { keywords: ["tsh", "thyroid stimulating", "thyrotropin"],        canonical: "TSH" },
+  { keywords: ["anti-tpo", "anti tpo", "thyroid peroxidase"],       canonical: "Anti-TPO" },
+  { keywords: ["thyroglobulin"],                                     canonical: "Thyroglobulin" },
+
+  // ── Lipids ──
+  { keywords: ["ldl"],                                              canonical: "LDL Cholesterol" },
+  { keywords: ["hdl"],                                              canonical: "HDL Cholesterol" },
+  { keywords: ["non-hdl", "non hdl"],                               canonical: "Non-HDL Cholesterol" },
+  { keywords: ["vldl"],                                             canonical: "VLDL Cholesterol" },
+  { keywords: ["triglyceride"],                                      canonical: "Triglycerides" },
+  { keywords: ["lipoprotein(a)", "lipoprotein (a)", "lp(a)"],       canonical: "Lipoprotein(a)" },
+  { keywords: ["apolipoprotein b", "apo b", "apob"],                canonical: "ApoB" },
+  { keywords: ["apolipoprotein a", "apo a", "apoa"],                canonical: "ApoA-I" },
+  { keywords: ["cholesterol"],                                       canonical: "Total Cholesterol" },
+
+  // ── Blood sugar ──
+  { keywords: ["hba1c", "hemoglobin a1c", "haemoglobin a1c", "glycated hemoglobin", "glycohemoglobin", "a1c"], canonical: "HbA1c" },
+  { keywords: ["fasting glucose", "glucose, fasting"],              canonical: "Glucose" },
+  { keywords: ["glucose"],                                           canonical: "Glucose" },
+  { keywords: ["insulin"],                                           canonical: "Insulin" },
+  { keywords: ["homa"],                                              canonical: "HOMA-IR" },
+  { keywords: ["c-peptide", "c peptide"],                           canonical: "C-Peptide" },
+
+  // ── Liver ──
+  { keywords: ["alt", "alanine aminotransferase", "sgpt"],          canonical: "ALT" },
+  { keywords: ["ast", "aspartate aminotransferase", "sgot"],        canonical: "AST" },
+  { keywords: ["alkaline phosphatase", "alp"],                      canonical: "ALP" },
+  { keywords: ["ggt", "gamma-glutamyl", "gamma glutamyl"],          canonical: "GGT" },
+  { keywords: ["direct bilirubin", "bilirubin, direct", "conjugated bilirubin"], canonical: "Direct Bilirubin" },
+  { keywords: ["indirect bilirubin", "bilirubin, indirect", "unconjugated bilirubin"], canonical: "Indirect Bilirubin" },
+  { keywords: ["bilirubin"],                                         canonical: "Total Bilirubin" },
+  { keywords: ["albumin"],                                           canonical: "Albumin" },
+  { keywords: ["total protein", "protein, total"],                  canonical: "Total Protein" },
+  { keywords: ["ldh", "lactate dehydrogenase"],                     canonical: "LDH" },
+
+  // ── Kidney ──
+  { keywords: ["egfr", "estimated gfr", "gfr"],                    canonical: "eGFR" },
+  { keywords: ["bun/creatinine", "bun / creatinine", "bun:creatinine"], canonical: "BUN/Creatinine Ratio" },
+  { keywords: ["creatinine"],                                        canonical: "Creatinine" },
+  { keywords: ["bun", "blood urea nitrogen", "urea nitrogen"],      canonical: "BUN" },
+  { keywords: ["uric acid"],                                         canonical: "Uric Acid" },
+  { keywords: ["cystatin"],                                          canonical: "Cystatin C" },
+  { keywords: ["microalbumin"],                                      canonical: "Microalbumin" },
+
+  // ── CBC ──
+  { keywords: ["wbc", "white blood cell", "white blood count", "leukocyte count"], canonical: "WBC" },
+  { keywords: ["rbc", "red blood cell", "red blood count", "erythrocyte count"],   canonical: "RBC" },
+  { keywords: ["hemoglobin", "haemoglobin"],                        canonical: "Hemoglobin" },
+  { keywords: ["hematocrit", "haematocrit"],                        canonical: "Hematocrit" },
+  { keywords: ["platelet", "plt"],                                   canonical: "Platelets" },
+  { keywords: ["neutrophil"],                                        canonical: "Neutrophils" },
+  { keywords: ["lymphocyte"],                                        canonical: "Lymphocytes" },
+  { keywords: ["monocyte"],                                          canonical: "Monocytes" },
+  { keywords: ["eosinophil"],                                        canonical: "Eosinophils" },
+  { keywords: ["basophil"],                                          canonical: "Basophils" },
+  { keywords: ["mcv"],                                               canonical: "MCV" },
+  { keywords: ["mch"],                                               canonical: "MCH" },
+  { keywords: ["mchc"],                                              canonical: "MCHC" },
+  { keywords: ["rdw"],                                               canonical: "RDW" },
+  { keywords: ["mpv"],                                               canonical: "MPV" },
+  { keywords: ["reticulocyte"],                                      canonical: "Reticulocytes" },
+
+  // ── Vitamins & minerals ──
+  { keywords: ["vitamin d", "25-oh", "25 oh", "25-hydroxyvitamin", "calcidiol"], canonical: "Vitamin D" },
+  { keywords: ["vitamin b12", "b12", "cobalamin"],                  canonical: "Vitamin B12" },
+  { keywords: ["folate", "folic acid"],                             canonical: "Folate" },
+  { keywords: ["vitamin b6", "pyridoxine"],                         canonical: "Vitamin B6" },
+  { keywords: ["vitamin c", "ascorbic"],                            canonical: "Vitamin C" },
+  { keywords: ["vitamin a", "retinol"],                             canonical: "Vitamin A" },
+  { keywords: ["vitamin e", "tocopherol"],                          canonical: "Vitamin E" },
+  { keywords: ["magnesium"],                                         canonical: "Magnesium" },
+  { keywords: ["zinc"],                                              canonical: "Zinc" },
+  { keywords: ["selenium"],                                          canonical: "Selenium" },
+  { keywords: ["copper"],                                            canonical: "Copper" },
+  { keywords: ["phosphorus", "phosphate"],                          canonical: "Phosphorus" },
+  { keywords: ["iodine"],                                            canonical: "Iodine" },
+
+  // ── Iron studies ──
+  { keywords: ["tibc", "total iron binding"],                       canonical: "TIBC" },
+  { keywords: ["transferrin saturation", "iron saturation"],        canonical: "Transferrin Saturation" },
+  { keywords: ["transferrin"],                                       canonical: "Transferrin" },
+  { keywords: ["ferritin"],                                          canonical: "Ferritin" },
+  { keywords: ["serum iron", "iron, serum", "iron"],                canonical: "Serum Iron" },
+
+  // ── Electrolytes ──
+  { keywords: ["sodium"],                                            canonical: "Sodium" },
+  { keywords: ["potassium"],                                         canonical: "Potassium" },
+  { keywords: ["chloride"],                                          canonical: "Chloride" },
+  { keywords: ["bicarbonate", "co2", "carbon dioxide"],             canonical: "Bicarbonate" },
+  { keywords: ["calcium"],                                           canonical: "Calcium" },
+  { keywords: ["anion gap"],                                         canonical: "Anion Gap" },
+
+  // ── Hormones ──
+  { keywords: ["estradiol", "oestradiol", "e2"],                    canonical: "Estradiol" },
+  { keywords: ["progesterone"],                                      canonical: "Progesterone" },
+  { keywords: ["fsh", "follicle stimulating"],                      canonical: "FSH" },
+  { keywords: ["lh", "luteinizing", "luteinising"],                 canonical: "LH" },
+  { keywords: ["prolactin"],                                         canonical: "Prolactin" },
+  { keywords: ["dhea-s", "dheas", "dehydroepiandrosterone sulfate", "dhea sulfate", "dhea"], canonical: "DHEA-S" },
+  { keywords: ["cortisol"],                                          canonical: "Cortisol" },
+  { keywords: ["shbg", "sex hormone binding"],                      canonical: "SHBG" },
+  { keywords: ["igf-1", "igf1", "insulin-like growth factor"],      canonical: "IGF-1" },
+  { keywords: ["psa", "prostate specific"],                         canonical: "PSA" },
+  { keywords: ["amh", "anti-mullerian", "antimullerian"],           canonical: "AMH" },
+  { keywords: ["parathyroid", "pth"],                               canonical: "PTH" },
+
+  // ── Inflammation ──
+  { keywords: ["hs-crp", "hscrp", "high sensitivity crp", "high-sensitivity c-reactive"], canonical: "hs-CRP" },
+  { keywords: ["c-reactive protein", "crp"],                        canonical: "CRP" },
+  { keywords: ["esr", "erythrocyte sedimentation"],                 canonical: "ESR" },
+  { keywords: ["homocysteine"],                                      canonical: "Homocysteine" },
+  { keywords: ["procalcitonin", "pct"],                             canonical: "Procalcitonin" },
+
+  // ── Cardiac ──
+  { keywords: ["nt-probnp", "nt probnp"],                           canonical: "NT-proBNP" },
+  { keywords: ["bnp", "brain natriuretic"],                         canonical: "BNP" },
+  { keywords: ["troponin"],                                          canonical: "Troponin" },
+  { keywords: ["d-dimer", "d dimer"],                               canonical: "D-Dimer" },
+  { keywords: ["creatine kinase", "ck-mb", "ck mb"],                canonical: "CK-MB" },
+
+  // ── Bone ──
+  { keywords: ["osteocalcin"],                                       canonical: "Osteocalcin" },
+  { keywords: ["p1np"],                                              canonical: "P1NP" },
+  { keywords: ["ctx", "c-telopeptide"],                             canonical: "CTx" },
+];
+
+// Preferred unit per canonical name + conversion factors FROM alternative units.
+// factor: multiply the raw value by this to get preferred unit.
+var UNIT_NORMS = {
+  "Testosterone":          { preferred: "ng/dL", alts: { "nmol/l": 28.818, "pmol/l": 0.02882 } },
+  "Free Testosterone":     { preferred: "pg/mL", alts: { "pmol/l": 0.2882, "nmol/l": 288.2 } },
+  "Estradiol":             { preferred: "pg/mL", alts: { "pmol/l": 0.2724, "nmol/l": 272.4 } },
+  "Progesterone":          { preferred: "ng/mL", alts: { "nmol/l": 0.3144 } },
+  "Cortisol":              { preferred: "µg/dL", alts: { "nmol/l": 0.03625, "µg/l": 0.1 } },
+  "DHEA-S":                { preferred: "µg/dL", alts: { "µmol/l": 36.81, "nmol/l": 0.03681 } },
+  "TSH":                   { preferred: "mIU/L", alts: { "µiu/ml": 1, "uiu/ml": 1 } },
+  "Free T4":               { preferred: "ng/dL", alts: { "pmol/l": 0.07752, "nmol/l": 77.52 } },
+  "Free T3":               { preferred: "pg/mL", alts: { "pmol/l": 0.6513, "nmol/l": 651.3 } },
+  "Glucose":               { preferred: "mg/dL", alts: { "mmol/l": 18.016 } },
+  "HbA1c":                 { preferred: "%",     alts: { "mmol/mol": 0.09148 } },
+  "Insulin":               { preferred: "µIU/mL", alts: { "pmol/l": 0.1389, "miu/l": 1 } },
+  "Total Cholesterol":     { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
+  "LDL Cholesterol":       { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
+  "HDL Cholesterol":       { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
+  "Non-HDL Cholesterol":   { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
+  "Triglycerides":         { preferred: "mg/dL", alts: { "mmol/l": 88.57 } },
+  "Homocysteine":          { preferred: "µmol/L", alts: { "mg/l": 7.397, "mg/dl": 73.97 } },
+  "hs-CRP":                { preferred: "mg/L",  alts: { "mg/dl": 10, "nmol/l": 0.1047 } },
+  "CRP":                   { preferred: "mg/L",  alts: { "mg/dl": 10 } },
+  "Vitamin D":             { preferred: "ng/mL", alts: { "nmol/l": 0.4006 } },
+  "Vitamin B12":           { preferred: "pg/mL", alts: { "pmol/l": 1.355, "ng/l": 1 } },
+  "Folate":                { preferred: "ng/mL", alts: { "nmol/l": 0.4413 } },
+  "Ferritin":              { preferred: "ng/mL", alts: { "µg/l": 1, "pmol/l": 0.4442 } },
+  "Serum Iron":            { preferred: "µg/dL", alts: { "µmol/l": 5.587, "mmol/l": 5587 } },
+  "Transferrin Saturation":{ preferred: "%",     alts: {} },
+  "TIBC":                  { preferred: "µg/dL", alts: { "µmol/l": 5.587 } },
+  "Hemoglobin":            { preferred: "g/dL",  alts: { "g/l": 0.1, "mmol/l": 1.6113 } },
+  "Hematocrit":            { preferred: "%",     alts: { "l/l": 100 } },
+  "Creatinine":            { preferred: "mg/dL", alts: { "µmol/l": 0.01131, "umol/l": 0.01131 } },
+  "BUN":                   { preferred: "mg/dL", alts: { "mmol/l": 2.8, "µmol/l": 0.0028 } },
+  "Uric Acid":             { preferred: "mg/dL", alts: { "µmol/l": 0.01681, "mmol/l": 16.81 } },
+  "Calcium":               { preferred: "mg/dL", alts: { "mmol/l": 4.008 } },
+  "Magnesium":             { preferred: "mg/dL", alts: { "mmol/l": 2.431, "meq/l": 1.215 } },
+  "Phosphorus":            { preferred: "mg/dL", alts: { "mmol/l": 3.097 } },
+  "Sodium":                { preferred: "mEq/L", alts: { "mmol/l": 1 } },
+  "Potassium":             { preferred: "mEq/L", alts: { "mmol/l": 1 } },
+  "Chloride":              { preferred: "mEq/L", alts: { "mmol/l": 1 } },
+  "Zinc":                  { preferred: "µg/dL", alts: { "µmol/l": 6.54, "umol/l": 6.54 } },
+  "IGF-1":                 { preferred: "ng/mL", alts: { "nmol/l": 7.647 } },
+  "PTH":                   { preferred: "pg/mL", alts: { "pmol/l": 9.43 } },
+};
+
+// Returns the canonical name for a raw marker name, or the cleaned raw name if no match.
+function normalizeMarkerName(rawName) {
+  var lower = rawName.toLowerCase();
+  for (var i = 0; i < CANONICAL_MAP.length; i++) {
+    var entry = CANONICAL_MAP[i];
+    for (var j = 0; j < entry.keywords.length; j++) {
+      if (lower.includes(entry.keywords[j])) return entry.canonical;
+    }
+  }
+  // No canonical match — return title-cased original
+  return rawName;
+}
+
+// Converts value+unit to the preferred unit for a canonical marker.
+// Returns { value, unit } — unchanged if no conversion applies.
+function convertToPreferred(value, rawUnit, canonicalName) {
+  var norm = UNIT_NORMS[canonicalName];
+  if (!norm) return { value: value, unit: rawUnit };
+  var unitLower = (rawUnit || "").toLowerCase().trim();
+  if (unitLower === norm.preferred.toLowerCase()) return { value: value, unit: norm.preferred };
+  var factor = norm.alts[unitLower];
+  if (factor !== undefined) {
+    return { value: Math.round(value * factor * 1000) / 1000, unit: norm.preferred };
+  }
+  return { value: value, unit: rawUnit };
+}
+
 function getTrendMarkers(history) {
   var counts = {};
   history.forEach(function(report) {
     var markers = report.markers || [];
     var seen = {};
     markers.forEach(function(m) {
-      var key = m.name.toLowerCase();
+      var key = normalizeMarkerName(m.name);
       if (!seen[key]) {
         counts[key] = (counts[key] || 0) + 1;
         seen[key] = true;
@@ -817,26 +1029,28 @@ function getTrendMarkers(history) {
     .sort(function(a, b) { return counts[b] - counts[a]; });
 }
 
-function getTrendData(history, markerName) {
+function getTrendData(history, canonicalName) {
   var points = [];
-  var nameLower = markerName.toLowerCase();
   // history is sorted newest-first; reverse for chronological order
   var sorted = history.slice().reverse();
   sorted.forEach(function(report) {
     var markers = report.markers || [];
-    var match = markers.find(function(m) { return m.name.toLowerCase() === nameLower; });
+    var match = markers.find(function(m) { return normalizeMarkerName(m.name) === canonicalName; });
     if (match) {
+      var converted = convertToPreferred(match.value, match.unit, canonicalName);
+      var convLow   = convertToPreferred(match.low,   match.unit, canonicalName);
+      var convHigh  = convertToPreferred(match.high,  match.unit, canonicalName);
       var dateStr = report.report_date && report.report_date !== "Unknown"
         ? report.report_date
         : new Date(report.created_at).toLocaleDateString();
       points.push({
         date: dateStr,
         rawDate: report.created_at || report.report_date,
-        value: match.value,
-        low: match.low,
-        high: match.high,
-        unit: match.unit,
-        status: getStatus(match.value, match.low, match.high),
+        value: converted.value,
+        low:   convLow.value,
+        high:  convHigh.value,
+        unit:  converted.unit,
+        status: getStatus(converted.value, convLow.value, convHigh.value),
       });
     }
   });
