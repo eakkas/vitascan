@@ -954,6 +954,7 @@ var CANONICAL_MAP = [
   { keywords: ["bilirubin"],                                         canonical: "Total Bilirubin" },
   { keywords: ["albumin"],                                           canonical: "Albumin" },
   { keywords: ["total protein", "protein, total"],                  canonical: "Total Protein" },
+  { keywords: ["globulin"],                                         canonical: "Globulin" },
   { keywords: ["ldh", "lactate dehydrogenase"],                     canonical: "LDH" },
 
   // ── Kidney ──
@@ -1080,8 +1081,11 @@ var UNIT_NORMS = {
   "Serum Iron":            { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.1791 }, alts: { "µmol/l": 5.587, "mmol/l": 5587 } },
   "Transferrin Saturation":{ preferred: "%",      alts: {} },
   "TIBC":                  { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.1791 }, alts: { "µmol/l": 5.587 } },
-  "Hemoglobin":            { preferred: "g/dL",   alts: { "g/l": 0.1, "mmol/l": 1.6113 } },
+  "Hemoglobin":            { preferred: "g/dL",   si: { unit: "g/L",    factor: 10     }, alts: { "g/l": 0.1, "mmol/l": 1.6113 } },
   "Hematocrit":            { preferred: "%",      alts: { "l/l": 100 } },
+  "Albumin":               { preferred: "g/dL",   si: { unit: "g/L",    factor: 10     }, alts: { "g/l": 0.1 } },
+  "Total Protein":         { preferred: "g/dL",   si: { unit: "g/L",    factor: 10     }, alts: { "g/l": 0.1 } },
+  "Globulin":              { preferred: "g/dL",   si: { unit: "g/L",    factor: 10     }, alts: { "g/l": 0.1 } },
   "Creatinine":            { preferred: "mg/dL",  si: { unit: "µmol/L",  factor: 88.4   }, alts: { "µmol/l": 0.01131, "umol/l": 0.01131 } },
   "BUN":                   { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.3570 }, alts: { "mmol/l": 2.8, "µmol/l": 0.0028 } },
   "Uric Acid":             { preferred: "mg/dL",  si: { unit: "µmol/L",  factor: 59.48  }, alts: { "µmol/l": 0.01681, "mmol/l": 16.81 } },
