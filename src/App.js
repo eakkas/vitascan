@@ -554,6 +554,19 @@ const STYLES = `
   /* ── Optimal ranges ── */
   .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.55); border-left: 2px solid rgba(237,163,90,0.9); border-right: 2px solid rgba(237,163,90,0.9); z-index: 1; }
 
+  /* ── Trend stats ── */
+  .trend-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .trend-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; min-width: 90px; }
+  .trend-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+  .trend-stat-value { font-size: 18px; font-weight: 800; line-height: 1; }
+  .trend-stat-unit { font-size: 11px; color: var(--muted); margin-left: 3px; font-weight: 400; }
+  .trend-stat.s-ok   .trend-stat-value { color: var(--ok); }
+  .trend-stat.s-high .trend-stat-value { color: var(--danger); }
+  .trend-stat.s-low  .trend-stat-value { color: var(--warn); }
+  .trend-stat.s-neutral .trend-stat-value { color: var(--text); }
+  .trend-legend { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+  .trend-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+
   /* ── Sync toast ── */
   .sync-toast {
     position: fixed; bottom: 24px; right: 24px;
@@ -2299,27 +2312,52 @@ export default function App() {
                     </div>
                   );
                 }
+                // Sort chips by MARKER_SECTIONS order, Other last
+                var sectionOrderMap = {};
+                MARKER_SECTIONS.forEach(function(s, i) { sectionOrderMap[s.label] = i; });
+                var sortedMarkers = trendMarkers.slice().sort(function(a, b) {
+                  var catA = getMarkerCategory(a) || "Other";
+                  var catB = getMarkerCategory(b) || "Other";
+                  var iA = sectionOrderMap[catA] !== undefined ? sectionOrderMap[catA] : 999;
+                  var iB = sectionOrderMap[catB] !== undefined ? sectionOrderMap[catB] : 999;
+                  return iA - iB;
+                });
+
                 var activeName = selectedTrendMarker && trendMarkers.indexOf(selectedTrendMarker) !== -1
-                  ? selectedTrendMarker : trendMarkers[0];
+                  ? selectedTrendMarker : sortedMarkers[0];
                 var trendData = getTrendData(history, activeName, unitSystem);
-                var samplePoint = trendData[0] || {};
+                var samplePoint = trendData[trendData.length - 1] || {};
                 var yValues = trendData.map(function(d) { return d.value; });
                 var allLow  = trendData.map(function(d) { return d.low; });
                 var allHigh = trendData.map(function(d) { return d.high; });
-                var optRange    = getOptimalRange(activeName);
+                var optRange = showOptimalRanges ? getOptimalRange(activeName) : null;
                 var optLow  = optRange ? displayConvert(optRange.low,  activeName, unitSystem) : null;
                 var optHigh = optRange ? displayConvert(optRange.high, activeName, unitSystem) : null;
                 var allY = yValues.concat(allLow).concat(allHigh);
                 if (optLow  !== null) allY.push(optLow);
                 if (optHigh !== null) allY.push(optHigh);
-                var yMin = Math.min.apply(null, allY) * 0.85;
-                var yMax = Math.max.apply(null, allY) * 1.15;
-                var refLow  = allLow[0]  || samplePoint.low;
-                var refHigh = allHigh[0] || samplePoint.high;
+                var yMin = parseFloat((Math.min.apply(null, allY) * 0.85).toFixed(2));
+                var yMax = parseFloat((Math.max.apply(null, allY) * 1.15).toFixed(2));
+                var refLow  = allLow[0]  !== undefined ? allLow[0]  : samplePoint.low;
+                var refHigh = allHigh[0] !== undefined ? allHigh[0] : samplePoint.high;
+
+                // Stats
+                var latestVal = samplePoint.value;
+                var latestStatus = samplePoint.status || "ok";
+                var minVal = parseFloat(Math.min.apply(null, yValues).toFixed(2));
+                var maxVal = parseFloat(Math.max.apply(null, yValues).toFixed(2));
+                var avgVal = parseFloat((yValues.reduce(function(a, b) { return a + b; }, 0) / yValues.length).toFixed(2));
+
+                var tickFmt = function(v) {
+                  var n = parseFloat(v);
+                  return isNaN(n) ? v : (n % 1 === 0 ? n : parseFloat(n.toFixed(2)));
+                };
+                var manyPoints = trendData.length >= 5;
+
                 return (
                   <>
                     <div className="chip-list">
-                      {trendMarkers.map(function(name) {
+                      {sortedMarkers.map(function(name) {
                         return (
                           <button
                             key={name}
@@ -2331,13 +2369,44 @@ export default function App() {
                         );
                       })}
                     </div>
+
+                    <div className="trend-stats">
+                      <div className={"trend-stat s-" + latestStatus}>
+                        <div className="trend-stat-label">Latest</div>
+                        <div className="trend-stat-value">{latestVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
+                      </div>
+                      <div className="trend-stat s-neutral">
+                        <div className="trend-stat-label">Min</div>
+                        <div className="trend-stat-value">{minVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
+                      </div>
+                      <div className="trend-stat s-neutral">
+                        <div className="trend-stat-label">Max</div>
+                        <div className="trend-stat-value">{maxVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
+                      </div>
+                      <div className="trend-stat s-neutral">
+                        <div className="trend-stat-label">Avg</div>
+                        <div className="trend-stat-value">{avgVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
+                      </div>
+                    </div>
+
                     <div className="trend-chart-wrap">
                       <div className="trend-chart-title">{activeName}</div>
                       <div className="trend-chart-unit">{samplePoint.unit || ""}</div>
-                      <ResponsiveContainer width="100%" height={280}>
-                        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                          <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }} />
-                          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }} width={50} />
+                      <ResponsiveContainer width="100%" height={320}>
+                        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 4, bottom: manyPoints ? 32 : 4 }}>
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }}
+                            angle={manyPoints ? -35 : 0}
+                            textAnchor={manyPoints ? "end" : "middle"}
+                            interval={0}
+                          />
+                          <YAxis
+                            domain={[yMin, yMax]}
+                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }}
+                            tickFormatter={tickFmt}
+                            width={52}
+                          />
                           <Tooltip content={<TrendTooltip />} />
                           {refLow !== undefined && refHigh !== undefined && (
                             <ReferenceArea y1={refLow} y2={refHigh} fill="rgba(82,122,72,0.10)" strokeOpacity={0} />
@@ -2357,28 +2426,13 @@ export default function App() {
                           />
                         </LineChart>
                       </ResponsiveContainer>
-                      <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-                          <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#527A48" /></svg>
-                          Normal
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-                          <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#B84838" /></svg>
-                          High
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-                          <svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#C97B28" /></svg>
-                          Low
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-                          <div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />
-                          Lab range
-                        </div>
+                      <div className="trend-legend">
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#527A48" /></svg>Normal</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#B84838" /></svg>High</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#C97B28" /></svg>Low</div>
+                        <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />Lab range</div>
                         {optLow !== null && (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
-                            <div style={{ width: 16, height: 10, background: "rgba(237,163,90,0.35)", borderRadius: 2 }} />
-                            Optimal range
-                          </div>
+                          <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(237,163,90,0.45)", border: "1px solid rgba(237,163,90,0.8)", borderRadius: 2 }} />Optimal range</div>
                         )}
                       </div>
                     </div>
