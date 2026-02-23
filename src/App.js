@@ -1610,7 +1610,7 @@ export default function App() {
     setResults({
       patientName:    item.patient_name,
       reportDate:     item.report_date,
-      markers:        item.markers || [],
+      markers:        normalizeMarkers(item.markers || []),
       lifestyle:      item.lifestyle || [],
       interpretation: item.interpretation || "",
     });
