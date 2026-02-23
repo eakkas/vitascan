@@ -554,6 +554,34 @@ const STYLES = `
   /* ── Optimal ranges ── */
   .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.35); border-radius: 2px; z-index: 1; }
 
+  /* ── Sync toast ── */
+  .sync-toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    z-index: 1000; animation: fadeIn 0.2s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sync-toast-saved { background: var(--surface2); color: var(--ok);     border: 1px solid rgba(82,122,72,0.3); }
+  .sync-toast-error { background: var(--surface);  color: var(--danger); border: 1px solid rgba(184,72,56,0.3); }
+
+  /* ── Onboarding card ── */
+  .onboarding-card {
+    background: rgba(237,163,90,0.08); border: 1px solid rgba(237,163,90,0.3);
+    border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .onboarding-icon  { font-size: 26px; flex-shrink: 0; }
+  .onboarding-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+  .onboarding-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  @media (max-width: 768px) {
+    .summary-cards { grid-template-columns: repeat(2, 1fr); }
+    .markers-grid  { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .history-grid  { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .main { padding: 40px 20px; }
+    .results-title { font-size: 24px; }
+  }
+
   @media (max-width: 600px) {
     .header { padding: 16px 20px; }
     .header-email { display: none; }
@@ -617,7 +645,7 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
 
 function MarkerCard({ marker, unitSystem }) {
   const { name, value, unit, low, high } = marker;
-  var category = getMarkerCategory(name);
+  var category = getMarkerCategory(name, marker.category);
   var dispVal  = displayConvert(value, name, unitSystem);
   var dispLow  = displayConvert(low,   name, unitSystem);
   var dispHigh = displayConvert(high,  name, unitSystem);
@@ -831,7 +859,9 @@ function getProfileText(profile) {
     ". Use this to personalise interpretation and flag markers especially relevant for this patient.";
 }
 
-function getMarkerCategory(markerName) {
+var SECTION_LABELS = MARKER_SECTIONS.map(function(s) { return s.label; });
+
+function getMarkerCategory(markerName, aiCategory) {
   var lower = markerName.toLowerCase();
   for (var i = 0; i < MARKER_SECTIONS.length; i++) {
     var section = MARKER_SECTIONS[i];
@@ -839,6 +869,8 @@ function getMarkerCategory(markerName) {
       return section.label;
     }
   }
+  // Fall back to AI-provided category if it matches a known section exactly
+  if (aiCategory && SECTION_LABELS.indexOf(aiCategory) !== -1) return aiCategory;
   return null;
 }
 
@@ -1215,11 +1247,23 @@ function categorizeMarkers(markers) {
       var section = MARKER_SECTIONS[i];
       if (section.keywords.some(function(kw) { return name.includes(kw); })) {
         if (!sections[section.id]) {
-          sections[section.id] = { id: section.id, label: section.label, emoji: section.emoji, markers: [] };
+          sections[section.id] = { id: section.id, label: section.label, emoji: section.emoji, color: section.color, markers: [] };
         }
         sections[section.id].markers.push(marker);
         matched = true;
         break;
+      }
+    }
+
+    // AI section fallback for unmatched markers
+    if (!matched && marker.category && SECTION_LABELS.indexOf(marker.category) !== -1) {
+      var fallbackSection = MARKER_SECTIONS.find(function(s) { return s.label === marker.category; });
+      if (fallbackSection) {
+        if (!sections[fallbackSection.id]) {
+          sections[fallbackSection.id] = { id: fallbackSection.id, label: fallbackSection.label, emoji: fallbackSection.emoji, color: fallbackSection.color, markers: [] };
+        }
+        sections[fallbackSection.id].markers.push(marker);
+        matched = true;
       }
     }
 
@@ -1359,6 +1403,7 @@ async function analyzeReport(base64Data, mediaType, profileText) {
     "You are a clinical health data analyst. Extract every single lab marker from the uploaded report without skipping any. " +
     "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
     "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
+    "For each marker's 'category' field use exactly one of these values: " + SECTION_LABELS.concat(["Other"]).map(function(l) { return "\"" + l + "\""; }).join(", ") + ". " +
     "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
 
   var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
@@ -1429,6 +1474,13 @@ export default function App() {
 
   // ── Trends state ──
   const [selectedTrendMarker, setSelectedTrendMarker] = useState(null);
+
+  // ── Sync toast ──
+  const [syncToast, setSyncToast] = useState(null); // null | "saved" | "error"
+  function showSyncToast(type) {
+    setSyncToast(type);
+    setTimeout(function() { setSyncToast(null); }, 3000);
+  }
 
   // ── Unit system preference (persisted to localStorage) ──
   const [unitSystem, setUnitSystem] = useState(function() {
@@ -1630,7 +1682,10 @@ export default function App() {
           interpretation: data.interpretation,
         }, { onConflict: 'user_id,file_hash' }).then(function() {
           loadHistory();
-        }).catch(function() {});
+          showSyncToast("saved");
+        }).catch(function() {
+          showSyncToast("error");
+        });
       }
 
       setResults(data);
@@ -1781,6 +1836,7 @@ export default function App() {
               <button
                 className="icon-btn"
                 title="Edit profile"
+                aria-label="Edit profile"
                 onClick={function() {
                   setProfileForm({
                     full_name:      profile.full_name      || "",
@@ -1798,6 +1854,7 @@ export default function App() {
             <button
               className="icon-btn"
               title="Trends"
+              aria-label="View trends"
               onClick={function() { setStage("trends"); }}
             >
               📈
@@ -1805,6 +1862,7 @@ export default function App() {
             <button
               className="icon-btn"
               title="Debug: marker table"
+              aria-label="Debug marker table"
               onClick={function() { setStage("debug"); }}
             >
               🧪
@@ -1812,6 +1870,7 @@ export default function App() {
             <button
               className="icon-btn"
               title="Report history"
+              aria-label="Report history"
               onClick={function() { setStage("history"); }}
             >
               🕐
@@ -1828,8 +1887,17 @@ export default function App() {
 
           {stage === "profile" && (
             <div className="profile-screen">
+              {!profile && (
+                <div className="onboarding-card">
+                  <div className="onboarding-icon">👋</div>
+                  <div>
+                    <div className="onboarding-title">Welcome to VitaScan</div>
+                    <div className="onboarding-text">Tell us a bit about yourself so we can personalise your results and flag markers that matter most for your health profile. You can update this any time.</div>
+                  </div>
+                </div>
+              )}
               <div style={{ marginBottom: 32 }}>
-                <div className="results-title">Your Profile</div>
+                <div className="results-title">{profile ? "Edit Profile" : "Your Profile"}</div>
                 <div className="results-meta">Help us personalise your results</div>
               </div>
               <form onSubmit={saveProfile}>
@@ -2199,8 +2267,14 @@ export default function App() {
                 var yValues = trendData.map(function(d) { return d.value; });
                 var allLow  = trendData.map(function(d) { return d.low; });
                 var allHigh = trendData.map(function(d) { return d.high; });
-                var yMin = Math.min.apply(null, yValues.concat(allLow))  * 0.85;
-                var yMax = Math.max.apply(null, yValues.concat(allHigh)) * 1.15;
+                var optRange    = getOptimalRange(activeName);
+                var optLow  = optRange ? displayConvert(optRange.low,  activeName, unitSystem) : null;
+                var optHigh = optRange ? displayConvert(optRange.high, activeName, unitSystem) : null;
+                var allY = yValues.concat(allLow).concat(allHigh);
+                if (optLow  !== null) allY.push(optLow);
+                if (optHigh !== null) allY.push(optHigh);
+                var yMin = Math.min.apply(null, allY) * 0.85;
+                var yMax = Math.max.apply(null, allY) * 1.15;
                 var refLow  = allLow[0]  || samplePoint.low;
                 var refHigh = allHigh[0] || samplePoint.high;
                 return (
@@ -2229,6 +2303,9 @@ export default function App() {
                           {refLow !== undefined && refHigh !== undefined && (
                             <ReferenceArea y1={refLow} y2={refHigh} fill="rgba(82,122,72,0.10)" strokeOpacity={0} />
                           )}
+                          {optLow !== null && optHigh !== null && (
+                            <ReferenceArea y1={optLow} y2={optHigh} fill="rgba(237,163,90,0.18)" strokeOpacity={0} />
+                          )}
                           <Line
                             type="monotone"
                             dataKey="value"
@@ -2236,6 +2313,8 @@ export default function App() {
                             strokeWidth={2}
                             dot={<TrendDot />}
                             activeDot={{ r: 6 }}
+                            animationDuration={600}
+                            animationEasing="ease-out"
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -2256,6 +2335,12 @@ export default function App() {
                           <div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />
                           Lab range
                         </div>
+                        {optLow !== null && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--muted)" }}>
+                            <div style={{ width: 16, height: 10, background: "rgba(237,163,90,0.35)", borderRadius: 2 }} />
+                            Optimal range
+                          </div>
+                        )}
                       </div>
                     </div>
                   </>
@@ -2404,6 +2489,11 @@ export default function App() {
 
         </main>
       </div>
+      {syncToast && (
+        <div className={"sync-toast sync-toast-" + syncToast}>
+          {syncToast === "saved" ? "✓ Saved to history" : "⚠ Sync failed"}
+        </div>
+      )}
     </>
   );
 }
