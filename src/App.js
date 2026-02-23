@@ -1035,7 +1035,7 @@ function normalizeDate(raw) {
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
   // Try DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY (international, not parsed by JS by default)
-  var m = raw.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/);
+  var m = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
   if (m) {
     d = new Date(m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0"));
     if (!isNaN(d.getTime())) {
