@@ -475,6 +475,13 @@ const STYLES = `
   .report-stat.s-low .report-stat-num { color: var(--warn); }
   .report-stat.s-total .report-stat-num { color: var(--accent); }
 
+  .year-divider {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin: 28px 0 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .year-divider:first-child { margin-top: 0; }
+  .year-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
   .history-empty {
     text-align: center;
     padding: 80px 40px;
@@ -1005,10 +1012,20 @@ function normalizeMarkerName(rawName) {
   return rawName;
 }
 
-// Normalises every marker in an AI result to its canonical name.
+// Normalises every marker: canonical name + converts value/low/high to US Conventional unit.
 function normalizeMarkers(markers) {
   return markers.map(function(m) {
-    return Object.assign({}, m, { name: normalizeMarkerName(m.name) });
+    var canonical = normalizeMarkerName(m.name);
+    var val  = convertToPreferred(m.value, m.unit, canonical);
+    var low  = convertToPreferred(m.low,   m.unit, canonical);
+    var high = convertToPreferred(m.high,  m.unit, canonical);
+    return Object.assign({}, m, {
+      name:  canonical,
+      value: val.value,
+      unit:  val.unit,
+      low:   low.value,
+      high:  high.value,
+    });
   });
 }
 
@@ -1913,48 +1930,70 @@ export default function App() {
                 </div>
               )}
 
-              {!historyLoading && history.length > 0 && (
-                <div className="history-grid">
-                  {history.map(function(item) {
-                    var itemMarkers = item.markers || [];
-                    var itemCounts = {
-                      total: itemMarkers.length,
-                      ok:    itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok"; }).length,
-                      high:  itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "high"; }).length,
-                      low:   itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low"; }).length,
-                    };
-                    var dateLabel = item.report_date && item.report_date !== "Unknown"
-                      ? item.report_date
-                      : new Date(item.created_at).toLocaleDateString();
-                    return (
-                      <div key={item.id} className="report-card" onClick={function() { handleHistoryItem(item); }}>
-                        <div className="report-card-name">
-                          {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : "Lab Report"}
-                        </div>
-                        <div className="report-card-date">{dateLabel}</div>
-                        <div className="report-card-stats">
-                          <div className="report-stat s-total">
-                            <div className="report-stat-num">{itemCounts.total}</div>
-                            <div className="report-stat-label">Total</div>
-                          </div>
-                          <div className="report-stat s-ok">
-                            <div className="report-stat-num">{itemCounts.ok}</div>
-                            <div className="report-stat-label">Normal</div>
-                          </div>
-                          <div className="report-stat s-high">
-                            <div className="report-stat-num">{itemCounts.high}</div>
-                            <div className="report-stat-label">High</div>
-                          </div>
-                          <div className="report-stat s-low">
-                            <div className="report-stat-num">{itemCounts.low}</div>
-                            <div className="report-stat-label">Low</div>
-                          </div>
-                        </div>
+              {!historyLoading && history.length > 0 && (function() {
+                // Sort by report_date desc, fall back to created_at
+                var sorted = history.slice().sort(function(a, b) {
+                  var da = a.report_date ? new Date(a.report_date) : new Date(a.created_at);
+                  var db = b.report_date ? new Date(b.report_date) : new Date(b.created_at);
+                  return db - da;
+                });
+                // Group by year
+                var byYear = {};
+                sorted.forEach(function(item) {
+                  var d = item.report_date ? new Date(item.report_date) : new Date(item.created_at);
+                  var yr = isNaN(d) ? "Unknown" : d.getFullYear();
+                  if (!byYear[yr]) byYear[yr] = [];
+                  byYear[yr].push(item);
+                });
+                var years = Object.keys(byYear).sort(function(a, b) { return b - a; });
+                return years.map(function(year) {
+                  return (
+                    <div key={year}>
+                      <div className="year-divider">{year}</div>
+                      <div className="history-grid">
+                        {byYear[year].map(function(item) {
+                          var itemMarkers = item.markers || [];
+                          var itemCounts = {
+                            total: itemMarkers.length,
+                            ok:    itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok"; }).length,
+                            high:  itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "high"; }).length,
+                            low:   itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low"; }).length,
+                          };
+                          var dateLabel = item.report_date && item.report_date !== "Unknown"
+                            ? item.report_date
+                            : new Date(item.created_at).toLocaleDateString();
+                          return (
+                            <div key={item.id} className="report-card" onClick={function() { handleHistoryItem(item); }}>
+                              <div className="report-card-name">
+                                {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : "Lab Report"}
+                              </div>
+                              <div className="report-card-date">{dateLabel}</div>
+                              <div className="report-card-stats">
+                                <div className="report-stat s-total">
+                                  <div className="report-stat-num">{itemCounts.total}</div>
+                                  <div className="report-stat-label">Total</div>
+                                </div>
+                                <div className="report-stat s-ok">
+                                  <div className="report-stat-num">{itemCounts.ok}</div>
+                                  <div className="report-stat-label">Normal</div>
+                                </div>
+                                <div className="report-stat s-high">
+                                  <div className="report-stat-num">{itemCounts.high}</div>
+                                  <div className="report-stat-label">High</div>
+                                </div>
+                                <div className="report-stat s-low">
+                                  <div className="report-stat-num">{itemCounts.low}</div>
+                                  <div className="report-stat-label">Low</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           )}
 
