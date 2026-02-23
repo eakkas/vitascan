@@ -475,6 +475,20 @@ const STYLES = `
   .report-stat.s-low .report-stat-num { color: var(--warn); }
   .report-stat.s-total .report-stat-num { color: var(--accent); }
 
+  /* ── Debug table ── */
+  .debug-wrap { overflow-x: auto; }
+  .debug-table { border-collapse: collapse; width: 100%; font-size: 12px; font-family: 'Open Sans', sans-serif; }
+  .debug-table th { background: var(--surface2); border: 1px solid var(--border); padding: 8px 12px; text-align: left; font-weight: 700; white-space: nowrap; position: sticky; top: 0; }
+  .debug-table th.col-marker { position: sticky; left: 0; z-index: 2; min-width: 180px; }
+  .debug-table td { border: 1px solid var(--border); padding: 6px 12px; white-space: nowrap; background: var(--surface); }
+  .debug-table td.col-marker { font-weight: 600; position: sticky; left: 0; background: var(--surface2); z-index: 1; }
+  .debug-table tr:hover td { background: rgba(237,163,90,0.07); }
+  .debug-table tr:hover td.col-marker { background: var(--surface2); }
+  .debug-cell-ok   { color: var(--ok); }
+  .debug-cell-high { color: var(--danger); font-weight: 600; }
+  .debug-cell-low  { color: var(--warn);   font-weight: 600; }
+  .debug-cell-none { color: var(--muted);  }
+
   .year-divider {
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
     color: var(--muted); margin: 28px 0 16px; display: flex; align-items: center; gap: 12px;
@@ -1743,6 +1757,13 @@ export default function App() {
             </button>
             <button
               className="icon-btn"
+              title="Debug: marker table"
+              onClick={function() { setStage("debug"); }}
+            >
+              🧪
+            </button>
+            <button
+              className="icon-btn"
               title="Report history"
               onClick={function() { setStage("history"); }}
             >
@@ -1990,6 +2011,77 @@ export default function App() {
                     </div>
                   );
                 });
+              })()}
+            </div>
+          )}
+
+          {stage === "debug" && (
+            <div>
+              <div className="history-header">
+                <div>
+                  <div className="results-title">Marker Debug Table</div>
+                  <div className="results-meta">{history.length} report{history.length !== 1 ? "s" : ""} · all canonical values in stored unit</div>
+                </div>
+                <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>← Back</button>
+              </div>
+              {history.length === 0 ? (
+                <div className="history-empty">
+                  <div className="history-empty-icon">🧪</div>
+                  <div className="history-empty-text">No reports yet</div>
+                </div>
+              ) : (function() {
+                // Columns: reports sorted oldest → newest
+                var cols = history.slice().sort(function(a, b) {
+                  var da = a.report_date ? new Date(a.report_date) : new Date(a.created_at);
+                  var db = b.report_date ? new Date(b.report_date) : new Date(b.created_at);
+                  return da - db;
+                });
+                // Rows: all unique canonical marker names, sorted alphabetically
+                var markerSet = {};
+                cols.forEach(function(report) {
+                  (report.markers || []).forEach(function(m) { markerSet[normalizeMarkerName(m.name)] = true; });
+                });
+                var markerNames = Object.keys(markerSet).sort();
+                return (
+                  <div className="debug-wrap">
+                    <table className="debug-table">
+                      <thead>
+                        <tr>
+                          <th className="col-marker">Marker</th>
+                          {cols.map(function(r) {
+                            return (
+                              <th key={r.id}>
+                                {r.report_date || new Date(r.created_at).toLocaleDateString()}
+                                <div style={{ fontWeight: 400, opacity: 0.7, fontSize: 10 }}>
+                                  {r.patient_name && r.patient_name !== "Unknown" ? r.patient_name : "—"}
+                                </div>
+                              </th>
+                            );
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {markerNames.map(function(name) {
+                          return (
+                            <tr key={name}>
+                              <td className="col-marker">{name}</td>
+                              {cols.map(function(r) {
+                                var m = (r.markers || []).find(function(x) { return normalizeMarkerName(x.name) === name; });
+                                if (!m) return <td key={r.id} className="debug-cell-none">—</td>;
+                                var status = getStatus(m.value, m.low, m.high);
+                                return (
+                                  <td key={r.id} className={"debug-cell-" + status} title={"ref: " + m.low + "–" + m.high + " " + m.unit}>
+                                    {m.value} {m.unit}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
               })()}
             </div>
           )}
