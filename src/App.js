@@ -565,6 +565,18 @@ const STYLES = `
   .sync-toast-error { background: var(--surface);  color: var(--danger); border: 1px solid rgba(184,72,56,0.3); }
 
   /* ── Onboarding card ── */
+  .toggle-row { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
+  .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; margin-top: 2px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--dim); border-radius: 22px; transition: background 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+  .toggle-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .toggle-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .settings-info-box { background: rgba(140,115,90,0.06); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 8px; }
+  .settings-info-box strong { color: var(--text); font-weight: 600; }
+
   .onboarding-card {
     background: rgba(237,163,90,0.08); border: 1px solid rgba(237,163,90,0.3);
     border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
@@ -632,7 +644,7 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
       <div className="range-labels">
         <span>{low}</span>
         <span>
-          Normal
+          Lab range
           {hasOptimal && (
             <> · <span style={{ color: "var(--accent)" }}>Optimal</span></>
           )}
@@ -643,7 +655,7 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
   );
 }
 
-function MarkerCard({ marker, unitSystem }) {
+function MarkerCard({ marker, unitSystem, showOptimalRanges }) {
   const { name, value, unit, low, high } = marker;
   var category = getMarkerCategory(name, marker.category);
   var dispVal  = displayConvert(value, name, unitSystem);
@@ -651,7 +663,7 @@ function MarkerCard({ marker, unitSystem }) {
   var dispHigh = displayConvert(high,  name, unitSystem);
   var dispUnit = displayUnit(name, unit, unitSystem);
   const status = getStatus(dispVal, dispLow, dispHigh);
-  var optimal  = getOptimalRange(name);
+  var optimal  = showOptimalRanges ? getOptimalRange(name) : null;
   var dispOptLow  = optimal ? displayConvert(optimal.low,  name, unitSystem) : null;
   var dispOptHigh = optimal ? displayConvert(optimal.high, name, unitSystem) : null;
   const [expanded,    setExpanded]    = useState(false);
@@ -1494,6 +1506,15 @@ export default function App() {
     localStorage.setItem("vitascan_unit_system", val);
   }
 
+  // ── Optimal ranges display preference ──
+  const [showOptimalRanges, setShowOptimalRanges] = useState(function() {
+    return localStorage.getItem("vitascan_optimal_ranges") !== "false";
+  });
+  function handleOptimalRangesChange(val) {
+    setShowOptimalRanges(val);
+    localStorage.setItem("vitascan_optimal_ranges", val ? "true" : "false");
+  }
+
   // ── Session bootstrap ──
   useEffect(function() {
     supabase.auth.getSession().then(function({ data: { session } }) {
@@ -1989,6 +2010,22 @@ export default function App() {
                     })}
                   </div>
                 </div>
+                <div className="form-group">
+                  <label className="form-label">Display Preferences</label>
+                  <label className="toggle-row" style={{ marginBottom: 16 }}>
+                    <div className="toggle-switch">
+                      <input type="checkbox" checked={showOptimalRanges} onChange={function(e) { handleOptimalRangesChange(e.target.checked); }} />
+                      <div className="toggle-slider" />
+                    </div>
+                    <div>
+                      <div className="toggle-label">Show Optimal Ranges</div>
+                      <div className="toggle-desc">Displays an amber zone on the marker bar representing functional medicine target ranges — tighter than standard lab reference ranges, based on longevity and preventive health research. These are <em>not</em> diagnostic thresholds and are not universally accepted by conventional medicine. Use as a starting point for discussion with your doctor.</div>
+                    </div>
+                  </label>
+                  <div className="settings-info-box">
+                    <strong>Where do reference ranges come from?</strong> The green band on each marker bar is extracted directly from your lab report — each laboratory sets its own reference ranges based on its equipment, reagents, and local population data. This means ranges may differ between labs and countries, which is normal and expected. VitaScan does not override them.
+                  </div>
+                </div>
                 {profileError && <div className="profile-error">{profileError}</div>}
                 <div className="profile-actions">
                   <button className="btn-primary" type="submit" disabled={profileSaving} style={{ width: "auto", padding: "12px 32px" }}>
@@ -2424,7 +2461,7 @@ export default function App() {
                           {abnormal > 0 && <span className="health-section-alert">{abnormal} out of range</span>}
                         </div>
                         <div className="markers-grid">
-                          {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} />; })}
+                          {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} showOptimalRanges={showOptimalRanges} />; })}
                         </div>
                       </div>
                     );
