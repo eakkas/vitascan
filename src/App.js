@@ -993,8 +993,14 @@ function normalizeMarkerName(rawName) {
       if (lower.includes(entry.keywords[j])) return entry.canonical;
     }
   }
-  // No canonical match — return title-cased original
   return rawName;
+}
+
+// Normalises every marker in an AI result to its canonical name.
+function normalizeMarkers(markers) {
+  return markers.map(function(m) {
+    return Object.assign({}, m, { name: normalizeMarkerName(m.name) });
+  });
 }
 
 // Converts value+unit to the preferred unit for a canonical marker.
@@ -1460,6 +1466,7 @@ export default function App() {
       }
       var profileText = getProfileText(profile);
       var data = await analyzeReport(base64, mediaType, profileText);
+      data = Object.assign({}, data, { markers: normalizeMarkers(data.markers || []) });
       saveToCache(hash, data);
 
       // Save to Supabase (fire-and-forget — don't block UI on this)
