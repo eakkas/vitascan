@@ -1404,7 +1404,9 @@ async function analyzeReport(base64Data, mediaType, profileText) {
     "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
     "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
     "For each marker's 'category' field use exactly one of these values: " + SECTION_LABELS.concat(["Other"]).map(function(l) { return "\"" + l + "\""; }).join(", ") + ". " +
-    "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
+    "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. " +
+    "The report may be in any language — always output marker names in English using standard international clinical terminology (e.g. 'Glucose' not 'Glikoz', 'Hemoglobin' not 'Hemoglobin A', 'TSH' not 'TSH (Tiroid Stimülan Hormon)'). " +
+    "If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
 
   var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
   var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
