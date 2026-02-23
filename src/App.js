@@ -1039,13 +1039,16 @@ function normalizeDate(raw) {
     var d = new Date(+iso[1], +iso[2] - 1, +iso[3]);
     if (!isNaN(d.getTime())) return fmt(d);
   }
-  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY (international)
-  var dmy = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
-  if (dmy) {
-    var d2 = new Date(+dmy[3], +dmy[2] - 1, +dmy[1]);
+  // Numeric NN/NN/YYYY — detect MM/DD vs DD/MM by which part exceeds 12
+  var num = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
+  if (num) {
+    var a = +num[1], b = +num[2], yr = +num[3], d2;
+    if (a > 12)      d2 = new Date(yr, b - 1, a); // a must be day → DD/MM/YYYY
+    else if (b > 12) d2 = new Date(yr, a - 1, b); // b must be day → MM/DD/YYYY
+    else             d2 = new Date(raw);            // ambiguous → let JS decide
     if (!isNaN(d2.getTime())) return fmt(d2);
   }
-  // Everything else ("January 15 2025", "Jan 15, 2025", "01/15/2025", etc.)
+  // Everything else ("January 15 2025", "Jan 15, 2025", etc.)
   var d3 = new Date(raw);
   if (!isNaN(d3.getTime())) return fmt(d3);
   return raw; // fallback
