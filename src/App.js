@@ -1027,22 +1027,28 @@ function convertToPreferred(value, rawUnit, canonicalName) {
 }
 
 // Normalises a raw date string from AI into "15 Jan 2025".
+// Always constructs Date objects from explicit parts to avoid UTC timezone offset issues.
 function normalizeDate(raw) {
   if (!raw || raw === "Unknown") return null;
-  // Try native parsing (handles ISO, "January 15 2025", "Jan 15, 2025", "01/15/2025" etc.)
-  var d = new Date(raw);
-  if (!isNaN(d.getTime())) {
+  var fmt = function(d) {
     return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
+  // YYYY-MM-DD (ISO) — must handle explicitly; new Date("YYYY-MM-DD") is UTC midnight
+  var iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    var d = new Date(+iso[1], +iso[2] - 1, +iso[3]);
+    if (!isNaN(d.getTime())) return fmt(d);
   }
-  // Try DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY (international, not parsed by JS by default)
-  var m = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
-  if (m) {
-    d = new Date(m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0"));
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    }
+  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY (international)
+  var dmy = raw.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
+  if (dmy) {
+    var d2 = new Date(+dmy[3], +dmy[2] - 1, +dmy[1]);
+    if (!isNaN(d2.getTime())) return fmt(d2);
   }
-  return raw; // fallback: return as-is
+  // Everything else ("January 15 2025", "Jan 15, 2025", "01/15/2025", etc.)
+  var d3 = new Date(raw);
+  if (!isNaN(d3.getTime())) return fmt(d3);
+  return raw; // fallback
 }
 
 // Converts a stored (US Conventional) value to the user's preferred unit system.
@@ -1544,7 +1550,7 @@ export default function App() {
           markers: data.markers,
           lifestyle: data.lifestyle,
           interpretation: data.interpretation,
-        }).then(function() {
+        }, { onConflict: 'user_id,file_hash' }).then(function() {
           loadHistory();
         }).catch(function() {});
       }
