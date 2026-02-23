@@ -581,10 +581,16 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
   );
 }
 
-function MarkerCard({ marker }) {
+function MarkerCard({ marker, unitSystem }) {
   const { name, value, unit, low, high, category } = marker;
-  const status = getStatus(value, low, high);
-  var optimal = getOptimalRange(name);
+  var dispVal  = displayConvert(value, name, unitSystem);
+  var dispLow  = displayConvert(low,   name, unitSystem);
+  var dispHigh = displayConvert(high,  name, unitSystem);
+  var dispUnit = displayUnit(name, unit, unitSystem);
+  const status = getStatus(dispVal, dispLow, dispHigh);
+  var optimal  = getOptimalRange(name);
+  var dispOptLow  = optimal ? displayConvert(optimal.low,  name, unitSystem) : null;
+  var dispOptHigh = optimal ? displayConvert(optimal.high, name, unitSystem) : null;
   const [expanded,    setExpanded]    = useState(false);
   const [info,        setInfo]        = useState(() => loadMarkerInfo(name));
   const [loadingInfo, setLoadingInfo] = useState(false);
@@ -610,13 +616,13 @@ function MarkerCard({ marker }) {
           <div className="marker-category">{category}</div>
         </div>
         <div className={"marker-value status-" + status}>
-          <div className="val">{value}</div>
-          <div className="unit">{unit}</div>
+          <div className="val">{dispVal}</div>
+          <div className="unit">{dispUnit}</div>
         </div>
       </div>
-      <RangeBar value={value} low={low} high={high} status={status}
-        optimalLow={optimal ? optimal.low : null}
-        optimalHigh={optimal ? optimal.high : null} />
+      <RangeBar value={dispVal} low={dispLow} high={dispHigh} status={status}
+        optimalLow={dispOptLow}
+        optimalHigh={dispOptHigh} />
       <div className="marker-footer">
         <StatusPill status={status} />
         <button className={"info-btn" + (expanded ? " info-btn-active" : "")} onClick={handleInfoClick} title="What is this marker?">ⓘ</button>
@@ -940,48 +946,51 @@ var CANONICAL_MAP = [
 
 // Preferred unit per canonical name + conversion factors FROM alternative units.
 // factor: multiply the raw value by this to get preferred unit.
+// preferred = stored/US Conventional unit (all values in DB use this)
+// si        = { unit, factor } where factor converts FROM preferred TO si
+// alts      = { unit: factor } where factor converts FROM alt unit TO preferred (import-time)
 var UNIT_NORMS = {
-  "Testosterone":          { preferred: "ng/dL", alts: { "nmol/l": 28.818, "pmol/l": 0.02882 } },
-  "Free Testosterone":     { preferred: "pg/mL", alts: { "pmol/l": 0.2882, "nmol/l": 288.2 } },
-  "Estradiol":             { preferred: "pg/mL", alts: { "pmol/l": 0.2724, "nmol/l": 272.4 } },
-  "Progesterone":          { preferred: "ng/mL", alts: { "nmol/l": 0.3144 } },
-  "Cortisol":              { preferred: "µg/dL", alts: { "nmol/l": 0.03625, "µg/l": 0.1 } },
-  "DHEA-S":                { preferred: "µg/dL", alts: { "µmol/l": 36.81, "nmol/l": 0.03681 } },
-  "TSH":                   { preferred: "mIU/L", alts: { "µiu/ml": 1, "uiu/ml": 1 } },
-  "Free T4":               { preferred: "ng/dL", alts: { "pmol/l": 0.07752, "nmol/l": 77.52 } },
-  "Free T3":               { preferred: "pg/mL", alts: { "pmol/l": 0.6513, "nmol/l": 651.3 } },
-  "Glucose":               { preferred: "mg/dL", alts: { "mmol/l": 18.016 } },
-  "HbA1c":                 { preferred: "%",     alts: { "mmol/mol": 0.09148 } },
-  "Insulin":               { preferred: "µIU/mL", alts: { "pmol/l": 0.1389, "miu/l": 1 } },
-  "Total Cholesterol":     { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
-  "LDL Cholesterol":       { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
-  "HDL Cholesterol":       { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
-  "Non-HDL Cholesterol":   { preferred: "mg/dL", alts: { "mmol/l": 38.67 } },
-  "Triglycerides":         { preferred: "mg/dL", alts: { "mmol/l": 88.57 } },
+  "Testosterone":          { preferred: "ng/dL",  si: { unit: "nmol/L",  factor: 0.03467 }, alts: { "nmol/l": 28.818, "pmol/l": 0.02882 } },
+  "Free Testosterone":     { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 3.467  }, alts: { "pmol/l": 0.2882, "nmol/l": 288.2 } },
+  "Estradiol":             { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 3.671  }, alts: { "pmol/l": 0.2724, "nmol/l": 272.4 } },
+  "Progesterone":          { preferred: "ng/mL",  si: { unit: "nmol/L",  factor: 3.180  }, alts: { "nmol/l": 0.3144 } },
+  "Cortisol":              { preferred: "µg/dL",  si: { unit: "nmol/L",  factor: 27.59  }, alts: { "nmol/l": 0.03625, "µg/l": 0.1 } },
+  "DHEA-S":                { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.02714}, alts: { "µmol/l": 36.81, "nmol/l": 0.03681 } },
+  "TSH":                   { preferred: "mIU/L",  alts: { "µiu/ml": 1, "uiu/ml": 1 } },
+  "Free T4":               { preferred: "ng/dL",  si: { unit: "pmol/L",  factor: 12.87  }, alts: { "pmol/l": 0.07752, "nmol/l": 77.52 } },
+  "Free T3":               { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 1.536  }, alts: { "pmol/l": 0.6513, "nmol/l": 651.3 } },
+  "Glucose":               { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.05551}, alts: { "mmol/l": 18.016 } },
+  "HbA1c":                 { preferred: "%",      alts: { "mmol/mol": 0.09148 } },
+  "Insulin":               { preferred: "µIU/mL", si: { unit: "pmol/L",  factor: 6.945  }, alts: { "pmol/l": 0.1389, "miu/l": 1 } },
+  "Total Cholesterol":     { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.02586}, alts: { "mmol/l": 38.67 } },
+  "LDL Cholesterol":       { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.02586}, alts: { "mmol/l": 38.67 } },
+  "HDL Cholesterol":       { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.02586}, alts: { "mmol/l": 38.67 } },
+  "Non-HDL Cholesterol":   { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.02586}, alts: { "mmol/l": 38.67 } },
+  "Triglycerides":         { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.01129}, alts: { "mmol/l": 88.57 } },
   "Homocysteine":          { preferred: "µmol/L", alts: { "mg/l": 7.397, "mg/dl": 73.97 } },
-  "hs-CRP":                { preferred: "mg/L",  alts: { "mg/dl": 10, "nmol/l": 0.1047 } },
-  "CRP":                   { preferred: "mg/L",  alts: { "mg/dl": 10 } },
-  "Vitamin D":             { preferred: "ng/mL", alts: { "nmol/l": 0.4006 } },
-  "Vitamin B12":           { preferred: "pg/mL", alts: { "pmol/l": 1.355, "ng/l": 1 } },
-  "Folate":                { preferred: "ng/mL", alts: { "nmol/l": 0.4413 } },
-  "Ferritin":              { preferred: "ng/mL", alts: { "µg/l": 1, "pmol/l": 0.4442 } },
-  "Serum Iron":            { preferred: "µg/dL", alts: { "µmol/l": 5.587, "mmol/l": 5587 } },
-  "Transferrin Saturation":{ preferred: "%",     alts: {} },
-  "TIBC":                  { preferred: "µg/dL", alts: { "µmol/l": 5.587 } },
-  "Hemoglobin":            { preferred: "g/dL",  alts: { "g/l": 0.1, "mmol/l": 1.6113 } },
-  "Hematocrit":            { preferred: "%",     alts: { "l/l": 100 } },
-  "Creatinine":            { preferred: "mg/dL", alts: { "µmol/l": 0.01131, "umol/l": 0.01131 } },
-  "BUN":                   { preferred: "mg/dL", alts: { "mmol/l": 2.8, "µmol/l": 0.0028 } },
-  "Uric Acid":             { preferred: "mg/dL", alts: { "µmol/l": 0.01681, "mmol/l": 16.81 } },
-  "Calcium":               { preferred: "mg/dL", alts: { "mmol/l": 4.008 } },
-  "Magnesium":             { preferred: "mg/dL", alts: { "mmol/l": 2.431, "meq/l": 1.215 } },
-  "Phosphorus":            { preferred: "mg/dL", alts: { "mmol/l": 3.097 } },
-  "Sodium":                { preferred: "mEq/L", alts: { "mmol/l": 1 } },
-  "Potassium":             { preferred: "mEq/L", alts: { "mmol/l": 1 } },
-  "Chloride":              { preferred: "mEq/L", alts: { "mmol/l": 1 } },
-  "Zinc":                  { preferred: "µg/dL", alts: { "µmol/l": 6.54, "umol/l": 6.54 } },
-  "IGF-1":                 { preferred: "ng/mL", alts: { "nmol/l": 7.647 } },
-  "PTH":                   { preferred: "pg/mL", alts: { "pmol/l": 9.43 } },
+  "hs-CRP":                { preferred: "mg/L",   alts: { "mg/dl": 10, "nmol/l": 0.1047 } },
+  "CRP":                   { preferred: "mg/L",   alts: { "mg/dl": 10 } },
+  "Vitamin D":             { preferred: "ng/mL",  si: { unit: "nmol/L",  factor: 2.496  }, alts: { "nmol/l": 0.4006 } },
+  "Vitamin B12":           { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 0.7378 }, alts: { "pmol/l": 1.355, "ng/l": 1 } },
+  "Folate":                { preferred: "ng/mL",  si: { unit: "nmol/L",  factor: 2.266  }, alts: { "nmol/l": 0.4413 } },
+  "Ferritin":              { preferred: "ng/mL",  alts: { "µg/l": 1, "pmol/l": 0.4442 } },
+  "Serum Iron":            { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.1791 }, alts: { "µmol/l": 5.587, "mmol/l": 5587 } },
+  "Transferrin Saturation":{ preferred: "%",      alts: {} },
+  "TIBC":                  { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.1791 }, alts: { "µmol/l": 5.587 } },
+  "Hemoglobin":            { preferred: "g/dL",   alts: { "g/l": 0.1, "mmol/l": 1.6113 } },
+  "Hematocrit":            { preferred: "%",      alts: { "l/l": 100 } },
+  "Creatinine":            { preferred: "mg/dL",  si: { unit: "µmol/L",  factor: 88.4   }, alts: { "µmol/l": 0.01131, "umol/l": 0.01131 } },
+  "BUN":                   { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.3570 }, alts: { "mmol/l": 2.8, "µmol/l": 0.0028 } },
+  "Uric Acid":             { preferred: "mg/dL",  si: { unit: "µmol/L",  factor: 59.48  }, alts: { "µmol/l": 0.01681, "mmol/l": 16.81 } },
+  "Calcium":               { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.2495 }, alts: { "mmol/l": 4.008 } },
+  "Magnesium":             { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.4114 }, alts: { "mmol/l": 2.431, "meq/l": 1.215 } },
+  "Phosphorus":            { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.3229 }, alts: { "mmol/l": 3.097 } },
+  "Sodium":                { preferred: "mEq/L",  alts: { "mmol/l": 1 } },
+  "Potassium":             { preferred: "mEq/L",  alts: { "mmol/l": 1 } },
+  "Chloride":              { preferred: "mEq/L",  alts: { "mmol/l": 1 } },
+  "Zinc":                  { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.1530 }, alts: { "µmol/l": 6.54, "umol/l": 6.54 } },
+  "IGF-1":                 { preferred: "ng/mL",  si: { unit: "nmol/L",  factor: 0.1307 }, alts: { "nmol/l": 7.647 } },
+  "PTH":                   { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 0.1060 }, alts: { "pmol/l": 9.43 } },
 };
 
 // Returns the canonical name for a raw marker name, or the cleaned raw name if no match.
@@ -1017,6 +1026,45 @@ function convertToPreferred(value, rawUnit, canonicalName) {
   return { value: value, unit: rawUnit };
 }
 
+// Normalises a raw date string from AI into "15 Jan 2025".
+function normalizeDate(raw) {
+  if (!raw || raw === "Unknown") return null;
+  // Try native parsing (handles ISO, "January 15 2025", "Jan 15, 2025", "01/15/2025" etc.)
+  var d = new Date(raw);
+  if (!isNaN(d.getTime())) {
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }
+  // Try DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY (international, not parsed by JS by default)
+  var m = raw.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/);
+  if (m) {
+    d = new Date(m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0"));
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+  }
+  return raw; // fallback: return as-is
+}
+
+// Converts a stored (US Conventional) value to the user's preferred unit system.
+// Returns the converted numeric value (rounded to avoid floating-point noise).
+function displayConvert(value, canonicalName, unitSystem) {
+  if (unitSystem !== "si") return value;
+  var norm = UNIT_NORMS[canonicalName];
+  if (!norm || !norm.si) return value;
+  var converted = value * norm.si.factor;
+  // Round to at most 4 significant figures
+  var magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(converted) || 1)) - 3);
+  return Math.round(converted / magnitude) * magnitude;
+}
+
+// Returns the display unit string for the given unit system.
+function displayUnit(canonicalName, storedUnit, unitSystem) {
+  if (unitSystem !== "si") return storedUnit;
+  var norm = UNIT_NORMS[canonicalName];
+  if (!norm || !norm.si) return storedUnit;
+  return norm.si.unit;
+}
+
 function getTrendMarkers(history) {
   var counts = {};
   history.forEach(function(report) {
@@ -1035,7 +1083,7 @@ function getTrendMarkers(history) {
     .sort(function(a, b) { return counts[b] - counts[a]; });
 }
 
-function getTrendData(history, canonicalName) {
+function getTrendData(history, canonicalName, unitSystem) {
   var points = [];
   // history is sorted newest-first; reverse for chronological order
   var sorted = history.slice().reverse();
@@ -1046,17 +1094,21 @@ function getTrendData(history, canonicalName) {
       var converted = convertToPreferred(match.value, match.unit, canonicalName);
       var convLow   = convertToPreferred(match.low,   match.unit, canonicalName);
       var convHigh  = convertToPreferred(match.high,  match.unit, canonicalName);
+      var dispVal  = displayConvert(converted.value,    canonicalName, unitSystem);
+      var dispLow  = displayConvert(convLow.value,      canonicalName, unitSystem);
+      var dispHigh = displayConvert(convHigh.value,     canonicalName, unitSystem);
+      var dispUnt  = displayUnit(canonicalName, converted.unit, unitSystem);
       var dateStr = report.report_date && report.report_date !== "Unknown"
         ? report.report_date
         : new Date(report.created_at).toLocaleDateString();
       points.push({
         date: dateStr,
         rawDate: report.created_at || report.report_date,
-        value: converted.value,
-        low:   convLow.value,
-        high:  convHigh.value,
-        unit:  converted.unit,
-        status: getStatus(converted.value, convLow.value, convHigh.value),
+        value: dispVal,
+        low:   dispLow,
+        high:  dispHigh,
+        unit:  dispUnt,
+        status: getStatus(dispVal, dispLow, dispHigh),
       });
     }
   });
@@ -1315,6 +1367,16 @@ export default function App() {
   // ── Trends state ──
   const [selectedTrendMarker, setSelectedTrendMarker] = useState(null);
 
+  // ── Unit system preference (persisted to localStorage) ──
+  const [unitSystem, setUnitSystem] = useState(function() {
+    return localStorage.getItem("vitascan_unit_system") || "us";
+  });
+
+  function handleUnitSystemChange(val) {
+    setUnitSystem(val);
+    localStorage.setItem("vitascan_unit_system", val);
+  }
+
   // ── Session bootstrap ──
   useEffect(function() {
     supabase.auth.getSession().then(function({ data: { session } }) {
@@ -1466,7 +1528,10 @@ export default function App() {
       }
       var profileText = getProfileText(profile);
       var data = await analyzeReport(base64, mediaType, profileText);
-      data = Object.assign({}, data, { markers: normalizeMarkers(data.markers || []) });
+      data = Object.assign({}, data, {
+        markers:    normalizeMarkers(data.markers || []),
+        reportDate: normalizeDate(data.reportDate),
+      });
       saveToCache(hash, data);
 
       // Save to Supabase (fire-and-forget — don't block UI on this)
@@ -1744,6 +1809,25 @@ export default function App() {
                     })}
                   </div>
                 </div>
+                <div className="form-group">
+                  <label className="form-label">Unit System</label>
+                  <div className="radio-group">
+                    {[
+                      { val: "us", label: "US Conventional", desc: "mg/dL · ng/dL" },
+                      { val: "si", label: "SI / Metric",      desc: "mmol/L · nmol/L" },
+                    ].map(function(opt) {
+                      return (
+                        <label key={opt.val} className={"radio-option" + (unitSystem === opt.val ? " selected" : "")}>
+                          <input type="radio" name="unit_system" value={opt.val}
+                            checked={unitSystem === opt.val}
+                            onChange={function() { handleUnitSystemChange(opt.val); }}
+                          />
+                          <span>{opt.label} <span style={{ fontSize: 11, opacity: 0.65 }}>({opt.desc})</span></span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
                 {profileError && <div className="profile-error">{profileError}</div>}
                 <div className="profile-actions">
                   <button className="btn-primary" type="submit" disabled={profileSaving} style={{ width: "auto", padding: "12px 32px" }}>
@@ -1896,7 +1980,7 @@ export default function App() {
                 }
                 var activeName = selectedTrendMarker && trendMarkers.indexOf(selectedTrendMarker) !== -1
                   ? selectedTrendMarker : trendMarkers[0];
-                var trendData = getTrendData(history, activeName);
+                var trendData = getTrendData(history, activeName, unitSystem);
                 var samplePoint = trendData[0] || {};
                 var yValues = trendData.map(function(d) { return d.value; });
                 var allLow  = trendData.map(function(d) { return d.low; });
@@ -2017,7 +2101,7 @@ export default function App() {
                           {abnormal > 0 && <span className="health-section-alert">{abnormal} out of range</span>}
                         </div>
                         <div className="markers-grid">
-                          {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} />; })}
+                          {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} />; })}
                         </div>
                       </div>
                     );
