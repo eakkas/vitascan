@@ -1418,26 +1418,17 @@ async function fetchMarkerInfo(name) {
     }
   } catch (e) { /* continue to AI */ }
 
-  // 3. AI API
-  var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
-  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
-
-  var response = await fetch(url, {
+  // 3. Proxy API
+  var { data: { session } } = await supabase.auth.getSession();
+  var token = session ? session.access_token : "";
+  var response = await fetch("/api/marker-info", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{
-        role: "user",
-        parts: [{ text: "Explain the blood test marker \"" + name + "\" in simple, patient-friendly language. Return ONLY a JSON object with no markdown: {\"what\": \"1-2 sentences on what this marker measures\", \"implications\": \"1-2 sentences on what high or low levels may indicate\"}." }]
-      }],
-      generationConfig: { maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } }
-    })
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    body: JSON.stringify({ name: name })
   });
 
-  var data = await response.json();
-  if (!response.ok || !data.candidates || !data.candidates[0]) throw new Error("Failed");
-  var raw = data.candidates[0].content.parts.map(function(p) { return p.text || ""; }).join("");
-  var info = JSON.parse(raw.replace(/```json/g, "").replace(/```/g, "").trim());
+  if (!response.ok) throw new Error("Failed");
+  var info = await response.json();
   saveMarkerInfo(name, info); // saves to localStorage + Supabase
   return info;
 }
@@ -1458,40 +1449,25 @@ function repairJSON(raw) {
 }
 
 async function analyzeReport(base64Data, mediaType, profileText) {
-  var profilePrefix = profileText ? profileText + "\n\n" : "";
-  var systemPrompt = profilePrefix +
-    "You are a clinical health data analyst. Extract every single lab marker from the uploaded report without skipping any. " +
-    "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
-    "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
-    "For each marker's 'category' field use exactly one of these values: " + SECTION_LABELS.concat(["Other"]).map(function(l) { return "\"" + l + "\""; }).join(", ") + ". " +
-    "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. " +
-    "The report may be in any language — always output marker names in English using standard international clinical terminology (e.g. 'Glucose' not 'Glikoz', 'Hemoglobin' not 'Hemoglobin A', 'TSH' not 'TSH (Tiroid Stimülan Hormon)'). " +
-    "If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
+  var { data: { session } } = await supabase.auth.getSession();
+  var token = session ? session.access_token : "";
 
-  var apiKey = process.env.REACT_APP_GEMINI_API_KEY;
-  var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
-
-  var response = await fetch(url, {
+  var response = await fetch("/api/analyze", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents: [{
-        role: "user",
-        parts: [
-          { inline_data: { mime_type: mediaType, data: base64Data } },
-          { text: "Analyze this blood test report and return the JSON." }
-        ]
-      }],
-      generationConfig: { maxOutputTokens: 16000, thinkingConfig: { thinkingBudget: 0 } }
+      base64Data: base64Data,
+      mediaType: mediaType,
+      profileText: profileText || null,
+      sectionLabels: SECTION_LABELS
     })
   });
 
   var data = await response.json();
 
   if (!response.ok) {
-    var msg = (data.error && data.error.message) ? data.error.message : JSON.stringify(data);
-    throw new Error("API error " + response.status + ": " + msg);
+    var msg = data.error || ("API error " + response.status);
+    throw new Error(msg);
   }
   if (!data.candidates || data.candidates.length === 0) {
     throw new Error("Empty response from API");
