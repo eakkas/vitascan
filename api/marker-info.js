@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
+const { markerInfoLimit } = require("./_ratelimit");
 
 const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
@@ -17,6 +18,10 @@ module.exports = async function handler(req, res) {
   if (!token) return res.status(401).json({ error: "Unauthorized" });
   var { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) return res.status(401).json({ error: "Unauthorized" });
+
+  // Rate limit: 100 marker info lookups per user per hour
+  var { success } = await markerInfoLimit.limit(user.id);
+  if (!success) return res.status(429).json({ error: "Too many requests. Please try again later." });
 
   var { name } = req.body;
   if (!name || typeof name !== "string" || name.length > 200) {

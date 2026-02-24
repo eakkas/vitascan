@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
+const { analyzeLimit } = require("./_ratelimit");
 
 const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
@@ -20,6 +21,10 @@ module.exports = async function handler(req, res) {
   if (!token) return res.status(401).json({ error: "Unauthorized" });
   var { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) return res.status(401).json({ error: "Unauthorized" });
+
+  // Rate limit: 10 analyses per user per hour
+  var { success, remaining } = await analyzeLimit.limit(user.id);
+  if (!success) return res.status(429).json({ error: "You've reached the limit of 10 report analyses per hour. Please try again later." });
 
   var { base64Data, mediaType, profileText, sectionLabels } = req.body;
   if (!base64Data || !mediaType) return res.status(400).json({ error: "Missing fields" });
