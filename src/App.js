@@ -472,6 +472,14 @@ const STYLES = `
     border-radius: 3px 0 0 3px;
   }
   .report-card:hover { border-color: rgba(237,163,90,0.5); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+  .report-card-delete { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1; opacity: 0; transition: opacity 0.15s, color 0.15s; }
+  .report-card:hover .report-card-delete { opacity: 1; }
+  .report-card-delete:hover { color: var(--danger) !important; }
+  .report-delete-confirm { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .report-delete-confirm-text { font-size: 12px; color: var(--text); font-weight: 500; }
+  .report-delete-confirm-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .report-delete-yes { background: var(--danger); color: white; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; }
+  .report-delete-no  { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); font-family: 'Open Sans', sans-serif; }
 
   .report-card-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
   .report-card-date { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 300; }
@@ -1505,7 +1513,8 @@ export default function App() {
 
   // ── Report history state ──
   const [history,        setHistory]        = useState([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoading,   setHistoryLoading]   = useState(false);
+  const [deletingReportId, setDeletingReportId] = useState(null);
   const [normalizing,    setNormalizing]    = useState(false);
 
   // ── Profile state ──
@@ -1804,6 +1813,13 @@ export default function App() {
     setFromCache(false);
     setActiveTab("markers");
     setStage("results");
+  }
+
+  // ── Report deletion ──
+  async function handleDeleteReport(id) {
+    await supabase.from('reports').delete().eq('id', id);
+    setHistory(function(h) { return h.filter(function(r) { return r.id !== id; }); });
+    setDeletingReportId(null);
   }
 
   // ── Derived counts ──
@@ -2219,8 +2235,10 @@ export default function App() {
                           var dateLabel = item.report_date && item.report_date !== "Unknown"
                             ? item.report_date
                             : new Date(item.created_at).toLocaleDateString();
+                          var isConfirming = deletingReportId === item.id;
                           return (
-                            <div key={item.id} className="report-card" onClick={function() { handleHistoryItem(item); }}>
+                            <div key={item.id} className="report-card" onClick={function() { if (!isConfirming) handleHistoryItem(item); }}>
+                              <button className="report-card-delete" title="Delete report" onClick={function(e) { e.stopPropagation(); setDeletingReportId(item.id); }}>✕</button>
                               <div className="report-card-name">
                                 {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : "Lab Report"}
                               </div>
@@ -2248,6 +2266,15 @@ export default function App() {
                                   <div style={{ width: (itemCounts.ok   / itemCounts.total * 100) + "%", background: "var(--ok)"     }}></div>
                                   <div style={{ width: (itemCounts.high / itemCounts.total * 100) + "%", background: "var(--danger)" }}></div>
                                   <div style={{ width: (itemCounts.low  / itemCounts.total * 100) + "%", background: "var(--warn)"   }}></div>
+                                </div>
+                              )}
+                              {isConfirming && (
+                                <div className="report-delete-confirm" onClick={function(e) { e.stopPropagation(); }}>
+                                  <div className="report-delete-confirm-text">Delete this report?</div>
+                                  <div className="report-delete-confirm-btns">
+                                    <button className="report-delete-yes" onClick={function() { handleDeleteReport(item.id); }}>Delete</button>
+                                    <button className="report-delete-no"  onClick={function() { setDeletingReportId(null); }}>Cancel</button>
+                                  </div>
                                 </div>
                               )}
                             </div>
