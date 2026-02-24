@@ -989,6 +989,7 @@ var CANONICAL_MAP = [
   { keywords: ["cholesterol"],                                       canonical: "Total Cholesterol" },
 
   // ── Blood sugar ──
+  { keywords: ["estimated average glucose", "eag"],                 canonical: "Estimated Average Glucose" },
   { keywords: ["hba1c", "hemoglobin a1c", "haemoglobin a1c", "glycated hemoglobin", "glycohemoglobin", "a1c"], canonical: "HbA1c" },
   { keywords: ["fasting glucose", "glucose, fasting"],              canonical: "Glucose" },
   { keywords: ["glucose"],                                           canonical: "Glucose" },
@@ -1116,7 +1117,7 @@ var UNIT_NORMS = {
   "Free T4":               { preferred: "ng/dL",  si: { unit: "pmol/L",  factor: 12.87  }, alts: { "pmol/l": 0.07752, "nmol/l": 77.52 } },
   "Free T3":               { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 1.536  }, alts: { "pmol/l": 0.6513, "nmol/l": 651.3 } },
   "Glucose":               { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.05551}, alts: { "mmol/l": 18.016 } },
-  "HbA1c":                 { preferred: "%",      alts: { "mmol/mol": 0.09148 } },
+  "HbA1c":                 { preferred: "%",      alts: { "mmol/mol": { factor: 0.09148, offset: 2.152 } } },
   "Insulin":               { preferred: "µIU/mL", si: { unit: "pmol/L",  factor: 6.945  }, alts: { "pmol/l": 0.1389, "miu/l": 1 } },
   "Total Cholesterol":     { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.02586}, alts: { "mmol/l": 38.67 } },
   "LDL Cholesterol":       { preferred: "mg/dL",  si: { unit: "mmol/L",  factor: 0.02586}, alts: { "mmol/l": 38.67 } },
@@ -1165,8 +1166,10 @@ function normalizeMarkerName(rawName) {
 }
 
 // Normalises every marker: canonical name + converts value/low/high to US Conventional unit.
+// Deduplicates: if the same canonical name appears multiple times (e.g. HbA1c as both %
+// and mmol/mol), keeps the entry with the UNIT_NORMS preferred unit; first occurrence wins on ties.
 function normalizeMarkers(markers) {
-  return markers.map(function(m) {
+  var normalized = markers.map(function(m) {
     var canonical = normalizeMarkerName(m.name);
     var val  = convertToPreferred(m.value, m.unit, canonical);
     var low  = convertToPreferred(m.low,   m.unit, canonical);
@@ -1179,6 +1182,28 @@ function normalizeMarkers(markers) {
       high:  high.value,
     });
   });
+
+  // Deduplicate in order, preferring the entry whose unit matches UNIT_NORMS preferred
+  var result = [];
+  var indexByName = {};
+  normalized.forEach(function(m) {
+    if (indexByName[m.name] === undefined) {
+      indexByName[m.name] = result.length;
+      result.push(m);
+    } else {
+      var norm = UNIT_NORMS[m.name];
+      if (norm) {
+        var preferred = norm.preferred.toLowerCase();
+        var existing = result[indexByName[m.name]];
+        if ((m.unit || "").toLowerCase() === preferred &&
+            (existing.unit || "").toLowerCase() !== preferred) {
+          result[indexByName[m.name]] = m; // replace with the preferred-unit entry
+        }
+      }
+      // else keep first occurrence
+    }
+  });
+  return result;
 }
 
 // Converts value+unit to the preferred unit for a canonical marker.
@@ -1190,7 +1215,11 @@ function convertToPreferred(value, rawUnit, canonicalName) {
   if (unitLower === norm.preferred.toLowerCase()) return { value: value, unit: norm.preferred };
   var factor = norm.alts[unitLower];
   if (factor !== undefined) {
-    return { value: parseFloat((value * factor).toFixed(2)), unit: norm.preferred };
+    // Support affine transforms { factor, offset } for conversions like HbA1c mmol/mol → %
+    var converted = typeof factor === "object"
+      ? value * factor.factor + factor.offset
+      : value * factor;
+    return { value: parseFloat(converted.toFixed(2)), unit: norm.preferred };
   }
   return { value: value, unit: rawUnit };
 }
