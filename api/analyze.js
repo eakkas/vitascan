@@ -41,7 +41,8 @@ module.exports = async function handler(req, res) {
     profilePrefix +
     "You are a clinical health data analyst. Extract every single lab marker from the uploaded report without skipping any. " +
     "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
-    "Structure: {\"patientName\":\"string\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
+    "Structure: {\"patientName\":\"string\",\"labName\":\"string or null\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
+    "For labName extract the laboratory or clinic name from the report header (e.g. 'Quest Diagnostics', 'LabCorp', 'Mayo Clinic'). Set to null if not found. " +
     "For each marker's 'category' field use exactly one of these values: " + sectionEnum + ". " +
     "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. " +
     "The report may be in any language — always output marker names in English using standard international clinical terminology (e.g. 'Glucose' not 'Glikoz', 'Hemoglobin' not 'Hemoglobin A', 'TSH' not 'TSH (Tiroid Stimülan Hormon)'). " +

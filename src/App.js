@@ -480,6 +480,11 @@ const STYLES = `
   .report-delete-confirm-btns { display: flex; gap: 8px; flex-shrink: 0; }
   .report-delete-yes { background: var(--danger); color: white; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; }
   .report-delete-no  { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); font-family: 'Open Sans', sans-serif; }
+  .report-card-lab { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .report-card-note { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .report-card-note-text { font-size: 12px; color: var(--text); line-height: 1.5; cursor: text; }
+  .report-card-note-empty { font-size: 12px; color: var(--muted); font-style: italic; cursor: text; }
+  .report-card-note-input { width: 100%; font-size: 12px; font-family: 'Open Sans', sans-serif; color: var(--text); background: rgba(255,255,255,0.5); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 8px; resize: none; outline: none; line-height: 1.5; box-sizing: border-box; }
 
   .report-card-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
   .report-card-date { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 300; }
@@ -1515,6 +1520,8 @@ export default function App() {
   const [history,        setHistory]        = useState([]);
   const [historyLoading,   setHistoryLoading]   = useState(false);
   const [deletingReportId, setDeletingReportId] = useState(null);
+  const [editingNoteId,    setEditingNoteId]    = useState(null);
+  const [editingNoteText,  setEditingNoteText]  = useState("");
   const [normalizing,    setNormalizing]    = useState(false);
 
   // ── Profile state ──
@@ -1674,7 +1681,7 @@ export default function App() {
     try {
       var { data } = await supabase
         .from('reports')
-        .select('id, created_at, patient_name, report_date, markers, lifestyle, interpretation')
+        .select('id, created_at, patient_name, lab_name, report_date, markers, lifestyle, interpretation, notes')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setHistory(data || []);
@@ -1770,6 +1777,7 @@ export default function App() {
           user_id: user.id,
           file_hash: hash,
           patient_name: data.patientName,
+          lab_name: data.labName || null,
           report_date: data.reportDate,
           markers: data.markers,
           lifestyle: data.lifestyle,
@@ -1813,6 +1821,22 @@ export default function App() {
     setFromCache(false);
     setActiveTab("markers");
     setStage("results");
+  }
+
+  // ── Report notes ──
+  function startEditingNote(e, item) {
+    e.stopPropagation();
+    setEditingNoteId(item.id);
+    setEditingNoteText(item.notes || "");
+  }
+
+  function saveNote(id) {
+    var text = editingNoteText.trim();
+    setEditingNoteId(null);
+    setHistory(function(h) {
+      return h.map(function(r) { return r.id === id ? Object.assign({}, r, { notes: text || null }) : r; });
+    });
+    supabase.from('reports').update({ notes: text || null }).eq('id', id);
   }
 
   // ── Report deletion ──
@@ -2239,6 +2263,7 @@ export default function App() {
                           return (
                             <div key={item.id} className="report-card" onClick={function() { if (!isConfirming) handleHistoryItem(item); }}>
                               <button className="report-card-delete" title="Delete report" onClick={function(e) { e.stopPropagation(); setDeletingReportId(item.id); }}>✕</button>
+                              {item.lab_name && <div className="report-card-lab">{item.lab_name}</div>}
                               <div className="report-card-name">
                                 {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : "Lab Report"}
                               </div>
@@ -2268,6 +2293,25 @@ export default function App() {
                                   <div style={{ width: (itemCounts.low  / itemCounts.total * 100) + "%", background: "var(--warn)"   }}></div>
                                 </div>
                               )}
+                              <div className="report-card-note" onClick={function(e) { e.stopPropagation(); }}>
+                                {editingNoteId === item.id ? (
+                                  <textarea
+                                    className="report-card-note-input"
+                                    rows={2}
+                                    autoFocus
+                                    value={editingNoteText}
+                                    onChange={function(e) { setEditingNoteText(e.target.value); }}
+                                    onBlur={function() { saveNote(item.id); }}
+                                    onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveNote(item.id); } }}
+                                    placeholder="Add a note…"
+                                  />
+                                ) : item.notes ? (
+                                  <div className="report-card-note-text" onClick={function(e) { startEditingNote(e, item); }}>{item.notes}</div>
+                                ) : (
+                                  <div className="report-card-note-empty" onClick={function(e) { startEditingNote(e, item); }}>Add a note…</div>
+                                )}
+                              </div>
+
                               {isConfirming && (
                                 <div className="report-delete-confirm" onClick={function(e) { e.stopPropagation(); }}>
                                   <div className="report-delete-confirm-text">Delete this report?</div>
