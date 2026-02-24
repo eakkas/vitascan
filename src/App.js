@@ -964,6 +964,7 @@ function getOptimalRange(markerName) {
 
 var CANONICAL_MAP = [
   // ── Testosterone family ──
+  { keywords: ["dihydrotestosterone", "dihidrotestosteron", "dht"],             canonical: "Dihydrotestosterone (DHT)" },
   { keywords: ["free testosterone", "testosterone, free", "testosterone free"], canonical: "Free Testosterone" },
   { keywords: ["bioavailable testosterone"],                                     canonical: "Bioavailable Testosterone" },
   { keywords: ["testosterone"],                                                  canonical: "Testosterone" },
