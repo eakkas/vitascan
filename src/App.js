@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import * as Sentry from "@sentry/react";
 import { supabase } from './supabase';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContainer } from "recharts";
 
@@ -1602,7 +1603,9 @@ export default function App() {
       setAuthLoading(false);
     });
     var { data: { subscription } } = supabase.auth.onAuthStateChange(function(_event, session) {
-      setUser(session?.user ?? null);
+      var u = session?.user ?? null;
+      setUser(u);
+      Sentry.setUser(u ? { id: u.id, email: u.email } : null);
     });
     return function() { subscription.unsubscribe(); };
   }, []);
@@ -1699,6 +1702,7 @@ export default function App() {
       await supabase.auth.signOut();
       // Auth listener will reset stage to auth screen
     } catch (e) {
+      Sentry.captureException(e);
       setProfileError(e.message || "Failed to delete account. Please try again.");
       setDeleting(false);
       setDeleteConfirm(false);
@@ -1737,7 +1741,7 @@ export default function App() {
       }
       await loadHistory();
     } catch (e) {
-      console.error("Renormalize failed:", e);
+      Sentry.captureException(e);
     } finally {
       setNormalizing(false);
     }
@@ -1825,7 +1829,7 @@ export default function App() {
       setActiveTab("markers");
       setStage("results");
     } catch (e) {
-      console.error("VitaScan error:", e);
+      Sentry.captureException(e);
       setError(e.message || "Could not analyze the report. Please try again.");
       setStage("upload");
     }
