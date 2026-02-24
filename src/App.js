@@ -1794,7 +1794,7 @@ async function fetchMarkerInfo(name) {
   // 3. Proxy API
   var { data: { session } } = await supabase.auth.getSession();
   var token = session ? session.access_token : "";
-  var response = await fetch("/api/marker-info", {
+  var response = await fetch((process.env.REACT_APP_API_BASE || "") + "/api/marker-info", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     body: JSON.stringify({ name: name })
@@ -1825,7 +1825,7 @@ async function analyzeReport(base64Data, mediaType, profileText, historySummary)
   var { data: { session } } = await supabase.auth.getSession();
   var token = session ? session.access_token : "";
 
-  var response = await fetch("/api/analyze", {
+  var response = await fetch((process.env.REACT_APP_API_BASE || "") + "/api/analyze", {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
     body: JSON.stringify({
@@ -2019,7 +2019,7 @@ export default function App() {
     try {
       var { data: { session } } = await supabase.auth.getSession();
       var token = session ? session.access_token : "";
-      var res = await fetch("/api/delete-account", {
+      var res = await fetch((process.env.REACT_APP_API_BASE || "") + "/api/delete-account", {
         method: "POST",
         headers: { "Authorization": "Bearer " + token }
       });
@@ -2214,7 +2214,7 @@ export default function App() {
         var st = getStatus(m.value, m.low, m.high);
         return m.name + ": " + m.value + " " + (m.unit || "") + (st !== "ok" ? " [" + st + "]" : "");
       }).join(", ");
-      var res = await fetch("/api/interpretation", {
+      var res = await fetch((process.env.REACT_APP_API_BASE || "") + "/api/interpretation", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
         body: JSON.stringify({
