@@ -2,6 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { supabase } from './supabase';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContainer } from "recharts";
+import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+
+var isNative = Capacitor.isNativePlatform();
+var NATIVE_REDIRECT = "com.vitascan.app://login-callback";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -1943,6 +1949,18 @@ export default function App() {
     return function() { subscription.unsubscribe(); };
   }, []);
 
+  // ── Deep link handler (Capacitor native only) ──
+  useEffect(function() {
+    if (!isNative) return;
+    var listenerPromise = CapApp.addListener("appUrlOpen", async function({ url }) {
+      if (url.includes("login-callback")) {
+        await supabase.auth.exchangeCodeForSession(url);
+        Browser.close();
+      }
+    });
+    return function() { listenerPromise.then(function(l) { l.remove(); }); };
+  }, []);
+
   // ── Load history when user signs in ──
   useEffect(function() {
     if (user) {
@@ -2085,8 +2103,17 @@ export default function App() {
   async function handleGoogleSignIn() {
     setAuthBusy(true);
     setAuthError(null);
-    var { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-    if (err) { setAuthError(err.message); setAuthBusy(false); }
+    if (isNative) {
+      var { data, error: err } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true },
+      });
+      if (err) { setAuthError(err.message); setAuthBusy(false); return; }
+      if (data?.url) { await Browser.open({ url: data.url, windowName: '_self' }); }
+    } else {
+      var { error: err2 } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      if (err2) { setAuthError(err2.message); setAuthBusy(false); }
+    }
   }
 
   async function handleMagicLink(e) {
@@ -2094,7 +2121,10 @@ export default function App() {
     if (!authEmail.trim()) return;
     setAuthBusy(true);
     setAuthError(null);
-    var { error: err } = await supabase.auth.signInWithOtp({ email: authEmail.trim() });
+    var { error: err } = await supabase.auth.signInWithOtp({
+      email: authEmail.trim(),
+      options: { emailRedirectTo: isNative ? NATIVE_REDIRECT : window.location.origin },
+    });
     setAuthBusy(false);
     if (err) { setAuthError(err.message); }
     else     { setAuthMode("magic_sent"); }
