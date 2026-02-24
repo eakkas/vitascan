@@ -1955,6 +1955,13 @@ export default function App() {
     var listenerPromise = CapApp.addListener("appUrlOpen", async function({ url }) {
       if (url.includes("login-callback")) {
         await supabase.auth.exchangeCodeForSession(url);
+        // onAuthStateChange doesn't fire reliably in Capacitor WebView —
+        // explicitly pull the session and update state.
+        var { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser(session.user);
+          setAuthLoading(false);
+        }
         Browser.close();
       }
     });
