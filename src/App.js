@@ -273,6 +273,11 @@ const STYLES = `
     line-height: 1.6; display: flex; gap: 12px; align-items: flex-start; margin-top: 32px;
   }
   .disclaimer-icon { color: var(--warn); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .stale-notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: rgba(201,123,40,0.06); border: 1px solid rgba(201,123,40,0.2); border-radius: 10px; margin-bottom: 20px; }
+  .stale-notice-text { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .btn-refresh { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+  .btn-refresh:hover { background: rgba(237,163,90,0.1); }
+  .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
   .app-footer { border-top: 1px solid var(--border); padding: 16px 40px; text-align: center; font-size: 11px; color: var(--muted); line-height: 1.6; background: var(--bg); }
   @media (max-width: 600px) { .app-footer { padding: 16px 20px; } }
 
@@ -673,6 +678,30 @@ const STYLES = `
 `;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
+
+function parseReportDate(item) {
+  if (item.report_date) {
+    var d = new Date(item.report_date);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return new Date(item.created_at);
+}
+
+function buildHistorySummary(history) {
+  if (!history || history.length === 0) return null;
+  var sorted = history.slice().sort(function(a, b) {
+    return parseReportDate(a) - parseReportDate(b);
+  }).slice(-4); // last 4 reports
+  var lines = sorted.map(function(r) {
+    var dateLabel = r.report_date || new Date(r.created_at).toLocaleDateString();
+    var markers = (r.markers || []).slice(0, 20).map(function(m) {
+      var st = getStatus(m.value, m.low, m.high);
+      return m.name + ": " + m.value + " " + (m.unit || "") + (st !== "ok" ? " [" + st + "]" : "");
+    }).join(", ");
+    return dateLabel + " — " + markers;
+  }).join("\n");
+  return lines || null;
+}
 
 function getStatus(value, low, high) {
   if (value < low) return "low";
@@ -1501,7 +1530,7 @@ function repairJSON(raw) {
   }
 }
 
-async function analyzeReport(base64Data, mediaType, profileText) {
+async function analyzeReport(base64Data, mediaType, profileText, historySummary) {
   var { data: { session } } = await supabase.auth.getSession();
   var token = session ? session.access_token : "";
 
@@ -1512,7 +1541,8 @@ async function analyzeReport(base64Data, mediaType, profileText) {
       base64Data: base64Data,
       mediaType: mediaType,
       profileText: profileText || null,
-      sectionLabels: SECTION_LABELS
+      sectionLabels: SECTION_LABELS,
+      historySummary: historySummary || null
     })
   });
 
@@ -1552,7 +1582,8 @@ export default function App() {
   // ── Report history state ──
   const [history,        setHistory]        = useState([]);
   const [historyLoading,   setHistoryLoading]   = useState(false);
-  const [deletingReportId, setDeletingReportId] = useState(null);
+  const [deletingReportId,         setDeletingReportId]         = useState(null);
+  const [refreshingInterpretation, setRefreshingInterpretation] = useState(false);
   const [editingNoteId,    setEditingNoteId]    = useState(null);
   const [editingNoteText,  setEditingNoteText]  = useState("");
   const [normalizing,    setNormalizing]    = useState(false);
@@ -1717,7 +1748,7 @@ export default function App() {
     try {
       var { data } = await supabase
         .from('reports')
-        .select('id, created_at, patient_name, lab_name, report_date, markers, lifestyle, interpretation, notes')
+        .select('id, created_at, patient_name, lab_name, report_date, markers, lifestyle, interpretation, interpretation_stale, notes')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setHistory(data || []);
@@ -1800,7 +1831,8 @@ export default function App() {
         return;
       }
       var profileText = getProfileText(profile);
-      var data = await analyzeReport(base64, mediaType, profileText);
+      var historySummary = buildHistorySummary(history);
+      var data = await analyzeReport(base64, mediaType, profileText, historySummary);
       data = Object.assign({}, data, {
         markers:    normalizeMarkers(data.markers || []),
         reportDate: normalizeDate(data.reportDate),
@@ -1819,6 +1851,14 @@ export default function App() {
           lifestyle: data.lifestyle,
           interpretation: data.interpretation,
         }, { onConflict: 'user_id,file_hash' }).then(function() {
+          // Mark later reports stale if this report has an earlier date
+          var newDate = new Date(data.reportDate || Date.now());
+          var staleIds = history
+            .filter(function(r) { return parseReportDate(r) > newDate; })
+            .map(function(r) { return r.id; });
+          if (staleIds.length > 0) {
+            supabase.from('reports').update({ interpretation_stale: true }).in('id', staleIds);
+          }
           loadHistory();
           showSyncToast("saved");
         }).catch(function() {
@@ -1836,7 +1876,7 @@ export default function App() {
       setStage("upload");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile]);
+  }, [user, profile, history]);
 
   const onDrop = useCallback(function(e) {
     e.preventDefault();
@@ -1848,15 +1888,56 @@ export default function App() {
   // ── History card click ──
   function handleHistoryItem(item) {
     setResults({
-      patientName:    item.patient_name,
-      reportDate:     item.report_date,
-      markers:        normalizeMarkers(item.markers || []),
-      lifestyle:      item.lifestyle || [],
-      interpretation: item.interpretation || "",
+      reportId:            item.id,
+      patientName:         item.patient_name,
+      reportDate:          item.report_date,
+      markers:             normalizeMarkers(item.markers || []),
+      lifestyle:           item.lifestyle || [],
+      interpretation:      item.interpretation || "",
+      interpretationStale: item.interpretation_stale || false,
     });
     setFromCache(false);
     setActiveTab("markers");
     setStage("results");
+  }
+
+  // ── Interpretation refresh ──
+  async function handleRefreshInterpretation() {
+    if (!results || !results.reportId) return;
+    setRefreshingInterpretation(true);
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      var token = session ? session.access_token : "";
+      var otherReports = history.filter(function(r) { return r.id !== results.reportId; });
+      var markersSummary = (results.markers || []).map(function(m) {
+        var st = getStatus(m.value, m.low, m.high);
+        return m.name + ": " + m.value + " " + (m.unit || "") + (st !== "ok" ? " [" + st + "]" : "");
+      }).join(", ");
+      var res = await fetch("/api/interpretation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({
+          reportId:       results.reportId,
+          markersSummary: markersSummary,
+          historySummary: buildHistorySummary(otherReports),
+          profileText:    getProfileText(profile),
+        })
+      });
+      if (!res.ok) throw new Error("Failed to refresh");
+      var body = await res.json();
+      setResults(function(r) { return Object.assign({}, r, { interpretation: body.interpretation, interpretationStale: false }); });
+      setHistory(function(h) {
+        return h.map(function(r) {
+          return r.id === results.reportId
+            ? Object.assign({}, r, { interpretation: body.interpretation, interpretation_stale: false })
+            : r;
+        });
+      });
+    } catch (e) {
+      Sentry.captureException(e);
+    } finally {
+      setRefreshingInterpretation(false);
+    }
   }
 
   // ── Report notes ──
@@ -2768,6 +2849,14 @@ export default function App() {
               {activeTab === "insights" && (
                 <div className="insights-panel">
                   <h3><div className="insight-icon blue">🔬</div>Clinical Interpretation</h3>
+                  {results.interpretationStale && (
+                    <div className="stale-notice">
+                      <div className="stale-notice-text">A report was added that may affect this interpretation.</div>
+                      <button className="btn-refresh" onClick={handleRefreshInterpretation} disabled={refreshingInterpretation}>
+                        {refreshingInterpretation ? "Refreshing…" : "↺ Refresh"}
+                      </button>
+                    </div>
+                  )}
                   {results.interpretation && results.interpretation.trim() ? (
                     results.interpretation.split("\n").filter(Boolean).map(function(p, i) {
                       return <p key={i} className="insight-text" style={{ marginBottom: 14 }}>{p}</p>;

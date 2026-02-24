@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   var { success, remaining } = await analyzeLimit.limit(user.id);
   if (!success) return res.status(429).json({ error: "You've reached the limit of 10 report analyses per hour. Please try again later." });
 
-  var { base64Data, mediaType, profileText, sectionLabels } = req.body;
+  var { base64Data, mediaType, profileText, sectionLabels, historySummary } = req.body;
   if (!base64Data || !mediaType) return res.status(400).json({ error: "Missing fields" });
   // Approx 10 MB file limit (base64 is ~33% larger than binary)
   if (base64Data.length > 14 * 1024 * 1024) return res.status(400).json({ error: "File too large (max 10 MB)" });
@@ -37,8 +37,13 @@ module.exports = async function handler(req, res) {
   var sections = Array.isArray(sectionLabels) ? sectionLabels : [];
   var sectionEnum = sections.concat(["Other"]).map(function(l) { return "\"" + l + "\""; }).join(", ");
   var profilePrefix = profileText ? profileText + "\n\n" : "";
+  var historyPrefix = historySummary ? historySummary + "\n\n" : "";
+  var interpretationInstruction = historySummary
+    ? "For the interpretation field write 3-4 sentences: summarise the current results and compare trends with previous reports, explicitly noting any improvements or deteriorations (e.g. 'LDL has decreased from X to Y')."
+    : "For the interpretation field write 2-3 sentences summarising the key findings.";
   var systemPrompt =
     profilePrefix +
+    historyPrefix +
     "You are a clinical health data analyst. Extract every single lab marker from the uploaded report without skipping any. " +
     "Return ONLY a valid JSON object with no markdown, no preamble, no extra text. " +
     "Structure: {\"patientName\":\"string\",\"labName\":\"string or null\",\"reportDate\":\"string\",\"markers\":[{\"name\":\"string\",\"value\":number,\"unit\":\"string\",\"low\":number,\"high\":number,\"category\":\"string\"}],\"lifestyle\":[{\"emoji\":\"string\",\"label\":\"string\",\"desc\":\"string\"}],\"interpretation\":\"string\"}. " +
@@ -46,7 +51,8 @@ module.exports = async function handler(req, res) {
     "For each marker's 'category' field use exactly one of these values: " + sectionEnum + ". " +
     "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. " +
     "The report may be in any language — always output marker names in English using standard international clinical terminology (e.g. 'Glucose' not 'Glikoz', 'Hemoglobin' not 'Hemoglobin A', 'TSH' not 'TSH (Tiroid Stimülan Hormon)'). " +
-    "If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. Keep interpretation to 2 sentences max. Output ONLY the raw JSON object.";
+    "If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. " +
+    interpretationInstruction + " Output ONLY the raw JSON object.";
 
   var geminiRes = await fetch(GEMINI_URL, {
     method: "POST",

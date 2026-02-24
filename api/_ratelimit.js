@@ -21,4 +21,11 @@ const markerInfoLimit = new Ratelimit({
   prefix: "rl:marker-info",
 });
 
-module.exports = { analyzeLimit, markerInfoLimit };
+// 20 interpretation refreshes per user per hour
+const interpretationLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 h"),
+  prefix: "rl:interpretation",
+});
+
+module.exports = { analyzeLimit, markerInfoLimit, interpretationLimit };
