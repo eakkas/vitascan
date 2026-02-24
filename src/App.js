@@ -273,6 +273,8 @@ const STYLES = `
     line-height: 1.6; display: flex; gap: 12px; align-items: flex-start; margin-top: 32px;
   }
   .disclaimer-icon { color: var(--warn); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .app-footer { border-top: 1px solid var(--border); padding: 16px 40px; text-align: center; font-size: 11px; color: var(--muted); line-height: 1.6; background: var(--bg); }
+  @media (max-width: 600px) { .app-footer { padding: 16px 20px; } }
 
   .tabs {
     display: flex; gap: 4px; background: var(--surface);
@@ -2813,14 +2815,18 @@ export default function App() {
               <div className="disclaimer">
                 <span className="disclaimer-icon">⚠</span>
                 <span>
-                  This analysis is for informational purposes only and does not constitute medical advice.
-                  Always consult a qualified healthcare professional before making any health decisions.
+                  This is an AI-generated analysis for informational purposes only. It is not a medical device and does not constitute medical advice.
+                  AI interpretation may contain errors — always verify against your original lab report and consult a qualified healthcare professional before making any health decisions.
                 </span>
               </div>
             </>
           )}
 
         </main>
+        <footer className="app-footer">
+          VitaScan provides AI-generated analysis for <strong>informational purposes only</strong>. It is not a medical device and does not constitute medical advice.
+          AI analysis may contain errors — always verify results with your original lab report and consult a qualified healthcare professional before making any health decisions.
+        </footer>
       </div>
       {syncToast && (
         <div className={"sync-toast sync-toast-" + syncToast}>
