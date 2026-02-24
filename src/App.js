@@ -577,8 +577,10 @@ const STYLES = `
   .chip-dot-high { background: var(--danger); }
   .chip-dot-low  { background: var(--warn); }
 
-  /* ── Chip section divider ── */
-  .chip-section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 4px 2px 2px; align-self: center; white-space: nowrap; }
+  /* ── Chip groups (stacked sections) ── */
+  .chip-groups { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
+  .chip-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+  .chip-group-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
   /* ── Optimal ranges ── */
   .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.55); border-left: 2px solid rgba(237,163,90,0.9); border-right: 2px solid rgba(237,163,90,0.9); z-index: 1; }
@@ -2454,39 +2456,70 @@ export default function App() {
                       })}
                     </div>
 
-                    {/* Chip list — out-of-range first, grouped by section when showing all */}
-                    <div className="chip-list" style={{ marginBottom: 24 }}>
+                    {/* Chip groups — stacked by section */}
+                    <div className="chip-groups">
                       {(function() {
                         if (selectedTrendDomain) {
-                          // Single domain: flat list, out-of-range first
-                          return visibleMarkers.map(function(name) {
-                            var st = markerLatestStatus[name];
-                            return (
-                              <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
-                                {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
-                                {name}
-                              </button>
-                            );
-                          });
+                          // Single domain selected: one flat group, no label needed
+                          return (
+                            <div className="chip-group-chips">
+                              {visibleMarkers.map(function(name) {
+                                var st = markerLatestStatus[name];
+                                return (
+                                  <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
+                                    {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
+                                    {name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
                         }
-                        // All domains: inject section labels as dividers
-                        var rendered = [];
-                        var lastSection = null;
-                        visibleMarkers.forEach(function(name) {
-                          var cat = getMarkerCategory(name) || "Other";
-                          if (cat !== lastSection) {
-                            rendered.push(<span key={"sec-" + cat} className="chip-section-label">{cat}</span>);
-                            lastSection = cat;
-                          }
-                          var st = markerLatestStatus[name];
-                          rendered.push(
-                            <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
-                              {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
-                              {name}
-                            </button>
+                        // All domains: one stacked block per section
+                        var groups = [];
+                        var seen = {};
+                        MARKER_SECTIONS.forEach(function(sec) {
+                          var sectionMarkers = visibleMarkers.filter(function(n) { return getMarkerCategory(n) === sec.label; });
+                          if (sectionMarkers.length === 0) return;
+                          groups.push(
+                            <div key={sec.id}>
+                              <div className="chip-group-label" style={{ color: sec.color || "var(--muted)" }}>{sec.emoji} {sec.label}</div>
+                              <div className="chip-group-chips">
+                                {sectionMarkers.map(function(name) {
+                                  seen[name] = true;
+                                  var st = markerLatestStatus[name];
+                                  return (
+                                    <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
+                                      {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
+                                      {name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           );
                         });
-                        return rendered;
+                        // Catch uncategorized markers
+                        var other = visibleMarkers.filter(function(n) { return !seen[n]; });
+                        if (other.length > 0) {
+                          groups.push(
+                            <div key="other">
+                              <div className="chip-group-label">Other</div>
+                              <div className="chip-group-chips">
+                                {other.map(function(name) {
+                                  var st = markerLatestStatus[name];
+                                  return (
+                                    <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
+                                      {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
+                                      {name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return groups;
                       })()}
                     </div>
 
