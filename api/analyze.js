@@ -9,6 +9,9 @@ const supabase = createClient(
   process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
+// Raise Vercel's default 4.5 MB body limit — PDFs as base64 can exceed it
+module.exports.config = { api: { bodyParser: { sizeLimit: "20mb" } } };
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
