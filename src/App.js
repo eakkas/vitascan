@@ -537,6 +537,13 @@ const STYLES = `
   .checkbox-option input { display: none; }
   .profile-actions { display: flex; gap: 12px; margin-top: 32px; }
   .profile-error { font-size: 13px; color: var(--danger); margin-top: 12px; }
+  .danger-zone { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .danger-zone-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
+  .btn-delete { background: none; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'Open Sans', sans-serif; }
+  .btn-delete:hover { background: rgba(184,72,56,0.08); }
+  .delete-confirm-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .btn-delete-confirm { background: var(--danger); color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; }
+  .btn-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
   /* ── Trends screen ── */
   .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
@@ -1504,8 +1511,10 @@ export default function App() {
   // ── Profile state ──
   const [profile,       setProfile]       = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileError,  setProfileError]  = useState(null);
+  const [profileSaving,  setProfileSaving]  = useState(false);
+  const [profileError,   setProfileError]   = useState(null);
+  const [deleteConfirm,  setDeleteConfirm]  = useState(false);
+  const [deleting,       setDeleting]       = useState(false);
   const [profileForm,   setProfileForm]   = useState({
     full_name: "", age: "", biological_sex: "", conditions: [],
   });
@@ -1619,6 +1628,34 @@ export default function App() {
       setProfileError(e2.message || "Could not save profile.");
     } finally {
       setProfileSaving(false);
+    }
+  }
+
+  // ── Account deletion ──
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      var token = session ? session.access_token : "";
+      var res = await fetch("/api/delete-account", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (!res.ok) {
+        var body = await res.json();
+        throw new Error(body.error || "Failed to delete account");
+      }
+      // Clear all local caches
+      localStorage.removeItem("vitascan_cache");
+      localStorage.removeItem("vitascan_marker_info");
+      localStorage.removeItem("vitascan_unit_system");
+      localStorage.removeItem("vitascan_optimal_ranges");
+      await supabase.auth.signOut();
+      // Auth listener will reset stage to auth screen
+    } catch (e) {
+      setProfileError(e.message || "Failed to delete account. Please try again.");
+      setDeleting(false);
+      setDeleteConfirm(false);
     }
   }
 
@@ -2063,6 +2100,29 @@ export default function App() {
                   )}
                 </div>
               </form>
+
+              {profile !== null && (
+                <div className="danger-zone">
+                  <div className="danger-zone-label">Danger Zone</div>
+                  {!deleteConfirm ? (
+                    <button className="btn-delete" onClick={function() { setDeleteConfirm(true); }}>
+                      Delete Account
+                    </button>
+                  ) : (
+                    <div>
+                      <div className="delete-confirm-text">This permanently deletes all your reports, profile, and account. It cannot be undone.</div>
+                      <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+                        <button className="btn-delete-confirm" onClick={handleDeleteAccount} disabled={deleting}>
+                          {deleting ? "Deleting…" : "Yes, delete everything"}
+                        </button>
+                        <button className="btn btn-ghost" onClick={function() { setDeleteConfirm(false); }} disabled={deleting}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
