@@ -1949,23 +1949,38 @@ export default function App() {
     return function() { subscription.unsubscribe(); };
   }, []);
 
-  // ── Deep link handler (Capacitor native only) ──
+  // ── Deep link + foreground handler (Capacitor native only) ──
   useEffect(function() {
     if (!isNative) return;
-    var listenerPromise = CapApp.addListener("appUrlOpen", async function({ url }) {
+
+    async function syncSession() {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        setAuthLoading(false);
+      }
+    }
+
+    // Called when app is opened via custom URL scheme (magic link / OAuth redirect)
+    var urlListenerPromise = CapApp.addListener("appUrlOpen", async function({ url }) {
       if (url.includes("login-callback")) {
         await supabase.auth.exchangeCodeForSession(url);
-        // onAuthStateChange doesn't fire reliably in Capacitor WebView —
-        // explicitly pull the session and update state.
-        var { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-          setAuthLoading(false);
-        }
+        await syncSession();
         Browser.close();
       }
     });
-    return function() { listenerPromise.then(function(l) { l.remove(); }); };
+
+    // Backup: whenever app returns to foreground, re-check session.
+    // Catches cases where appUrlOpen fires before the listener is ready,
+    // or where exchangeCodeForSession succeeds but state update is missed.
+    var stateListenerPromise = CapApp.addListener("appStateChange", async function({ isActive }) {
+      if (isActive) { await syncSession(); }
+    });
+
+    return function() {
+      urlListenerPromise.then(function(l) { l.remove(); });
+      stateListenerPromise.then(function(l) { l.remove(); });
+    };
   }, []);
 
   // ── Load history when user signs in ──
