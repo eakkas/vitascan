@@ -710,7 +710,7 @@ function getStatus(value, low, high) {
 }
 
 function StatusPill({ status }) {
-  const map = { ok: ["pill-ok", "Normal"], high: ["pill-high", "High"], low: ["pill-low", "Low"] };
+  const map = { ok: ["pill-ok", t("pill_normal")], high: ["pill-high", t("pill_high")], low: ["pill-low", t("pill_low")] };
   const [cls, label] = map[status] || map.ok;
   return <span className={"status-pill " + cls}>{label}</span>;
 }
@@ -740,9 +740,9 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
       <div className="range-labels">
         <span>{low}</span>
         <span>
-          Lab range
+          {t("range_lab")}
           {hasOptimal && (
-            <> · <span style={{ color: "var(--accent)" }}>Optimal</span></>
+            <> · <span style={{ color: "var(--accent)" }}>{t("range_optimal")}</span></>
           )}
         </span>
         <span>{high}</span>
@@ -784,7 +784,7 @@ function MarkerCard({ marker, unitSystem, showOptimalRanges }) {
       <div className="marker-top">
         <div>
           <div className="marker-name">{name}</div>
-          <div className="marker-category">{category}</div>
+          <div className="marker-category">{localizeSection(category)}</div>
         </div>
         <div className={"marker-value status-" + status}>
           <div className="val">{dispVal}</div>
@@ -800,16 +800,16 @@ function MarkerCard({ marker, unitSystem, showOptimalRanges }) {
       </div>
       {expanded && (
         <div className="info-panel">
-          {loadingInfo && <div className="info-loading">Loading…</div>}
-          {infoError   && <div className="info-error" onClick={handleInfoClick}><span>↺</span> Could not load info — tap to retry</div>}
+          {loadingInfo && <div className="info-loading">{t("info_loading")}</div>}
+          {infoError   && <div className="info-error" onClick={handleInfoClick}>{t("info_error")}</div>}
           {info && !loadingInfo && (
             <>
               <div className="info-block">
-                <div className="info-block-label">What is this?</div>
+                <div className="info-block-label">{t("info_what")}</div>
                 <div className="info-block-text">{info.what}</div>
               </div>
               <div className="info-block">
-                <div className="info-block-label">What does it mean?</div>
+                <div className="info-block-label">{t("info_implications")}</div>
                 <div className="info-block-text">{info.implications}</div>
               </div>
             </>
@@ -824,44 +824,44 @@ function MarkerCard({ marker, unitSystem, showOptimalRanges }) {
 
 var MARKER_SECTIONS = [
   {
-    id: "cardiovascular", label: "Heart & Cardiovascular", emoji: "❤️", color: "#B84838",
+    id: "cardiovascular", label: "Heart & Cardiovascular", labelTr: "Kalp ve Kardiyovasküler", emoji: "❤️", color: "#B84838",
     keywords: ["cholesterol", "ldl", "hdl", "triglyceride", "vldl", "lipoprotein",
       "apolipoprotein", "apob", "apoa", "apo b", "apo a", "homocysteine",
       "bnp", "nt-probnp", "troponin", "creatine kinase", "ck-mb", "ck mb",
       "hs-crp", "hscrp", "c-reactive protein", "non-hdl", "cardiac", "d-dimer"]
   },
   {
-    id: "liver", label: "Liver Health", emoji: "🫁", color: "#A06830",
+    id: "liver", label: "Liver Health", labelTr: "Karaciğer Sağlığı", emoji: "🫁", color: "#A06830",
     keywords: ["alt", "alanine aminotransferase", "sgpt", "ast", "aspartate aminotransferase",
       "sgot", "alp", "alkaline phosphatase", "ggt", "gamma-glutamyl", "gamma glutamyl",
       "bilirubin", "albumin", "total protein", "globulin", "a/g ratio", "ag ratio",
       "prothrombin", "inr", "lactate dehydrogenase", "ldh"]
   },
   {
-    id: "kidney", label: "Kidney Health", emoji: "🫘", color: "#4A9E80",
+    id: "kidney", label: "Kidney Health", labelTr: "Böbrek Sağlığı", emoji: "🫘", color: "#4A9E80",
     keywords: ["creatinine", "bun", "blood urea nitrogen", "urea", "egfr", "gfr",
       "uric acid", "cystatin", "microalbumin", "uacr", "renal", "bun/creatinine"]
   },
   {
-    id: "blood_sugar", label: "Blood Sugar & Metabolic", emoji: "🩸", color: "#C97B28",
+    id: "blood_sugar", label: "Blood Sugar & Metabolic", labelTr: "Kan Şekeri ve Metabolizma", emoji: "🩸", color: "#C97B28",
     keywords: ["glucose", "hba1c", "hemoglobin a1c", "haemoglobin a1c", "glycated hemoglobin",
       "insulin", "homa", "c-peptide", "c peptide", "fructosamine", "blood sugar"]
   },
   {
-    id: "blood_count", label: "Complete Blood Count", emoji: "🔬", color: "#B84860",
+    id: "blood_count", label: "Complete Blood Count", labelTr: "Tam Kan Sayımı", emoji: "🔬", color: "#B84860",
     keywords: ["wbc", "white blood cell", "white blood count", "rbc", "red blood cell",
       "red blood count", "hemoglobin", "haemoglobin", "hematocrit", "haematocrit",
       "mcv", "mch", "mchc", "rdw", "platelet", "plt", "mpv",
       "neutrophil", "lymphocyte", "monocyte", "eosinophil", "basophil", "reticulocyte"]
   },
   {
-    id: "thyroid", label: "Thyroid", emoji: "🦋", color: "#5080B0",
+    id: "thyroid", label: "Thyroid", labelTr: "Tiroid", emoji: "🦋", color: "#5080B0",
     keywords: ["tsh", "thyroid stimulating", "thyrotropin", "free t4", "ft4", "thyroxine",
       "free t3", "ft3", "triiodothyronine", "anti-tpo", "anti tpo", "thyroid peroxidase",
       "anti-tg", "thyroglobulin", "reverse t3", "rt3", "thyroid"]
   },
   {
-    id: "vitamins", label: "Vitamins & Minerals", emoji: "💊", color: "#5A8A3A",
+    id: "vitamins", label: "Vitamins & Minerals", labelTr: "Vitaminler ve Mineraller", emoji: "💊", color: "#5A8A3A",
     keywords: ["vitamin d", "25-oh", "25 oh", "vitamin b12", "b12", "cobalamin",
       "folate", "folic acid", "vitamin b6", "pyridoxine", "vitamin c", "ascorbic",
       "vitamin a", "retinol", "vitamin e", "tocopherol", "vitamin k",
@@ -869,12 +869,12 @@ var MARKER_SECTIONS = [
       "selenium", "copper", "phosphorus", "phosphate", "iodine"]
   },
   {
-    id: "electrolytes", label: "Electrolytes", emoji: "⚡", color: "#6E78C0",
+    id: "electrolytes", label: "Electrolytes", labelTr: "Elektrolitler", emoji: "⚡", color: "#6E78C0",
     keywords: ["sodium", "potassium", "chloride", "bicarbonate", "co2", "carbon dioxide",
       "anion gap", "osmolality", "osmolarity"]
   },
   {
-    id: "hormones", label: "Hormones", emoji: "⚗️", color: "#8B5EA0",
+    id: "hormones", label: "Hormones", labelTr: "Hormonlar", emoji: "⚗️", color: "#8B5EA0",
     keywords: ["testosterone", "estradiol", "estrogen", "oestradiol", "progesterone",
       "fsh", "follicle stimulating", "lh", "luteinizing", "luteinising",
       "prolactin", "dhea", "cortisol", "shbg", "sex hormone binding",
@@ -882,24 +882,315 @@ var MARKER_SECTIONS = [
       "androstenedione", "dihydrotestosterone", "dht", "parathyroid", "pth"]
   },
   {
-    id: "inflammation", label: "Inflammation & Immunity", emoji: "🛡️", color: "#3A8FA8",
+    id: "inflammation", label: "Inflammation & Immunity", labelTr: "İltihap ve Bağışıklık", emoji: "🛡️", color: "#3A8FA8",
     keywords: ["crp", "c-reactive protein", "esr", "erythrocyte sedimentation",
       "interleukin", "il-6", "tnf", "procalcitonin", "pct",
       "complement", "immunoglobulin", "igg", "iga", "igm",
       "ana", "antinuclear", "rheumatoid factor", "anti-ccp"]
   },
   {
-    id: "bone", label: "Bone Health", emoji: "🦴", color: "#6A8090",
+    id: "bone", label: "Bone Health", labelTr: "Kemik Sağlığı", emoji: "🦴", color: "#6A8090",
     keywords: ["calcium", "osteocalcin", "ctx", "c-telopeptide", "bone density",
       "deoxypyridinoline", "p1np", "bone alkaline"]
   },
   {
-    id: "iron", label: "Iron Studies", emoji: "🔩", color: "#B07840",
+    id: "iron", label: "Iron Studies", labelTr: "Demir Çalışmaları", emoji: "🔩", color: "#B07840",
     keywords: ["iron", "serum iron", "tibc", "transferrin", "ferritin", "saturation"]
   },
 ];
 
 var CONDITION_OPTIONS = ["Diabetes","Hypertension","High Cholesterol","Thyroid Disorder","Anemia","Other"];
+
+var CONDITION_KEYS = {
+  "Diabetes":         "cond_diabetes",
+  "Hypertension":     "cond_hypertension",
+  "High Cholesterol": "cond_high_cholesterol",
+  "Thyroid Disorder": "cond_thyroid",
+  "Anemia":           "cond_anemia",
+  "Other":            "cond_other",
+};
+
+// ── i18n ──────────────────────────────────────────────────────────────────────
+
+var STRINGS = {
+  en: {
+    auth_tagline: "Your blood work, decoded.",
+    auth_check_inbox: "Check your inbox!",
+    auth_sent_to: "We sent a sign-in link to",
+    auth_click_link: "Click the link to continue.",
+    auth_use_different: "Use a different email",
+    auth_google: "Continue with Google",
+    auth_or: "or",
+    auth_email_ph: "Enter your email",
+    auth_sending: "Sending\u2026",
+    auth_magic_link: "Send magic link",
+    hdr_edit_profile: "Edit profile",
+    hdr_trends: "Trends",
+    hdr_debug: "Debug: marker table",
+    hdr_history: "Report history",
+    hdr_sign_out: "Sign out",
+    loading_analyzing: "Analyzing your report",
+    loading_sub: "Extracting markers \u00b7 Interpreting results \u00b7 Generating guidance",
+    upload_title1: "Your blood work,",
+    upload_title2: "decoded.",
+    upload_sub: "Upload your lab report and get instant visual insights and lifestyle guidance.",
+    upload_drop_label: "Drop your lab report here",
+    upload_drop_hint: "PDF \u00b7 JPG \u00b7 PNG supported",
+    upload_privacy: "Your report is processed securely and saved to your account.",
+    btn_new_report: "+ New Report",
+    history_title: "Report History",
+    history_saved: "{{n}} report{{s}} saved",
+    history_empty_text: "No reports yet",
+    history_empty_sub: "Upload your first lab report to get started.",
+    history_fallback_name: "Lab Report",
+    stat_total: "Total",
+    stat_normal: "Normal",
+    stat_high: "High",
+    stat_low: "Low",
+    note_ph: "Add a note\u2026",
+    delete_report_q: "Delete this report?",
+    btn_delete: "Delete",
+    btn_cancel: "Cancel",
+    trends_title: "Marker Trends",
+    trends_meta: "Track changes across reports over time",
+    trends_empty_text: "Not enough data yet",
+    trends_empty_sub: "Upload at least 2 reports to see trends",
+    trends_no_shared_text: "No shared markers found",
+    trends_no_shared_sub: "No markers appear in 2 or more reports yet",
+    trends_all_domains: "All Domains",
+    trends_n_markers: "{{n}} marker{{s}}",
+    trends_all_normal: "All normal",
+    trends_n_oor: "{{n}} out of range",
+    trends_latest: "Latest",
+    trends_min: "Min",
+    trends_max: "Max",
+    trends_avg: "Avg",
+    legend_normal: "Normal",
+    legend_high: "High",
+    legend_low: "Low",
+    legend_lab_range: "Lab range",
+    legend_optimal: "Optimal range",
+    results_title: "Lab Results Overview",
+    results_n_markers: "{{n}} markers analyzed",
+    badge_cached: "cached",
+    btn_history: "History",
+    tab_markers: "Markers",
+    tab_insights: "Insights",
+    tab_lifestyle: "Lifestyle",
+    s_label_markers: "Markers",
+    section_oor: "{{n}} out of range",
+    insights_title: "Clinical Interpretation",
+    stale_notice: "A report was added that may affect this interpretation.",
+    btn_refreshing: "Refreshing\u2026",
+    btn_refresh: "\u21ba Refresh",
+    no_interpretation: "No interpretation available",
+    no_interpretation_sub: "Re-upload this report to generate a clinical summary",
+    lifestyle_title: "Lifestyle and Nutrition Guidance",
+    lifestyle_intro: "Personalized recommendations based on your results:",
+    no_lifestyle: "No recommendations available",
+    no_lifestyle_sub: "Re-upload this report to generate lifestyle guidance",
+    disclaimer: "This is an AI-generated analysis for informational purposes only. It is not a medical device and does not constitute medical advice. AI interpretation may contain errors \u2014 always verify against your original lab report and consult a qualified healthcare professional before making any health decisions.",
+    info_loading: "Loading\u2026",
+    info_error: "\u21ba Could not load info \u2014 tap to retry",
+    info_what: "What is this?",
+    info_implications: "What does it mean?",
+    range_lab: "Lab range",
+    range_optimal: "Optimal",
+    pill_normal: "Normal",
+    pill_high: "High",
+    pill_low: "Low",
+    toast_saved: "\u2713 Saved to history",
+    toast_error: "\u26a0 Sync failed",
+    footer: "VitaScan provides AI-generated analysis for <strong>informational purposes only</strong>. It is not a medical device and does not constitute medical advice. AI analysis may contain errors \u2014 always verify results with your original lab report and consult a qualified healthcare professional before making any health decisions.",
+    onboarding_title: "Welcome to VitaScan",
+    onboarding_text: "Tell us a bit about yourself so we can personalise your results and flag markers that matter most for your health profile. You can update this any time.",
+    profile_edit_title: "Edit Profile",
+    profile_new_title: "Your Profile",
+    profile_meta: "Help us personalise your results",
+    lbl_full_name: "Full Name",
+    lbl_age: "Age",
+    lbl_bio_sex: "Biological Sex",
+    sex_male: "Male",
+    sex_female: "Female",
+    sex_other: "Other",
+    lbl_conditions: "Known Conditions",
+    lbl_unit_system: "Unit System",
+    unit_us: "US Conventional",
+    unit_si: "SI / Metric",
+    lbl_display_prefs: "Display Preferences",
+    optimal_toggle_label: "Show Optimal Ranges",
+    optimal_toggle_desc: "Displays an amber zone on the marker bar representing functional medicine target ranges \u2014 tighter than standard lab reference ranges, based on longevity and preventive health research. These are not diagnostic thresholds and are not universally accepted by conventional medicine. Use as a starting point for discussion with your doctor.",
+    ref_ranges_title: "Where do reference ranges come from?",
+    ref_ranges_body: " The green band on each marker bar is extracted directly from your lab report \u2014 each laboratory sets its own reference ranges based on its equipment, reagents, and local population data. This means ranges may differ between labs and countries, which is normal and expected. VitaScan does not override them.",
+    lbl_language: "Language",
+    btn_saving: "Saving\u2026",
+    btn_save_profile: "Save Profile",
+    danger_zone: "Danger Zone",
+    btn_delete_account: "Delete Account",
+    delete_confirm_text: "This permanently deletes all your reports, profile, and account. It cannot be undone.",
+    btn_delete_all: "Yes, delete everything",
+    btn_deleting: "Deleting\u2026",
+    debug_title: "Marker Debug Table",
+    debug_renormalizing: "Re-normalizing\u2026",
+    debug_renormalize: "Re-normalize All",
+    debug_back: "\u2190 Back",
+    cond_diabetes: "Diabetes",
+    cond_hypertension: "Hypertension",
+    cond_high_cholesterol: "High Cholesterol",
+    cond_thyroid: "Thyroid Disorder",
+    cond_anemia: "Anemia",
+    cond_other: "Other",
+  },
+  tr: {
+    auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
+    auth_check_inbox: "Gelen kutunuzu kontrol edin!",
+    auth_sent_to: "adresine giri\u015f ba\u011flant\u0131s\u0131 g\u00f6nderdik:",
+    auth_click_link: "Devam etmek i\u00e7in ba\u011flant\u0131ya t\u0131klay\u0131n.",
+    auth_use_different: "Farkl\u0131 bir e-posta kullan",
+    auth_google: "Google ile devam et",
+    auth_or: "veya",
+    auth_email_ph: "E-posta adresinizi girin",
+    auth_sending: "G\u00f6nderiliyor\u2026",
+    auth_magic_link: "Giri\u015f ba\u011flant\u0131s\u0131 g\u00f6nder",
+    hdr_edit_profile: "Profili d\u00fczenle",
+    hdr_trends: "E\u011filimler",
+    hdr_debug: "Hata ay\u0131klama: belirte\u00e7 tablosu",
+    hdr_history: "Rapor ge\u00e7mi\u015fi",
+    hdr_sign_out: "\u00c7\u0131k\u0131\u015f yap",
+    loading_analyzing: "Raporunuz analiz ediliyor",
+    loading_sub: "Belirte\u00e7ler \u00e7\u0131kar\u0131l\u0131yor \u00b7 Sonu\u00e7lar yorumlan\u0131yor \u00b7 Rehberlik olu\u015fturuluyor",
+    upload_title1: "Kan tahlilleriniz,",
+    upload_title2: "yorumland\u0131.",
+    upload_sub: "Lab raporunuzu y\u00fckleyin ve anl\u0131k g\u00f6rsel i\u00e7g\u00f6r\u00fcler ve ya\u015fam tarz\u0131 rehberli\u011fi al\u0131n.",
+    upload_drop_label: "Lab raporunuzu buraya s\u00fcr\u00fckleyin",
+    upload_drop_hint: "PDF \u00b7 JPG \u00b7 PNG desteklenir",
+    upload_privacy: "Raporunuz g\u00fcvenli \u015fekilde i\u015flenir ve hesab\u0131n\u0131za kaydedilir.",
+    btn_new_report: "+ Yeni Rapor",
+    history_title: "Rapor Ge\u00e7mi\u015fi",
+    history_saved: "{{n}} rapor kaydedildi",
+    history_empty_text: "Hen\u00fcz rapor yok",
+    history_empty_sub: "Ba\u015flamak i\u00e7in ilk lab raporunuzu y\u00fckleyin.",
+    history_fallback_name: "Lab Raporu",
+    stat_total: "Toplam",
+    stat_normal: "Normal",
+    stat_high: "Y\u00fcksek",
+    stat_low: "D\u00fc\u015f\u00fck",
+    note_ph: "Not ekle\u2026",
+    delete_report_q: "Bu raporu sil?",
+    btn_delete: "Sil",
+    btn_cancel: "\u0130ptal",
+    trends_title: "Belirte\u00e7 E\u011filimleri",
+    trends_meta: "Raporlar aras\u0131nda de\u011fi\u015fimleri takip edin",
+    trends_empty_text: "Hen\u00fcz yeterli veri yok",
+    trends_empty_sub: "E\u011filimleri g\u00f6rmek i\u00e7in en az 2 rapor y\u00fckleyin",
+    trends_no_shared_text: "Ortak belirte\u00e7 bulunamad\u0131",
+    trends_no_shared_sub: "Hen\u00fcz 2 veya daha fazla raporda ortak belirte\u00e7 yok",
+    trends_all_domains: "T\u00fcm Alanlar",
+    trends_n_markers: "{{n}} belirte\u00e7",
+    trends_all_normal: "Hepsi normal",
+    trends_n_oor: "{{n}} aral\u0131k d\u0131\u015f\u0131",
+    trends_latest: "Son",
+    trends_min: "Min",
+    trends_max: "Maks",
+    trends_avg: "Ort",
+    legend_normal: "Normal",
+    legend_high: "Y\u00fcksek",
+    legend_low: "D\u00fc\u015f\u00fck",
+    legend_lab_range: "Lab aral\u0131\u011f\u0131",
+    legend_optimal: "Optimal aral\u0131k",
+    results_title: "Lab Sonu\u00e7lar\u0131na Genel Bak\u0131\u015f",
+    results_n_markers: "{{n}} belirte\u00e7 analiz edildi",
+    badge_cached: "\u00f6nbellekten",
+    btn_history: "Ge\u00e7mi\u015f",
+    tab_markers: "Belirte\u00e7ler",
+    tab_insights: "\u0130\u00e7g\u00f6r\u00fcler",
+    tab_lifestyle: "Ya\u015fam Tarz\u0131",
+    s_label_markers: "Belirte\u00e7ler",
+    section_oor: "{{n}} aral\u0131k d\u0131\u015f\u0131",
+    insights_title: "Klinik Yorum",
+    stale_notice: "Bu yorumu etkileyebilecek yeni bir rapor eklendi.",
+    btn_refreshing: "Yenileniyor\u2026",
+    btn_refresh: "\u21ba Yenile",
+    no_interpretation: "Yorum mevcut de\u011fil",
+    no_interpretation_sub: "Klinik \u00f6zet olu\u015fturmak i\u00e7in bu raporu tekrar y\u00fckleyin",
+    lifestyle_title: "Ya\u015fam Tarz\u0131 ve Beslenme Rehberli\u011fi",
+    lifestyle_intro: "Sonu\u00e7lar\u0131n\u0131za g\u00f6re ki\u015fiselleştirilmi\u015f \u00f6neriler:",
+    no_lifestyle: "\u00d6neri mevcut de\u011fil",
+    no_lifestyle_sub: "Ya\u015fam tarz\u0131 rehberli\u011fi olu\u015fturmak i\u00e7in bu raporu tekrar y\u00fckleyin",
+    disclaimer: "Bu, yaln\u0131zca bilgilendirme ama\u00e7l\u0131 bir yapay zeka analizidir. T\u0131bbi cihaz de\u011fildir ve t\u0131bbi tavsiye niteli\u011fi ta\u015f\u0131maz. Yapay zeka yorumu hatalar i\u00e7erebilir \u2014 her zaman orijinal lab raporunuzla kar\u015f\u0131la\u015ft\u0131r\u0131n ve herhangi bir sa\u011fl\u0131k karar\u0131 vermeden \u00f6nce nitelikli bir sa\u011fl\u0131k uzman\u0131na dan\u0131\u015f\u0131n.",
+    info_loading: "Y\u00fckleniyor\u2026",
+    info_error: "\u21ba Bilgi y\u00fcklenemedi \u2014 tekrar denemek i\u00e7in dokunun",
+    info_what: "Bu nedir?",
+    info_implications: "Ne anlama geliyor?",
+    range_lab: "Lab aral\u0131\u011f\u0131",
+    range_optimal: "Optimal",
+    pill_normal: "Normal",
+    pill_high: "Y\u00fcksek",
+    pill_low: "D\u00fc\u015f\u00fck",
+    toast_saved: "\u2713 Ge\u00e7mi\u015fe kaydedildi",
+    toast_error: "\u26a0 Senkronizasyon ba\u015far\u0131s\u0131z",
+    footer: "VitaScan yaln\u0131zca bilgilendirme ama\u00e7l\u0131 yapay zeka analizi sa\u011flar. T\u0131bbi cihaz de\u011fildir ve t\u0131bbi tavsiye niteli\u011fi ta\u015f\u0131maz. Yapay zeka analizi hatalar i\u00e7erebilir \u2014 sonu\u00e7lar\u0131 her zaman orijinal lab raporunuzla do\u011frulay\u0131n ve herhangi bir sa\u011fl\u0131k karar\u0131 vermeden \u00f6nce nitelikli bir sa\u011fl\u0131k uzman\u0131na dan\u0131\u015f\u0131n.",
+    onboarding_title: "VitaScan'a Ho\u015f Geldiniz",
+    onboarding_text: "Sonu\u00e7lar\u0131n\u0131z\u0131 ki\u015fiselleştirebilmemiz ve sa\u011fl\u0131k profiliniz i\u00e7in \u00f6nemli belirte\u00e7leri vurgulayabilmemiz i\u00e7in kendiniz hakk\u0131nda biraz bilgi verin. Bunu istedi\u011finiz zaman g\u00fcncelleyebilirsiniz.",
+    profile_edit_title: "Profili D\u00fczenle",
+    profile_new_title: "Profiliniz",
+    profile_meta: "Sonu\u00e7lar\u0131n\u0131z\u0131 ki\u015fiselleştirmemize yard\u0131mc\u0131 olun",
+    lbl_full_name: "Ad Soyad",
+    lbl_age: "Ya\u015f",
+    lbl_bio_sex: "Biyolojik Cinsiyet",
+    sex_male: "Erkek",
+    sex_female: "Kad\u0131n",
+    sex_other: "Di\u011fer",
+    lbl_conditions: "Bilinen Rahats\u0131zl\u0131klar",
+    lbl_unit_system: "Birim Sistemi",
+    unit_us: "ABD Konvansiyonel",
+    unit_si: "SI / Metrik",
+    lbl_display_prefs: "G\u00f6r\u00fcnt\u00fcleme Tercihleri",
+    optimal_toggle_label: "Optimal Aral\u0131klar\u0131 G\u00f6ster",
+    optimal_toggle_desc: "Belirte\u00e7 \u00e7ubu\u011funda, standart lab referans aral\u0131klar\u0131ndan daha dar olan ve uzun \u00f6m\u00fcr ile koruyucu sa\u011fl\u0131k ara\u015ft\u0131rmalar\u0131na dayanan fonksiyonel t\u0131p hedef aral\u0131klar\u0131n\u0131 temsil eden bir amber b\u00f6lge g\u00f6r\u00fcnt\u00fcler. Bunlar tan\u0131sal e\u015fikler de\u011fildir ve konvansiyonel t\u0131p taraf\u0131ndan evrensel olarak kabul edilmemektedir. Doktorunuzla tart\u0131\u015fmak i\u00e7in bir ba\u015flang\u0131\u00e7 noktas\u0131 olarak kullan\u0131n.",
+    ref_ranges_title: "Referans aral\u0131klar\u0131 nereden geliyor?",
+    ref_ranges_body: " Her belirte\u00e7 \u00e7ubu\u011fundaki ye\u015fil bant do\u011frudan lab raporunuzdan \u00e7\u0131kar\u0131lm\u0131\u015ft\u0131r \u2014 her laboratuvar kendi ekipman\u0131na, reaktiflerine ve yerel pop\u00fclasyon verilerine g\u00f6re kendi referans aral\u0131klar\u0131n\u0131 belirler. Bu, aral\u0131klar\u0131n laboratuvarlar ve \u00fclkeler aras\u0131nda farkl\u0131l\u0131k g\u00f6sterebilece\u011fi anlam\u0131na gelir; bu normal ve beklenen bir durumdur. VitaScan bunlar\u0131 ge\u00e7ersiz k\u0131lmaz.",
+    lbl_language: "Dil",
+    btn_saving: "Kaydediliyor\u2026",
+    btn_save_profile: "Profili Kaydet",
+    danger_zone: "Tehlikeli B\u00f6lge",
+    btn_delete_account: "Hesab\u0131 Sil",
+    delete_confirm_text: "Bu i\u015flem t\u00fcm raporlar\u0131n\u0131z\u0131, profilinizi ve hesab\u0131n\u0131z\u0131 kal\u0131c\u0131 olarak siler. Geri al\u0131namaz.",
+    btn_delete_all: "Evet, her \u015feyi sil",
+    btn_deleting: "Siliniyor\u2026",
+    debug_title: "Belirte\u00e7 Hata Ay\u0131klama Tablosu",
+    debug_renormalizing: "Yeniden normalleştiriliyor\u2026",
+    debug_renormalize: "T\u00fcm\u00fcn\u00fc Yeniden Normalleştir",
+    debug_back: "\u2190 Geri",
+    cond_diabetes: "Diyabet",
+    cond_hypertension: "Hipertansiyon",
+    cond_high_cholesterol: "Y\u00fcksek Kolesterol",
+    cond_thyroid: "Tiroid Bozuklu\u011fu",
+    cond_anemia: "Anemi",
+    cond_other: "Di\u011fer",
+  }
+};
+
+// Module-level language variable — set at the top of each App() render
+var _lang = "en";
+
+function t(key) {
+  return (STRINGS[_lang] && STRINGS[_lang][key]) || STRINGS.en[key] || key;
+}
+
+// Parameterised translation: tp("history_saved", { n: 3, s: "s" })
+function tp(key, vars) {
+  var s = t(key);
+  Object.keys(vars).forEach(function(k) { s = s.replace("{{" + k + "}}", vars[k]); });
+  return s;
+}
+
+// Return the localised section label for a given English section label
+function localizeSection(englishLabel) {
+  if (_lang !== "tr") return englishLabel;
+  var sec = MARKER_SECTIONS.find(function(s) { return s.label === englishLabel; });
+  return (sec && sec.labelTr) || englishLabel;
+}
 
 var OPTIMAL_RANGES = {
   "glucose":                          { low: 70,   high: 90   },
@@ -1629,6 +1920,15 @@ export default function App() {
     localStorage.setItem("vitascan_optimal_ranges", val ? "true" : "false");
   }
 
+  // ── Language preference ──
+  const [lang, setLang] = useState(function() {
+    return localStorage.getItem("vitascan_language") || "en";
+  });
+  function handleLangChange(val) {
+    setLang(val);
+    localStorage.setItem("vitascan_language", val);
+  }
+
   // ── Session bootstrap ──
   useEffect(function() {
     supabase.auth.getSession().then(function({ data: { session } }) {
@@ -1732,6 +2032,7 @@ export default function App() {
       localStorage.removeItem("vitascan_marker_info");
       localStorage.removeItem("vitascan_unit_system");
       localStorage.removeItem("vitascan_optimal_ranges");
+      localStorage.removeItem("vitascan_language");
       await supabase.auth.signOut();
       // Auth listener will reset stage to auth screen
     } catch (e) {
@@ -1974,6 +2275,9 @@ export default function App() {
     low:   markers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low";  }).length,
   };
 
+  // Apply current language before any render
+  _lang = lang;
+
   // ── Render: loading spinner (auth bootstrap) ──
   if (authLoading) {
     return (
@@ -1996,21 +2300,21 @@ export default function App() {
         <div className="auth-screen">
           <div className="auth-card">
             <div className="auth-logo">vita<span>scan</span></div>
-            <div className="auth-tagline">Your blood work, decoded.</div>
+            <div className="auth-tagline">{t("auth_tagline")}</div>
 
             {authMode === "magic_sent" ? (
               <>
                 <div className="auth-success">
-                  ✉️ Check your inbox!<br />
-                  We sent a sign-in link to <strong>{authEmail}</strong>.<br />
-                  Click the link to continue.
+                  ✉️ {t("auth_check_inbox")}<br />
+                  {t("auth_sent_to")} <strong>{authEmail}</strong>.<br />
+                  {t("auth_click_link")}
                 </div>
                 <button
                   className="btn btn-ghost"
                   style={{ marginTop: 20, width: "100%", justifyContent: "center" }}
                   onClick={function() { setAuthMode("login"); setAuthEmail(""); setAuthError(null); }}
                 >
-                  Use a different email
+                  {t("auth_use_different")}
                 </button>
               </>
             ) : (
@@ -2022,22 +2326,22 @@ export default function App() {
                     <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
                     <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                   </svg>
-                  Continue with Google
+                  {t("auth_google")}
                 </button>
 
-                <div className="auth-divider">or</div>
+                <div className="auth-divider">{t("auth_or")}</div>
 
                 <form onSubmit={handleMagicLink}>
                   <input
                     className="auth-input"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t("auth_email_ph")}
                     value={authEmail}
                     onChange={function(e) { setAuthEmail(e.target.value); }}
                     required
                   />
                   <button className="btn-primary" type="submit" disabled={authBusy || !authEmail.trim()}>
-                    {authBusy ? "Sending…" : "Send magic link"}
+                    {authBusy ? t("auth_sending") : t("auth_magic_link")}
                   </button>
                 </form>
 
@@ -2077,8 +2381,8 @@ export default function App() {
             {profile && (
               <button
                 className="icon-btn"
-                title="Edit profile"
-                aria-label="Edit profile"
+                title={t("hdr_edit_profile")}
+                aria-label={t("hdr_edit_profile")}
                 onClick={function() {
                   setProfileForm({
                     full_name:      profile.full_name      || "",
@@ -2095,24 +2399,24 @@ export default function App() {
             )}
             <button
               className="icon-btn"
-              title="Trends"
-              aria-label="View trends"
+              title={t("hdr_trends")}
+              aria-label={t("hdr_trends")}
               onClick={function() { setStage("trends"); }}
             >
               📈
             </button>
             <button
               className="icon-btn"
-              title="Debug: marker table"
-              aria-label="Debug marker table"
+              title={t("hdr_debug")}
+              aria-label={t("hdr_debug")}
               onClick={function() { setStage("debug"); }}
             >
               🧪
             </button>
             <button
               className="icon-btn"
-              title="Report history"
-              aria-label="Report history"
+              title={t("hdr_history")}
+              aria-label={t("hdr_history")}
               onClick={function() { setStage("history"); }}
             >
               🕐
@@ -2120,7 +2424,7 @@ export default function App() {
             <div className="header-avatar" title={user.email}>{avatarLetter}</div>
             <span className="header-email">{user.email}</span>
             <button className="btn btn-ghost" style={{ padding: "8px 16px" }} onClick={handleSignOut}>
-              Sign out
+              {t("hdr_sign_out")}
             </button>
           </div>
         </header>
@@ -2133,18 +2437,18 @@ export default function App() {
                 <div className="onboarding-card">
                   <div className="onboarding-icon">👋</div>
                   <div>
-                    <div className="onboarding-title">Welcome to VitaScan</div>
-                    <div className="onboarding-text">Tell us a bit about yourself so we can personalise your results and flag markers that matter most for your health profile. You can update this any time.</div>
+                    <div className="onboarding-title">{t("onboarding_title")}</div>
+                    <div className="onboarding-text">{t("onboarding_text")}</div>
                   </div>
                 </div>
               )}
               <div style={{ marginBottom: 32 }}>
-                <div className="results-title">{profile ? "Edit Profile" : "Your Profile"}</div>
-                <div className="results-meta">Help us personalise your results</div>
+                <div className="results-title">{profile ? t("profile_edit_title") : t("profile_new_title")}</div>
+                <div className="results-meta">{t("profile_meta")}</div>
               </div>
               <form onSubmit={saveProfile}>
                 <div className="form-group">
-                  <label className="form-label">Full Name</label>
+                  <label className="form-label">{t("lbl_full_name")}</label>
                   <input
                     className="form-input"
                     type="text"
@@ -2154,7 +2458,7 @@ export default function App() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Age</label>
+                  <label className="form-label">{t("lbl_age")}</label>
                   <input
                     className="form-input"
                     type="number"
@@ -2167,9 +2471,10 @@ export default function App() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Biological Sex</label>
+                  <label className="form-label">{t("lbl_bio_sex")}</label>
                   <div className="radio-group">
                     {["Male", "Female", "Other"].map(function(opt) {
+                      var sexKey = "sex_" + opt.toLowerCase();
                       return (
                         <label key={opt} className={"radio-option" + (profileForm.biological_sex === opt ? " selected" : "")}>
                           <input
@@ -2179,14 +2484,14 @@ export default function App() {
                             checked={profileForm.biological_sex === opt}
                             onChange={function() { setProfileForm(function(f) { return Object.assign({}, f, { biological_sex: opt }); }); }}
                           />
-                          {opt}
+                          {t(sexKey)}
                         </label>
                       );
                     })}
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Known Conditions</label>
+                  <label className="form-label">{t("lbl_conditions")}</label>
                   <div className="checkbox-group">
                     {CONDITION_OPTIONS.map(function(opt) {
                       var checked = profileForm.conditions.indexOf(opt) !== -1;
@@ -2204,18 +2509,18 @@ export default function App() {
                               });
                             }}
                           />
-                          {opt}
+                          {t(CONDITION_KEYS[opt] || opt)}
                         </label>
                       );
                     })}
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Unit System</label>
+                  <label className="form-label">{t("lbl_unit_system")}</label>
                   <div className="radio-group">
                     {[
-                      { val: "us", label: "US Conventional", desc: "mg/dL · ng/dL" },
-                      { val: "si", label: "SI / Metric",      desc: "mmol/L · nmol/L" },
+                      { val: "us", label: t("unit_us"), desc: "mg/dL · ng/dL" },
+                      { val: "si", label: t("unit_si"), desc: "mmol/L · nmol/L" },
                     ].map(function(opt) {
                       return (
                         <label key={opt.val} className={"radio-option" + (unitSystem === opt.val ? " selected" : "")}>
@@ -2230,29 +2535,45 @@ export default function App() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Display Preferences</label>
+                  <label className="form-label">{t("lbl_display_prefs")}</label>
                   <label className="toggle-row" style={{ marginBottom: 16 }}>
                     <div className="toggle-switch">
                       <input type="checkbox" checked={showOptimalRanges} onChange={function(e) { handleOptimalRangesChange(e.target.checked); }} />
                       <div className="toggle-slider" />
                     </div>
                     <div>
-                      <div className="toggle-label">Show Optimal Ranges</div>
-                      <div className="toggle-desc">Displays an amber zone on the marker bar representing functional medicine target ranges — tighter than standard lab reference ranges, based on longevity and preventive health research. These are <em>not</em> diagnostic thresholds and are not universally accepted by conventional medicine. Use as a starting point for discussion with your doctor.</div>
+                      <div className="toggle-label">{t("optimal_toggle_label")}</div>
+                      <div className="toggle-desc">{t("optimal_toggle_desc")}</div>
                     </div>
                   </label>
                   <div className="settings-info-box">
-                    <strong>Where do reference ranges come from?</strong> The green band on each marker bar is extracted directly from your lab report — each laboratory sets its own reference ranges based on its equipment, reagents, and local population data. This means ranges may differ between labs and countries, which is normal and expected. VitaScan does not override them.
+                    <strong>{t("ref_ranges_title")}</strong>{t("ref_ranges_body")}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">{t("lbl_language")}</label>
+                  <div className="radio-group">
+                    {[{ val: "en", label: "English" }, { val: "tr", label: "Türkçe" }].map(function(opt) {
+                      return (
+                        <label key={opt.val} className={"radio-option" + (lang === opt.val ? " selected" : "")}>
+                          <input type="radio" name="language" value={opt.val}
+                            checked={lang === opt.val}
+                            onChange={function() { handleLangChange(opt.val); }}
+                          />
+                          {opt.label}
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
                 {profileError && <div className="profile-error">{profileError}</div>}
                 <div className="profile-actions">
                   <button className="btn-primary" type="submit" disabled={profileSaving} style={{ width: "auto", padding: "12px 32px" }}>
-                    {profileSaving ? "Saving…" : "Save Profile"}
+                    {profileSaving ? t("btn_saving") : t("btn_save_profile")}
                   </button>
                   {profile !== null && (
                     <button type="button" className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
-                      Cancel
+                      {t("btn_cancel")}
                     </button>
                   )}
                 </div>
@@ -2260,20 +2581,20 @@ export default function App() {
 
               {profile !== null && (
                 <div className="danger-zone">
-                  <div className="danger-zone-label">Danger Zone</div>
+                  <div className="danger-zone-label">{t("danger_zone")}</div>
                   {!deleteConfirm ? (
                     <button className="btn-delete" onClick={function() { setDeleteConfirm(true); }}>
-                      Delete Account
+                      {t("btn_delete_account")}
                     </button>
                   ) : (
                     <div>
-                      <div className="delete-confirm-text">This permanently deletes all your reports, profile, and account. It cannot be undone.</div>
+                      <div className="delete-confirm-text">{t("delete_confirm_text")}</div>
                       <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
                         <button className="btn-delete-confirm" onClick={handleDeleteAccount} disabled={deleting}>
-                          {deleting ? "Deleting…" : "Yes, delete everything"}
+                          {deleting ? t("btn_deleting") : t("btn_delete_all")}
                         </button>
                         <button className="btn btn-ghost" onClick={function() { setDeleteConfirm(false); }} disabled={deleting}>
-                          Cancel
+                          {t("btn_cancel")}
                         </button>
                       </div>
                     </div>
@@ -2285,8 +2606,8 @@ export default function App() {
 
           {stage === "upload" && (
             <div className="upload-section">
-              <h1 className="upload-title">Your blood work,<br /><span>decoded.</span></h1>
-              <p className="upload-sub">Upload your lab report and get instant visual insights and lifestyle guidance.</p>
+              <h1 className="upload-title">{t("upload_title1")}<br /><span>{t("upload_title2")}</span></h1>
+              <p className="upload-sub">{t("upload_sub")}</p>
               <div
                 className={"drop-zone" + (dragOver ? " drag-over" : "")}
                 onDragOver={function(e) { e.preventDefault(); setDragOver(true); }}
@@ -2295,8 +2616,8 @@ export default function App() {
                 onClick={function() { document.getElementById("file-input").click(); }}
               >
                 <div className="drop-icon">🧬</div>
-                <div className="drop-label">Drop your lab report here</div>
-                <div className="drop-hint">PDF · JPG · PNG supported</div>
+                <div className="drop-label">{t("upload_drop_label")}</div>
+                <div className="drop-hint">{t("upload_drop_hint")}</div>
                 <input
                   id="file-input"
                   type="file"
@@ -2306,15 +2627,15 @@ export default function App() {
                 />
               </div>
               {error && <p style={{ color: "var(--danger)", marginTop: 20, fontSize: 14 }}>{error}</p>}
-              <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>Your report is processed securely and saved to your account.</p>
+              <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>{t("upload_privacy")}</p>
             </div>
           )}
 
           {stage === "loading" && (
             <div className="loading-state">
               <div className="pulse-ring" />
-              <div className="loading-text">Analyzing your report</div>
-              <div className="loading-sub">Extracting markers · Interpreting results · Generating guidance</div>
+              <div className="loading-text">{t("loading_analyzing")}</div>
+              <div className="loading-sub">{t("loading_sub")}</div>
             </div>
           )}
 
@@ -2322,11 +2643,11 @@ export default function App() {
             <div className="history-view">
               <div className="history-header">
                 <div>
-                  <div className="results-title">Report History</div>
-                  <div className="results-meta">{history.length} report{history.length !== 1 ? "s" : ""} saved</div>
+                  <div className="results-title">{t("history_title")}</div>
+                  <div className="results-meta">{tp("history_saved", { n: history.length, s: history.length !== 1 ? "s" : "" })}</div>
                 </div>
                 <button className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
-                  + New Report
+                  {t("btn_new_report")}
                 </button>
               </div>
 
@@ -2339,8 +2660,8 @@ export default function App() {
               {!historyLoading && history.length === 0 && (
                 <div className="history-empty">
                   <div className="history-empty-icon">🧬</div>
-                  <div className="history-empty-text">No reports yet</div>
-                  <div className="history-empty-sub">Upload your first lab report to get started.</div>
+                  <div className="history-empty-text">{t("history_empty_text")}</div>
+                  <div className="history-empty-sub">{t("history_empty_sub")}</div>
                 </div>
               )}
 
@@ -2382,25 +2703,25 @@ export default function App() {
                               <button className="report-card-delete" title="Delete report" onClick={function(e) { e.stopPropagation(); setDeletingReportId(item.id); }}>✕</button>
                               {item.lab_name && <div className="report-card-lab">{item.lab_name}</div>}
                               <div className="report-card-name">
-                                {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : "Lab Report"}
+                                {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : t("history_fallback_name")}
                               </div>
                               <div className="report-card-date">{dateLabel}</div>
                               <div className="report-card-stats">
                                 <div className="report-stat s-total">
                                   <div className="report-stat-num">{itemCounts.total}</div>
-                                  <div className="report-stat-label">Total</div>
+                                  <div className="report-stat-label">{t("stat_total")}</div>
                                 </div>
                                 <div className="report-stat s-ok">
                                   <div className="report-stat-num">{itemCounts.ok}</div>
-                                  <div className="report-stat-label">Normal</div>
+                                  <div className="report-stat-label">{t("stat_normal")}</div>
                                 </div>
                                 <div className="report-stat s-high">
                                   <div className="report-stat-num">{itemCounts.high}</div>
-                                  <div className="report-stat-label">High</div>
+                                  <div className="report-stat-label">{t("stat_high")}</div>
                                 </div>
                                 <div className="report-stat s-low">
                                   <div className="report-stat-num">{itemCounts.low}</div>
-                                  <div className="report-stat-label">Low</div>
+                                  <div className="report-stat-label">{t("stat_low")}</div>
                                 </div>
                               </div>
                               {itemCounts.total > 0 && (
@@ -2420,21 +2741,21 @@ export default function App() {
                                     onChange={function(e) { setEditingNoteText(e.target.value); }}
                                     onBlur={function() { saveNote(item.id); }}
                                     onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveNote(item.id); } }}
-                                    placeholder="Add a note…"
+                                    placeholder={t("note_ph")}
                                   />
                                 ) : item.notes ? (
                                   <div className="report-card-note-text" onClick={function(e) { startEditingNote(e, item); }}>{item.notes}</div>
                                 ) : (
-                                  <div className="report-card-note-empty" onClick={function(e) { startEditingNote(e, item); }}>Add a note…</div>
+                                  <div className="report-card-note-empty" onClick={function(e) { startEditingNote(e, item); }}>{t("note_ph")}</div>
                                 )}
                               </div>
 
                               {isConfirming && (
                                 <div className="report-delete-confirm" onClick={function(e) { e.stopPropagation(); }}>
-                                  <div className="report-delete-confirm-text">Delete this report?</div>
+                                  <div className="report-delete-confirm-text">{t("delete_report_q")}</div>
                                   <div className="report-delete-confirm-btns">
-                                    <button className="report-delete-yes" onClick={function() { handleDeleteReport(item.id); }}>Delete</button>
-                                    <button className="report-delete-no"  onClick={function() { setDeletingReportId(null); }}>Cancel</button>
+                                    <button className="report-delete-yes" onClick={function() { handleDeleteReport(item.id); }}>{t("btn_delete")}</button>
+                                    <button className="report-delete-no"  onClick={function() { setDeletingReportId(null); }}>{t("btn_cancel")}</button>
                                   </div>
                                 </div>
                               )}
@@ -2453,20 +2774,20 @@ export default function App() {
             <div>
               <div className="history-header">
                 <div>
-                  <div className="results-title">Marker Debug Table</div>
-                  <div className="results-meta">{history.length} report{history.length !== 1 ? "s" : ""} · all canonical values in stored unit</div>
+                  <div className="results-title">{t("debug_title")}</div>
+                  <div className="results-meta">{tp("history_saved", { n: history.length, s: history.length !== 1 ? "s" : "" })} · all canonical values in stored unit</div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button className="btn btn-ghost" disabled={normalizing} onClick={renormalizeAll}>
-                    {normalizing ? "Re-normalizing…" : "Re-normalize All"}
+                    {normalizing ? t("debug_renormalizing") : t("debug_renormalize")}
                   </button>
-                  <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>← Back</button>
+                  <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>{t("debug_back")}</button>
                 </div>
               </div>
               {history.length === 0 ? (
                 <div className="history-empty">
                   <div className="history-empty-icon">🧪</div>
-                  <div className="history-empty-text">No reports yet</div>
+                  <div className="history-empty-text">{t("history_empty_text")}</div>
                 </div>
               ) : (function() {
                 // Columns: reports sorted oldest → newest
@@ -2547,19 +2868,19 @@ export default function App() {
             <div>
               <div className="history-header">
                 <div>
-                  <div className="results-title">Marker Trends</div>
-                  <div className="results-meta">Track changes across reports over time</div>
+                  <div className="results-title">{t("trends_title")}</div>
+                  <div className="results-meta">{t("trends_meta")}</div>
                 </div>
                 <button className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
-                  + New Report
+                  {t("btn_new_report")}
                 </button>
               </div>
 
               {history.length < 2 ? (
                 <div className="trends-empty">
                   <div className="trends-empty-icon">📈</div>
-                  <div className="trends-empty-text">Not enough data yet</div>
-                  <div className="trends-empty-sub">Upload at least 2 reports to see trends</div>
+                  <div className="trends-empty-text">{t("trends_empty_text")}</div>
+                  <div className="trends-empty-sub">{t("trends_empty_sub")}</div>
                 </div>
               ) : (function() {
                 var trendMarkers = getTrendMarkers(history);
@@ -2567,8 +2888,8 @@ export default function App() {
                   return (
                     <div className="trends-empty">
                       <div className="trends-empty-icon">📊</div>
-                      <div className="trends-empty-text">No shared markers found</div>
-                      <div className="trends-empty-sub">No markers appear in 2 or more reports yet</div>
+                      <div className="trends-empty-text">{t("trends_no_shared_text")}</div>
+                      <div className="trends-empty-sub">{t("trends_no_shared_sub")}</div>
                     </div>
                   );
                 }
@@ -2646,8 +2967,8 @@ export default function App() {
                         onClick={function() { setSelectedTrendDomain(null); setSelectedTrendMarker(null); }}
                       >
                         <span className="domain-card-emoji">📊</span>
-                        <div className="domain-card-label">All Domains</div>
-                        <div className="domain-card-count">{trendMarkers.length} markers</div>
+                        <div className="domain-card-label">{t("trends_all_domains")}</div>
+                        <div className="domain-card-count">{tp("trends_n_markers", { n: trendMarkers.length, s: trendMarkers.length !== 1 ? "s" : "" })}</div>
                         <div className="domain-card-bar">
                           <div style={{ width: (trendMarkers.filter(function(n) { return markerLatestStatus[n] === "ok"; }).length / trendMarkers.length * 100) + "%", background: "var(--ok)" }} />
                           <div style={{ width: (trendMarkers.filter(function(n) { return markerLatestStatus[n] !== "ok"; }).length / trendMarkers.length * 100) + "%", background: "var(--danger)" }} />
@@ -2656,7 +2977,7 @@ export default function App() {
                       {domainSummaries.map(function(d) {
                         var isActive = selectedTrendDomain === d.label;
                         var statusCls = d.outOfRange === 0 ? "dc-status-ok" : d.outOfRange === d.total ? "dc-status-all" : "dc-status-warn";
-                        var statusText = d.outOfRange === 0 ? "All normal" : d.outOfRange + " out of range";
+                        var statusText = d.outOfRange === 0 ? t("trends_all_normal") : tp("trends_n_oor", { n: d.outOfRange });
                         return (
                           <button
                             key={d.id}
@@ -2668,8 +2989,8 @@ export default function App() {
                             }}
                           >
                             <span className="domain-card-emoji">{d.emoji}</span>
-                            <div className="domain-card-label">{d.label}</div>
-                            <div className="domain-card-count">{d.total} marker{d.total !== 1 ? "s" : ""}</div>
+                            <div className="domain-card-label">{localizeSection(d.label)}</div>
+                            <div className="domain-card-count">{tp("trends_n_markers", { n: d.total, s: d.total !== 1 ? "s" : "" })}</div>
                             <div className="domain-card-bar">
                               <div style={{ width: (d.okCount / d.total * 100) + "%", background: "var(--ok)" }} />
                               <div style={{ width: (d.outOfRange / d.total * 100) + "%", background: d.outOfRange === d.total ? "var(--danger)" : "var(--warn)" }} />
@@ -2695,19 +3016,19 @@ export default function App() {
 
                     <div className="trend-stats">
                       <div className={"trend-stat s-" + latestStatus}>
-                        <div className="trend-stat-label">Latest</div>
+                        <div className="trend-stat-label">{t("trends_latest")}</div>
                         <div className="trend-stat-value">{latestVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
                       </div>
                       <div className="trend-stat s-neutral">
-                        <div className="trend-stat-label">Min</div>
+                        <div className="trend-stat-label">{t("trends_min")}</div>
                         <div className="trend-stat-value">{minVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
                       </div>
                       <div className="trend-stat s-neutral">
-                        <div className="trend-stat-label">Max</div>
+                        <div className="trend-stat-label">{t("trends_max")}</div>
                         <div className="trend-stat-value">{maxVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
                       </div>
                       <div className="trend-stat s-neutral">
-                        <div className="trend-stat-label">Avg</div>
+                        <div className="trend-stat-label">{t("trends_avg")}</div>
                         <div className="trend-stat-value">{avgVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
                       </div>
                     </div>
@@ -2750,12 +3071,12 @@ export default function App() {
                         </LineChart>
                       </ResponsiveContainer>
                       <div className="trend-legend">
-                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#527A48" /></svg>Normal</div>
-                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#B84838" /></svg>High</div>
-                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#C97B28" /></svg>Low</div>
-                        <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />Lab range</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#527A48" /></svg>{t("legend_normal")}</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#B84838" /></svg>{t("legend_high")}</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#C97B28" /></svg>{t("legend_low")}</div>
+                        <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />{t("legend_lab_range")}</div>
                         {optLow !== null && (
-                          <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(237,163,90,0.45)", border: "1px solid rgba(237,163,90,0.8)", borderRadius: 2 }} />Optimal range</div>
+                          <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(237,163,90,0.45)", border: "1px solid rgba(237,163,90,0.8)", borderRadius: 2 }} />{t("legend_optimal")}</div>
                         )}
                       </div>
                     </div>
@@ -2769,20 +3090,20 @@ export default function App() {
             <>
               <div className="results-header">
                 <div>
-                  <div className="results-title">Lab Results Overview</div>
+                  <div className="results-title">{t("results_title")}</div>
                   <div className="results-meta">
                     {results.patientName && results.patientName !== "Unknown" ? results.patientName + " · " : ""}
                     {results.reportDate  && results.reportDate  !== "Unknown" ? results.reportDate  + " · " : ""}
-                    {counts.total} markers analyzed
-                    {fromCache && <span className="cached-badge">cached</span>}
+                    {tp("results_n_markers", { n: counts.total })}
+                    {fromCache && <span className="cached-badge">{t("badge_cached")}</span>}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 10 }}>
                   <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>
-                    History
+                    {t("btn_history")}
                   </button>
                   <button className="btn btn-ghost" onClick={function() { setStage("upload"); setResults(null); }}>
-                    New Report
+                    {t("btn_new_report")}
                   </button>
                 </div>
               </div>
@@ -2790,7 +3111,7 @@ export default function App() {
               <div className="summary-cards">
                 <div className="summary-card c-total">
                   <div className="s-num">{counts.total}</div>
-                  <div className="s-label">Markers</div>
+                  <div className="s-label">{t("s_label_markers")}</div>
                   {counts.total > 0 && (
                     <div className="summary-ratio-bar">
                       <div style={{ width: (counts.ok   / counts.total * 100) + "%", background: "var(--ok)",     height: "100%" }}></div>
@@ -2801,26 +3122,30 @@ export default function App() {
                 </div>
                 <div className="summary-card c-ok">
                   <div className="s-num">{counts.ok}</div>
-                  <div className="s-label">Normal</div>
+                  <div className="s-label">{t("stat_normal")}</div>
                   <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.ok / counts.total * 100) + "%" : "0%" }}></div></div>
                 </div>
                 <div className="summary-card c-danger">
                   <div className="s-num">{counts.high}</div>
-                  <div className="s-label">High</div>
+                  <div className="s-label">{t("stat_high")}</div>
                   <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.high / counts.total * 100) + "%" : "0%" }}></div></div>
                 </div>
                 <div className="summary-card c-warn">
                   <div className="s-num">{counts.low}</div>
-                  <div className="s-label">Low</div>
+                  <div className="s-label">{t("stat_low")}</div>
                   <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.low / counts.total * 100) + "%" : "0%" }}></div></div>
                 </div>
               </div>
 
               <div className="tabs">
-                {["markers", "insights", "lifestyle"].map(function(t) {
+                {[
+                  { id: "markers",   label: t("tab_markers")  },
+                  { id: "insights",  label: t("tab_insights") },
+                  { id: "lifestyle", label: t("tab_lifestyle") },
+                ].map(function(tab) {
                   return (
-                    <button key={t} className={"tab" + (activeTab === t ? " active" : "")} onClick={function() { setActiveTab(t); }}>
-                      {t.charAt(0).toUpperCase() + t.slice(1)}
+                    <button key={tab.id} className={"tab" + (activeTab === tab.id ? " active" : "")} onClick={function() { setActiveTab(tab.id); }}>
+                      {tab.label}
                     </button>
                   );
                 })}
@@ -2834,8 +3159,8 @@ export default function App() {
                       <div key={section.id} className="health-section">
                         <div className="health-section-header" style={{ borderBottomColor: section.color || "var(--border)" }}>
                           <span className="health-section-emoji" style={{ background: section.color ? section.color + "18" : "transparent", borderRadius: 8, padding: "4px 6px" }}>{section.emoji}</span>
-                          <span className="health-section-label" style={{ color: section.color || "var(--text)" }}>{section.label}</span>
-                          {abnormal > 0 && <span className="health-section-alert">{abnormal} out of range</span>}
+                          <span className="health-section-label" style={{ color: section.color || "var(--text)" }}>{localizeSection(section.label)}</span>
+                          {abnormal > 0 && <span className="health-section-alert">{tp("section_oor", { n: abnormal })}</span>}
                         </div>
                         <div className="markers-grid">
                           {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} showOptimalRanges={showOptimalRanges} />; })}
@@ -2848,12 +3173,12 @@ export default function App() {
 
               {activeTab === "insights" && (
                 <div className="insights-panel">
-                  <h3><div className="insight-icon blue">🔬</div>Clinical Interpretation</h3>
+                  <h3><div className="insight-icon blue">🔬</div>{t("insights_title")}</h3>
                   {results.interpretationStale && (
                     <div className="stale-notice">
-                      <div className="stale-notice-text">A report was added that may affect this interpretation.</div>
+                      <div className="stale-notice-text">{t("stale_notice")}</div>
                       <button className="btn-refresh" onClick={handleRefreshInterpretation} disabled={refreshingInterpretation}>
-                        {refreshingInterpretation ? "Refreshing…" : "↺ Refresh"}
+                        {refreshingInterpretation ? t("btn_refreshing") : t("btn_refresh")}
                       </button>
                     </div>
                   )}
@@ -2864,8 +3189,8 @@ export default function App() {
                   ) : (
                     <div className="tab-empty">
                       <div className="tab-empty-icon">🔬</div>
-                      <div className="tab-empty-text">No interpretation available</div>
-                      <div className="tab-empty-sub">Re-upload this report to generate a clinical summary</div>
+                      <div className="tab-empty-text">{t("no_interpretation")}</div>
+                      <div className="tab-empty-sub">{t("no_interpretation_sub")}</div>
                     </div>
                   )}
                 </div>
@@ -2873,10 +3198,10 @@ export default function App() {
 
               {activeTab === "lifestyle" && (
                 <div className="insights-panel">
-                  <h3><div className="insight-icon teal">🌿</div>Lifestyle and Nutrition Guidance</h3>
+                  <h3><div className="insight-icon teal">🌿</div>{t("lifestyle_title")}</h3>
                   {lifestyle.length > 0 ? (
                     <>
-                      <p className="insight-text" style={{ marginBottom: 20 }}>Personalized recommendations based on your results:</p>
+                      <p className="insight-text" style={{ marginBottom: 20 }}>{t("lifestyle_intro")}</p>
                       <div className="lifestyle-grid">
                         {lifestyle.map(function(item, i) {
                           return (
@@ -2894,8 +3219,8 @@ export default function App() {
                   ) : (
                     <div className="tab-empty">
                       <div className="tab-empty-icon">🌿</div>
-                      <div className="tab-empty-text">No recommendations available</div>
-                      <div className="tab-empty-sub">Re-upload this report to generate lifestyle guidance</div>
+                      <div className="tab-empty-text">{t("no_lifestyle")}</div>
+                      <div className="tab-empty-sub">{t("no_lifestyle_sub")}</div>
                     </div>
                   )}
                 </div>
@@ -2903,23 +3228,17 @@ export default function App() {
 
               <div className="disclaimer">
                 <span className="disclaimer-icon">⚠</span>
-                <span>
-                  This is an AI-generated analysis for informational purposes only. It is not a medical device and does not constitute medical advice.
-                  AI interpretation may contain errors — always verify against your original lab report and consult a qualified healthcare professional before making any health decisions.
-                </span>
+                <span>{t("disclaimer")}</span>
               </div>
             </>
           )}
 
         </main>
-        <footer className="app-footer">
-          VitaScan provides AI-generated analysis for <strong>informational purposes only</strong>. It is not a medical device and does not constitute medical advice.
-          AI analysis may contain errors — always verify results with your original lab report and consult a qualified healthcare professional before making any health decisions.
-        </footer>
+        <footer className="app-footer" dangerouslySetInnerHTML={{ __html: t("footer") }} />
       </div>
       {syncToast && (
         <div className={"sync-toast sync-toast-" + syncToast}>
-          {syncToast === "saved" ? "✓ Saved to history" : "⚠ Sync failed"}
+          {syncToast === "saved" ? t("toast_saved") : t("toast_error")}
         </div>
       )}
     </>
