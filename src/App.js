@@ -1954,26 +1954,36 @@ export default function App() {
     if (!isNative) return;
 
     async function syncSession() {
-      var { data: { session } } = await supabase.auth.getSession();
+      var { data: { session }, error } = await supabase.auth.getSession();
+      console.log("[VitaScan] syncSession — session:", session?.user?.email ?? "none", "error:", error?.message ?? "none");
       if (session?.user) {
         setUser(session.user);
         setAuthLoading(false);
       }
     }
 
-    // Called when app is opened via custom URL scheme (magic link / OAuth redirect)
+    // Called when app is opened via custom URL scheme (magic link / OAuth redirect).
+    // Implicit flow: Supabase puts tokens in the URL hash fragment — no code exchange needed.
     var urlListenerPromise = CapApp.addListener("appUrlOpen", async function({ url }) {
+      console.log("[VitaScan] appUrlOpen:", url);
       if (url.includes("login-callback")) {
-        await supabase.auth.exchangeCodeForSession(url);
+        var hash = url.split("#")[1] || "";
+        var params = new URLSearchParams(hash);
+        var accessToken = params.get("access_token");
+        var refreshToken = params.get("refresh_token");
+        console.log("[VitaScan] accessToken:", accessToken ? "found" : "not found");
+        if (accessToken) {
+          var { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken || "" });
+          console.log("[VitaScan] setSession error:", error?.message ?? "none");
+        }
         await syncSession();
         Browser.close();
       }
     });
 
     // Backup: whenever app returns to foreground, re-check session.
-    // Catches cases where appUrlOpen fires before the listener is ready,
-    // or where exchangeCodeForSession succeeds but state update is missed.
     var stateListenerPromise = CapApp.addListener("appStateChange", async function({ isActive }) {
+      console.log("[VitaScan] appStateChange isActive:", isActive);
       if (isActive) { await syncSession(); }
     });
 
