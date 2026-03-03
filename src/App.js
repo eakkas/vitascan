@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContai
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
+import * as XLSX from "xlsx";
 
 var isNative = Capacitor.isNativePlatform();
 var NATIVE_REDIRECT = "com.vitascan.app://login-callback";
@@ -1040,6 +1041,7 @@ var STRINGS = {
     debug_title: "Marker Debug Table",
     debug_renormalizing: "Re-normalizing\u2026",
     debug_renormalize: "Re-normalize All",
+    debug_export_excel: "Export to Excel",
     debug_back: "\u2190 Back",
     cond_diabetes: "Diabetes",
     cond_hypertension: "Hypertension",
@@ -1168,6 +1170,7 @@ var STRINGS = {
     debug_title: "Belirte\u00e7 Hata Ay\u0131klama Tablosu",
     debug_renormalizing: "Yeniden normalleştiriliyor\u2026",
     debug_renormalize: "T\u00fcm\u00fcn\u00fc Yeniden Normalleştir",
+    debug_export_excel: "Excel'e Aktar",
     debug_back: "\u2190 Geri",
     cond_diabetes: "Diyabet",
     cond_hypertension: "Hipertansiyon",
@@ -2111,6 +2114,52 @@ export default function App() {
     }
   }
 
+  // ── Export debug table to Excel ──
+  function exportDebugTable() {
+    var cols = history.slice().sort(function(a, b) {
+      var da = a.report_date ? new Date(a.report_date) : new Date(a.created_at);
+      var db = b.report_date ? new Date(b.report_date) : new Date(b.created_at);
+      return da - db;
+    });
+    var markerSet = {};
+    cols.forEach(function(report) {
+      (report.markers || []).forEach(function(m) { markerSet[normalizeMarkerName(m.name)] = true; });
+    });
+    var allMarkerNames = Object.keys(markerSet).sort();
+    var sectionLabels = MARKER_SECTIONS.map(function(s) { return s.label; }).concat(["Other"]);
+    var sectionMap = {};
+    sectionLabels.forEach(function(label) { sectionMap[label] = []; });
+    allMarkerNames.forEach(function(name) {
+      var cat = getMarkerCategory(name) || "Other";
+      if (!sectionMap[cat]) sectionMap[cat] = [];
+      sectionMap[cat].push(name);
+    });
+
+    var colHeaders = cols.map(function(r) {
+      var date = r.report_date || new Date(r.created_at).toLocaleDateString();
+      var name = r.patient_name && r.patient_name !== "Unknown" ? " (" + r.patient_name + ")" : "";
+      return date + name;
+    });
+
+    var rows = [["Marker"].concat(colHeaders)];
+    sectionLabels.filter(function(label) { return sectionMap[label] && sectionMap[label].length > 0; }).forEach(function(label) {
+      rows.push(["── " + label + " ──"].concat(cols.map(function() { return ""; })));
+      sectionMap[label].forEach(function(name) {
+        var row = [name];
+        cols.forEach(function(r) {
+          var m = (r.markers || []).find(function(x) { return normalizeMarkerName(x.name) === name; });
+          row.push(m ? m.value + " " + m.unit : "");
+        });
+        rows.push(row);
+      });
+    });
+
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Markers");
+    XLSX.writeFile(wb, "vitascan_markers.xlsx");
+  }
+
   // ── Re-normalize all stored reports ──
   async function renormalizeAll() {
     setNormalizing(true);
@@ -2844,6 +2893,7 @@ export default function App() {
                   <button className="btn btn-ghost" disabled={normalizing} onClick={renormalizeAll}>
                     {normalizing ? t("debug_renormalizing") : t("debug_renormalize")}
                   </button>
+                  <button className="btn btn-ghost" disabled={history.length === 0} onClick={exportDebugTable}>{t("debug_export_excel")}</button>
                   <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>{t("debug_back")}</button>
                 </div>
               </div>
