@@ -2268,7 +2268,11 @@ export default function App() {
       var mediaType = file.type === "application/pdf" ? "application/pdf" : (file.type || "image/jpeg");
       var hash = await hashFile(base64);
       var cached = loadFromCache(hash);
-      if (cached) {
+      // For logged-in users, only serve the cache if this report is still in history.
+      // If it was deleted (or file_hash was never stored for old reports), bypass the
+      // cache so the file is re-analyzed and re-saved to Supabase.
+      var cacheValid = cached && (!user || history.some(function(r) { return r.file_hash === hash; }));
+      if (cacheValid) {
         setResults(cached);
         setFromCache(true);
         setActiveTab("markers");
