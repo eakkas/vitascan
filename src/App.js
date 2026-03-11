@@ -1622,6 +1622,8 @@ function getTrendMarkers(history) {
 
 function getTrendData(history, canonicalName, unitSystem) {
   var points = [];
+  var norm = UNIT_NORMS[canonicalName];
+  var preferredUnit = norm ? norm.preferred.toLowerCase() : null;
   // history is sorted newest-first; reverse for chronological order
   var sorted = history.slice().reverse();
   sorted.forEach(function(report) {
@@ -1631,6 +1633,9 @@ function getTrendData(history, canonicalName, unitSystem) {
       var converted = convertToPreferred(match.value, match.unit, canonicalName);
       var convLow   = convertToPreferred(match.low,   match.unit, canonicalName);
       var convHigh  = convertToPreferred(match.high,  match.unit, canonicalName);
+      // Skip points whose unit couldn't be normalized — plotting them alongside
+      // converted values (e.g. nmol/L mixed with g/dL) would skew the graph.
+      if (preferredUnit && converted.unit.toLowerCase() !== preferredUnit) return;
       var dispVal  = displayConvert(converted.value,    canonicalName, unitSystem);
       var dispLow  = displayConvert(convLow.value,      canonicalName, unitSystem);
       var dispHigh = displayConvert(convHigh.value,     canonicalName, unitSystem);
