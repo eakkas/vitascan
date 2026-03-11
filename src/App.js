@@ -1781,6 +1781,15 @@ function saveToCache(hash, result) {
   } catch (e) { /* quota exceeded — fail silently */ }
 }
 
+function evictFromCache(hash) {
+  if (!hash) return;
+  try {
+    var store = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+    delete store[hash];
+    localStorage.setItem(CACHE_KEY, JSON.stringify(store));
+  } catch (e) { /* ignore */ }
+}
+
 // ── Marker info helpers ───────────────────────────────────────────────────────
 
 var MARKER_INFO_KEY = "vitascan_marker_info";
@@ -2126,7 +2135,7 @@ export default function App() {
     try {
       var { data } = await supabase
         .from('reports')
-        .select('id, created_at, patient_name, lab_name, report_date, markers, lifestyle, interpretation, interpretation_stale, notes')
+        .select('id, created_at, file_hash, patient_name, lab_name, report_date, markers, lifestyle, interpretation, interpretation_stale, notes')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setHistory(data || []);
@@ -2394,7 +2403,9 @@ export default function App() {
 
   // ── Report deletion ──
   async function handleDeleteReport(id) {
+    var item = history.find(function(r) { return r.id === id; });
     await supabase.from('reports').delete().eq('id', id);
+    evictFromCache(item && item.file_hash);
     setHistory(function(h) { return h.filter(function(r) { return r.id !== id; }); });
     setDeletingReportId(null);
   }
