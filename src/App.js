@@ -762,14 +762,27 @@ function RangeBar({ value, low, high, status, optimalLow, optimalHigh }) {
 function MarkerCard({ marker, unitSystem, showOptimalRanges }) {
   const { name, value, unit, low, high } = marker;
   var category = getMarkerCategory(name, marker.category);
-  var dispVal  = displayConvert(value, name, unitSystem);
-  var dispLow  = displayConvert(low,   name, unitSystem);
-  var dispHigh = displayConvert(high,  name, unitSystem);
-  var dispUnit = displayUnit(name, unit, unitSystem);
+  // Show original lab units when available (raw_* fields set during normalizeMarkers).
+  // Falls back to normalized values for reports saved before this change.
+  var dispVal  = marker.raw_value !== undefined ? marker.raw_value : value;
+  var dispLow  = marker.raw_low   !== undefined ? marker.raw_low   : low;
+  var dispHigh = marker.raw_high  !== undefined ? marker.raw_high  : high;
+  var dispUnit = marker.raw_unit  !== undefined ? marker.raw_unit  : unit;
   const status = getStatus(dispVal, dispLow, dispHigh);
-  var optimal  = showOptimalRanges ? getOptimalRange(name) : null;
-  var dispOptLow  = optimal ? displayConvert(optimal.low,  name, unitSystem) : null;
-  var dispOptHigh = optimal ? displayConvert(optimal.high, name, unitSystem) : null;
+  // Optimal ranges are stored in preferred unit; try to match the raw display unit.
+  var optimal = showOptimalRanges ? getOptimalRange(name) : null;
+  var dispOptLow = null, dispOptHigh = null;
+  if (optimal) {
+    var norm = UNIT_NORMS[name];
+    if (!norm || dispUnit.toLowerCase() === (norm.preferred || "").toLowerCase()) {
+      dispOptLow  = optimal.low;
+      dispOptHigh = optimal.high;
+    } else if (norm.si && dispUnit.toLowerCase() === norm.si.unit.toLowerCase()) {
+      dispOptLow  = parseFloat((optimal.low  * norm.si.factor).toFixed(2));
+      dispOptHigh = parseFloat((optimal.high * norm.si.factor).toFixed(2));
+    }
+    // else: raw unit has no known conversion from preferred — skip optimal overlay
+  }
   const [expanded,    setExpanded]    = useState(false);
   const [info,        setInfo]        = useState(() => loadMarkerInfo(name));
   const [loadingInfo, setLoadingInfo] = useState(false);
@@ -1340,6 +1353,8 @@ var CANONICAL_MAP = [
   { keywords: ["bilirubin"],                                         canonical: "Total Bilirubin" },
   { keywords: ["albumin"],                                           canonical: "Albumin" },
   { keywords: ["total protein", "protein, total"],                  canonical: "Total Protein" },
+  // SHBG must come before the generic "globulin" entry — "Sex Hormone Binding Globulin" contains "globulin"
+  { keywords: ["shbg", "sex hormone binding globulin", "sex hormone binding"], canonical: "SHBG" },
   { keywords: ["globulin"],                                         canonical: "Globulin" },
   { keywords: ["ldh", "lactate dehydrogenase"],                     canonical: "LDH" },
 
@@ -1408,7 +1423,6 @@ var CANONICAL_MAP = [
   { keywords: ["prolactin"],                                         canonical: "Prolactin" },
   { keywords: ["dhea-s", "dheas", "dehydroepiandrosterone sulfate", "dhea sulfate", "dhea"], canonical: "DHEA-S" },
   { keywords: ["cortisol"],                                          canonical: "Cortisol" },
-  { keywords: ["shbg", "sex hormone binding"],                      canonical: "SHBG" },
   { keywords: ["igf-1", "igf1", "insulin-like growth factor"],      canonical: "IGF-1" },
   { keywords: ["psa", "prostate specific"],                         canonical: "PSA" },
   { keywords: ["amh", "anti-mullerian", "antimullerian"],           canonical: "AMH" },
@@ -1508,11 +1522,15 @@ function normalizeMarkers(markers) {
     var low  = convertToPreferred(m.low,   m.unit, canonical);
     var high = convertToPreferred(m.high,  m.unit, canonical);
     return Object.assign({}, m, {
-      name:  canonical,
-      value: val.value,
-      unit:  val.unit,
-      low:   low.value,
-      high:  high.value,
+      name:      canonical,
+      value:     val.value,
+      unit:      val.unit,
+      low:       low.value,
+      high:      high.value,
+      raw_value: m.value,
+      raw_unit:  m.unit,
+      raw_low:   m.low,
+      raw_high:  m.high,
     });
   });
 
