@@ -11,39 +11,33 @@ var isNative = Capacitor.isNativePlatform();
 var NATIVE_REDIRECT = "com.vitascan.app://login-callback";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #FEE8D9;
-    --surface: #E1E9C9;
-    --surface2: #CADCAE;
-    --border: rgba(140,115,90,0.2);
-    --accent: #EDA35A;
-    --accent2: #527A48;
-    --danger: #B84838;
-    --warn: #C97B28;
-    --ok: #527A48;
-    --text: #3A2518;
-    --muted: #8A6E55;
-    --dim: rgba(140,115,90,0.18);
+    --bg: #F0F4F8;
+    --surface: #FFFFFF;
+    --surface2: #F8FAFC;
+    --border: rgba(15,23,42,0.07);
+    --accent: #0EA5E9;
+    --accent2: #2DD4BF;
+    --ok: #10B981;
+    --danger: #EF4444;
+    --warn: #F97316;
+    --text: #0F172A;
+    --muted: #94A3B8;
+    --dim: rgba(15,23,42,0.07);
   }
 
-  body { background: var(--bg); color: var(--text); font-family: 'Open Sans', sans-serif; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
 
-  .app {
-    min-height: 100vh;
-    background: var(--bg);
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(237,163,90,0.14) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 40% at 90% 80%, rgba(202,220,174,0.25) 0%, transparent 50%);
-  }
+  .app { min-height: 100vh; background: var(--bg); }
 
   .header {
     border-bottom: 1px solid var(--border);
-    padding: 20px 40px;
-    padding-top: calc(20px + env(safe-area-inset-top));
+    padding: 16px 24px;
+    padding-top: calc(16px + env(safe-area-inset-top));
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -51,18 +45,18 @@ const STYLES = `
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(254,232,217,0.88);
+    background: rgba(255,255,255,0.92);
   }
 
-  .logo { font-family: 'Open Sans', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: var(--text); }
+  .logo { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: var(--text); }
   .logo span { color: var(--accent); }
 
   .badge {
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: 10px;
-    background: rgba(237,163,90,0.15);
-    border: 1px solid rgba(237,163,90,0.3);
+    background: rgba(14,165,233,0.1);
+    border: 1px solid rgba(14,165,233,0.2);
     color: var(--accent);
     padding: 3px 10px;
     border-radius: 20px;
@@ -70,130 +64,167 @@ const STYLES = `
     text-transform: uppercase;
   }
 
-  .main { max-width: 1100px; margin: 0 auto; padding: 48px 24px; }
-  .upload-section { text-align: center; padding: 80px 40px; }
+  .main { max-width: 680px; margin: 0 auto; padding: 32px 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .upload-section { text-align: center; padding: 48px 16px; }
 
   .upload-title {
-    font-family: 'Open Sans', sans-serif;
-    font-size: 42px;
+    font-family: 'Inter', sans-serif;
+    font-size: 36px;
     font-weight: 800;
     letter-spacing: -1.5px;
     line-height: 1.1;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   .upload-title span {
-    background: linear-gradient(135deg, var(--accent), #D07B2F);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
-  .upload-sub { color: var(--muted); font-size: 16px; margin-bottom: 48px; font-weight: 300; }
+  .upload-sub { color: var(--muted); font-size: 15px; margin-bottom: 32px; font-weight: 400; }
 
   .drop-zone {
-    border: 1.5px dashed rgba(237,163,90,0.4);
+    border: 1.5px dashed rgba(14,165,233,0.35);
     border-radius: 20px;
-    padding: 60px;
+    padding: 48px 32px;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: rgba(237,163,90,0.04);
-    max-width: 560px;
+    background: rgba(14,165,233,0.03);
+    max-width: 520px;
     margin: 0 auto;
     position: relative;
     overflow: hidden;
   }
-  .drop-zone::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(237,163,90,0.08) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .drop-zone:hover { border-color: rgba(237,163,90,0.7); }
-  .drop-zone:hover::before { opacity: 1; }
-  .drop-zone.drag-over { border-color: var(--accent); background: rgba(237,163,90,0.08); }
+  .drop-zone:hover { border-color: rgba(14,165,233,0.6); background: rgba(14,165,233,0.06); }
+  .drop-zone.drag-over { border-color: var(--accent); background: rgba(14,165,233,0.08); }
 
   .drop-icon {
     width: 56px; height: 56px;
-    margin: 0 auto 20px;
-    background: rgba(237,163,90,0.14);
+    margin: 0 auto 16px;
+    background: rgba(14,165,233,0.1);
     border-radius: 16px;
     display: flex; align-items: center; justify-content: center;
     font-size: 24px;
   }
-  .drop-label { font-size: 16px; color: var(--text); font-weight: 500; margin-bottom: 8px; }
-  .drop-hint { font-size: 13px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 300; }
+  .drop-label { font-size: 16px; color: var(--text); font-weight: 500; margin-bottom: 6px; }
+  .drop-hint { font-size: 13px; color: var(--muted); font-weight: 400; }
   .file-input { display: none; }
 
   .btn {
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 12px 28px; border-radius: 10px;
+    padding: 10px 22px; border-radius: 10px;
     font-size: 14px; font-weight: 500; cursor: pointer;
     border: none; transition: all 0.2s ease;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
-  .btn-ghost { background: rgba(58,37,24,0.06); color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:hover { background: rgba(58,37,24,0.1); color: var(--text); }
+  .btn-ghost { background: rgba(15,23,42,0.04); color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: rgba(15,23,42,0.08); color: var(--text); }
 
   .loading-state { text-align: center; padding: 80px 40px; }
   .pulse-ring {
     width: 80px; height: 80px; border-radius: 50%;
     border: 2px solid transparent;
     border-top-color: var(--accent);
-    border-right-color: rgba(237,163,90,0.3);
+    border-right-color: rgba(14,165,233,0.3);
     animation: spin 1s linear infinite;
     margin: 0 auto 24px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-family: 'Open Sans', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-  .loading-sub { color: var(--muted); font-size: 14px; font-family: 'Open Sans', sans-serif; font-weight: 300; }
+  .loading-text { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .loading-sub { color: var(--muted); font-size: 14px; font-family: 'Inter', sans-serif; font-weight: 400; }
 
-  .results-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; gap: 20px; flex-wrap: wrap; }
-  .results-title { font-family: 'Open Sans', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
-  .results-meta { font-size: 13px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 300; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .cached-badge { font-size: 10px; background: rgba(82,122,72,0.12); border: 1px solid rgba(82,122,72,0.25); color: var(--ok); padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .results-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+  .results-title { font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .results-meta { font-size: 13px; color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 400; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cached-badge { font-size: 10px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: var(--ok); padding: 2px 8px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
 
-  .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 40px; }
-  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center; }
-  .summary-card .s-num { font-family: 'Open Sans', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-  .summary-card .s-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'Open Sans', sans-serif; font-weight: 600; }
-  .c-ok .s-num { color: var(--ok); }
-  .c-warn .s-num { color: var(--warn); }
-  .c-danger .s-num { color: var(--danger); }
-  .c-total .s-num { color: var(--accent); }
-  .summary-ratio-bar { height: 4px; border-radius: 4px; background: var(--dim); margin-top: 14px; overflow: hidden; display: flex; }
-  .summary-ratio-fill { height: 100%; border-radius: 4px; }
-  .c-ok .summary-ratio-fill    { background: var(--ok); }
-  .c-danger .summary-ratio-fill { background: var(--danger); }
-  .c-warn .summary-ratio-fill  { background: var(--warn); }
+  /* ── Health Score Card ── */
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .score-ring-wrap { position: relative; flex-shrink: 0; }
+  .score-ring-wrap svg { display: block; }
+  .score-ring-pct {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+  }
+  .score-ring-num { font-size: 22px; font-weight: 800; line-height: 1; }
+  .score-ring-unit { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .score-info { flex: 1; min-width: 0; }
+  .score-label { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .score-sub { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .score-progress-track { height: 6px; background: var(--dim); border-radius: 6px; overflow: hidden; margin-bottom: 6px; }
+  .score-progress-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
+  .score-tally { font-size: 12px; color: var(--muted); }
+  .score-excellent .score-label, .score-excellent .score-ring-num { color: #10B981; }
+  .score-excellent .score-progress-fill { background: #10B981; }
+  .score-good .score-label, .score-good .score-ring-num { color: #0EA5E9; }
+  .score-good .score-progress-fill { background: #0EA5E9; }
+  .score-fair .score-label, .score-fair .score-ring-num { color: #F97316; }
+  .score-fair .score-progress-fill { background: #F97316; }
+  .score-review .score-label, .score-review .score-ring-num { color: #EF4444; }
+  .score-review .score-progress-fill { background: #EF4444; }
+
+  /* ── Attention / All Clear ── */
+  .attention-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; margin-top: 8px;
+  }
+  .attention-header-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--danger); }
+  .attention-header::after { content: ''; flex: 1; height: 1px; background: rgba(239,68,68,0.2); }
+  .allclear-toggle {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; padding: 14px 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; margin-top: 16px; margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .allclear-toggle:hover { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.03); }
+  .allclear-toggle-icon { font-size: 18px; }
+  .allclear-toggle-label { font-size: 14px; font-weight: 600; color: var(--ok); flex: 1; }
+  .allclear-count-pill {
+    font-size: 11px; font-weight: 700; background: rgba(16,185,129,0.12);
+    color: var(--ok); border: 1px solid rgba(16,185,129,0.2);
+    padding: 2px 10px; border-radius: 20px; letter-spacing: 0.3px;
+  }
+  .allclear-chevron { color: var(--muted); font-size: 12px; transition: transform 0.2s; }
+  .allclear-chevron.open { transform: rotate(180deg); }
 
   .section-title {
-    font-family: 'Open Sans', sans-serif; font-size: 14px; font-weight: 700;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
     margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
   }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .health-section { margin-bottom: 40px; }
+  .health-section { margin-bottom: 32px; }
   .health-section-header {
     display: flex; align-items: center; gap: 10px;
-    margin-bottom: 16px; padding-bottom: 12px;
+    margin-bottom: 14px; padding-bottom: 10px;
     border-bottom: 1.5px solid var(--border);
   }
   .health-section-emoji { font-size: 18px; line-height: 1; }
-  .health-section-label { font-family: 'Open Sans', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+  .health-section-label { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
   .health-section-alert {
-    font-family: 'Open Sans', sans-serif; font-size: 10px; font-weight: 600;
-    background: rgba(184,72,56,0.1); color: var(--danger);
-    border: 1px solid rgba(184,72,56,0.22); padding: 2px 9px;
+    font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600;
+    background: rgba(239,68,68,0.08); color: var(--danger);
+    border: 1px solid rgba(239,68,68,0.2); padding: 2px 9px;
     border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
   }
 
-  .markers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 8px; }
+  .markers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 8px; }
 
   .marker-card {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+    border-radius: 14px; padding: 18px; position: relative; overflow: hidden;
   }
   .marker-card::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0;
@@ -203,12 +234,12 @@ const STYLES = `
   .marker-card.status-high::before { background: var(--danger); }
   .marker-card.status-low::before { background: var(--warn); }
 
-  .marker-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .marker-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
   .marker-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-  .marker-category { font-size: 11px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 600; letter-spacing: 0.3px; }
+  .marker-category { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 0.3px; }
   .marker-value { text-align: right; }
-  .marker-value .val { font-family: 'Open Sans', sans-serif; font-size: 22px; font-weight: 800; line-height: 1; }
-  .marker-value .unit { font-size: 11px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 600; }
+  .marker-value .val { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800; line-height: 1; }
+  .marker-value .unit { font-size: 11px; color: var(--muted); font-weight: 600; }
   .status-ok .val { color: var(--ok); }
   .status-high .val { color: var(--danger); }
   .status-low .val { color: var(--warn); }
@@ -236,7 +267,7 @@ const STYLES = `
 
   .range-bar-wrap { margin-bottom: 6px; }
   .range-bar-track { height: 6px; background: var(--dim); border-radius: 10px; position: relative; margin-bottom: 4px; }
-  .range-bar-ok { position: absolute; top: 0; height: 100%; background: rgba(82,122,72,0.18); border-radius: 2px; }
+  .range-bar-ok { position: absolute; top: 0; height: 100%; background: rgba(16,185,129,0.18); border-radius: 2px; }
   .range-bar-marker {
     position: absolute; top: -3px; width: 12px; height: 12px;
     border-radius: 50%; transform: translateX(-50%);
@@ -246,60 +277,93 @@ const STYLES = `
   .status-ok .range-bar-marker { background: var(--ok); color: var(--ok); }
   .status-high .range-bar-marker { background: var(--danger); color: var(--danger); }
   .status-low .range-bar-marker { background: var(--warn); color: var(--warn); }
-  .range-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); font-family: 'Open Sans', sans-serif; font-weight: 400; }
+  .range-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); font-weight: 400; }
 
   .status-pill {
     display: inline-flex; align-items: center; gap: 5px;
     padding: 3px 10px; border-radius: 20px; font-size: 11px;
     font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
   }
-  .pill-ok   { background: rgba(82,122,72,0.12);  color: var(--ok);     border: 1px solid rgba(82,122,72,0.25); }
-  .pill-high { background: rgba(184,72,56,0.1);   color: var(--danger); border: 1px solid rgba(184,72,56,0.22); }
-  .pill-low  { background: rgba(201,123,40,0.1);  color: var(--warn);   border: 1px solid rgba(201,123,40,0.22); }
+  .pill-ok   { background: rgba(16,185,129,0.1);  color: var(--ok);     border: 1px solid rgba(16,185,129,0.2); }
+  .pill-high { background: rgba(239,68,68,0.08);  color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+  .pill-low  { background: rgba(249,115,22,0.08); color: var(--warn);   border: 1px solid rgba(249,115,22,0.2); }
 
-  .insights-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 32px; }
-  .insights-panel h3 { font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .insights-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+  .insights-panel h3 { font-family: 'Inter', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
   .insight-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
-  .insight-icon.blue { background: rgba(237,163,90,0.14); }
-  .insight-icon.teal { background: rgba(202,220,174,0.5); }
+  .insight-icon.blue { background: rgba(14,165,233,0.1); }
+  .insight-icon.teal { background: rgba(45,212,191,0.15); }
   .insight-text { font-size: 14px; line-height: 1.7; color: var(--muted); }
 
-  .tab-empty { text-align: center; padding: 48px 20px; }
+  .tab-empty { text-align: center; padding: 40px 20px; }
   .tab-empty-icon { font-size: 36px; margin-bottom: 14px; }
   .tab-empty-text { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-  .tab-empty-sub  { font-size: 13px; color: var(--muted); font-weight: 300; }
-  .lifestyle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 16px; }
-  .lifestyle-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
-  .lifestyle-emoji { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+  .tab-empty-sub  { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .lifestyle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; }
+  .lifestyle-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .lifestyle-emoji { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
   .lifestyle-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
   .lifestyle-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
   .disclaimer {
-    background: rgba(201,123,40,0.06); border: 1px solid rgba(201,123,40,0.18);
-    border-radius: 12px; padding: 16px 20px; font-size: 12px; color: var(--muted);
-    line-height: 1.6; display: flex; gap: 12px; align-items: flex-start; margin-top: 32px;
+    background: rgba(249,115,22,0.05); border: 1px solid rgba(249,115,22,0.15);
+    border-radius: 12px; padding: 14px 18px; font-size: 12px; color: var(--muted);
+    line-height: 1.6; display: flex; gap: 10px; align-items: flex-start; margin-top: 24px;
   }
-  .disclaimer-icon { color: var(--warn); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .stale-notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: rgba(201,123,40,0.06); border: 1px solid rgba(201,123,40,0.2); border-radius: 10px; margin-bottom: 20px; }
+  .disclaimer-icon { color: var(--warn); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .stale-notice { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: rgba(249,115,22,0.05); border: 1px solid rgba(249,115,22,0.15); border-radius: 10px; margin-bottom: 18px; }
   .stale-notice-text { font-size: 12px; color: var(--muted); line-height: 1.4; }
-  .btn-refresh { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
-  .btn-refresh:hover { background: rgba(237,163,90,0.1); }
+  .btn-refresh { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; transition: all 0.15s; flex-shrink: 0; }
+  .btn-refresh:hover { background: rgba(14,165,233,0.08); }
   .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
-  .app-footer { border-top: 1px solid var(--border); padding: 16px 40px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); text-align: center; font-size: 11px; color: var(--muted); line-height: 1.6; background: var(--bg); }
-  @media (max-width: 600px) { .app-footer { padding: 16px 20px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); } }
 
-  .tabs {
-    display: flex; gap: 4px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 12px;
-    padding: 4px; margin-bottom: 32px; width: fit-content;
+  /* ── Bottom Navigation ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(64px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    z-index: 200;
+    box-shadow: 0 -4px 20px rgba(15,23,42,0.06);
   }
-  .tab {
-    padding: 8px 20px; border-radius: 9px; font-size: 13px; font-weight: 500;
-    cursor: pointer; border: none; background: transparent; color: var(--muted);
-    font-family: 'Open Sans', sans-serif; transition: all 0.2s;
+  .bottom-nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; background: none; border: none;
+    cursor: pointer; padding: 8px 4px; transition: all 0.15s;
+    color: var(--muted); font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
   }
-  .tab.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .bottom-nav-tab.active { color: var(--accent); }
+  .bottom-nav-icon { font-size: 22px; line-height: 1; }
+  .bottom-nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; }
+
+  /* ── Recent strip (upload screen) ── */
+  .recent-strip { margin-top: 28px; text-align: left; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .recent-strip-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
+  .recent-strip-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; cursor: pointer; transition: all 0.15s; margin-bottom: 8px;
+  }
+  .recent-strip-item:hover { border-color: rgba(14,165,233,0.3); transform: translateY(-1px); }
+  .recent-strip-icon { font-size: 18px; flex-shrink: 0; }
+  .recent-strip-info { flex: 1; min-width: 0; }
+  .recent-strip-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .recent-strip-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .report-score-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.3px; flex-shrink: 0;
+    font-family: 'Inter', sans-serif;
+  }
+  .score-pill-excellent { background: rgba(16,185,129,0.1); color: #10B981; border: 1px solid rgba(16,185,129,0.2); }
+  .score-pill-good      { background: rgba(14,165,233,0.1); color: #0EA5E9; border: 1px solid rgba(14,165,233,0.2); }
+  .score-pill-fair      { background: rgba(249,115,22,0.08); color: #F97316; border: 1px solid rgba(249,115,22,0.2); }
+  .score-pill-review    { background: rgba(239,68,68,0.08); color: #EF4444; border: 1px solid rgba(239,68,68,0.2); }
 
   /* ── Auth screen ── */
   .auth-screen {
@@ -309,9 +373,6 @@ const STYLES = `
     justify-content: center;
     padding: 24px;
     background: var(--bg);
-    background-image:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(237,163,90,0.14) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 40% at 90% 80%, rgba(202,220,174,0.25) 0%, transparent 50%);
   }
 
   .auth-card {
@@ -322,11 +383,11 @@ const STYLES = `
     max-width: 420px;
     width: 100%;
     text-align: center;
-    box-shadow: 0 8px 40px rgba(58,37,24,0.08);
+    box-shadow: 0 8px 40px rgba(15,23,42,0.08);
   }
 
   .auth-logo {
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 800;
     font-size: 32px;
     letter-spacing: -1px;
@@ -339,7 +400,7 @@ const STYLES = `
     font-size: 14px;
     color: var(--muted);
     margin-bottom: 40px;
-    font-weight: 300;
+    font-weight: 400;
   }
 
   .btn-google {
@@ -352,7 +413,7 @@ const STYLES = `
     border: 1px solid var(--border);
     border-radius: 10px;
     background: white;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 600;
     color: #3c4043;
@@ -381,8 +442,8 @@ const STYLES = `
     padding: 12px 16px;
     border: 1px solid var(--border);
     border-radius: 10px;
-    background: rgba(255,255,255,0.6);
-    font-family: 'Open Sans', sans-serif;
+    background: var(--surface2);
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     color: var(--text);
     outline: none;
@@ -400,7 +461,7 @@ const STYLES = `
     border: none;
     background: var(--accent);
     color: white;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -412,7 +473,7 @@ const STYLES = `
   .auth-error { font-size: 13px; color: var(--danger); margin-top: 14px; }
   .auth-success {
     font-size: 14px; color: var(--ok); margin-top: 14px; line-height: 1.6;
-    background: rgba(82,122,72,0.08); border: 1px solid rgba(82,122,72,0.2);
+    background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);
     border-radius: 10px; padding: 14px 16px;
   }
 
@@ -420,60 +481,39 @@ const STYLES = `
   .header-right { display: flex; align-items: center; gap: 8px; }
 
   .header-avatar {
-    width: 32px; height: 32px;
+    width: 34px; height: 34px;
     border-radius: 50%;
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
     color: white;
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700;
+    font-size: 14px; font-weight: 700;
     flex-shrink: 0;
-  }
-
-  .header-email {
-    font-size: 13px;
-    color: var(--muted);
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .icon-btn {
-    background: none;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 10px;
     cursor: pointer;
-    font-size: 15px;
-    color: var(--muted);
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    line-height: 1;
+    transition: opacity 0.15s;
   }
-  .icon-btn:hover { background: rgba(58,37,24,0.06); color: var(--text); }
+  .header-avatar:hover { opacity: 0.85; }
 
   /* ── History view ── */
   .history-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
     gap: 16px;
   }
 
-  .history-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .report-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 24px;
+    padding: 18px 20px;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
@@ -487,28 +527,35 @@ const STYLES = `
     background: var(--accent);
     border-radius: 3px 0 0 3px;
   }
-  .report-card:hover { border-color: rgba(237,163,90,0.5); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+  .report-card:hover { border-color: rgba(14,165,233,0.3); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
   .report-card-delete { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1; opacity: 0; transition: opacity 0.15s, color 0.15s; }
   .report-card:hover .report-card-delete { opacity: 1; }
   .report-card-delete:hover { color: var(--danger) !important; }
-  .report-delete-confirm { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .report-delete-confirm { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .report-delete-confirm-text { font-size: 12px; color: var(--text); font-weight: 500; }
   .report-delete-confirm-btns { display: flex; gap: 8px; flex-shrink: 0; }
-  .report-delete-yes { background: var(--danger); color: white; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; }
-  .report-delete-no  { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); font-family: 'Open Sans', sans-serif; }
+  .report-delete-yes { background: var(--danger); color: white; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .report-delete-no  { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted); font-family: 'Inter', sans-serif; }
+  .report-card-date-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 6px; margin-bottom: 8px;
+  }
   .report-card-lab { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .report-card-note { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .report-card-note { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
   .report-card-note-text { font-size: 12px; color: var(--text); line-height: 1.5; cursor: text; }
   .report-card-note-empty { font-size: 12px; color: var(--muted); font-style: italic; cursor: text; }
-  .report-card-note-input { width: 100%; font-size: 12px; font-family: 'Open Sans', sans-serif; color: var(--text); background: rgba(255,255,255,0.5); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 8px; resize: none; outline: none; line-height: 1.5; box-sizing: border-box; }
+  .report-card-note-input { width: 100%; font-size: 12px; font-family: 'Inter', sans-serif; color: var(--text); background: rgba(255,255,255,0.8); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 8px; resize: none; outline: none; line-height: 1.5; box-sizing: border-box; }
 
-  .report-card-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
-  .report-card-date { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 300; }
+  .report-card-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; color: var(--text); }
+  .report-card-date { font-size: 12px; color: var(--muted); margin-bottom: 14px; font-weight: 400; }
   .report-card-stats { display: flex; gap: 16px; }
-  .report-ratio-bar { display: flex; height: 4px; border-radius: 4px; overflow: hidden; background: var(--dim); margin-top: 16px; }
+  .report-ratio-bar { display: flex; height: 3px; border-radius: 3px; overflow: hidden; background: var(--dim); margin-top: 12px; }
   .report-ratio-bar div { height: 100%; }
   .report-stat { text-align: center; }
-  .report-stat-num { font-size: 22px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
+  .report-stat-num { font-size: 20px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
   .report-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
   .report-stat.s-ok .report-stat-num { color: var(--ok); }
   .report-stat.s-high .report-stat-num { color: var(--danger); }
@@ -517,23 +564,23 @@ const STYLES = `
 
   /* ── Debug table ── */
   .debug-wrap { overflow-x: auto; }
-  .debug-table { border-collapse: collapse; width: 100%; font-size: 12px; font-family: 'Open Sans', sans-serif; }
+  .debug-table { border-collapse: collapse; width: 100%; font-size: 12px; font-family: 'Inter', sans-serif; }
   .debug-table th { background: var(--surface2); border: 1px solid var(--border); padding: 8px 12px; text-align: left; font-weight: 700; white-space: nowrap; position: sticky; top: 0; }
   .debug-table th.col-marker { position: sticky; left: 0; z-index: 2; min-width: 180px; }
   .debug-table td { border: 1px solid var(--border); padding: 6px 12px; white-space: nowrap; background: var(--surface); }
   .debug-table td.col-marker { font-weight: 600; position: sticky; left: 0; background: var(--surface2); z-index: 1; }
-  .debug-table tr:hover td { background: rgba(237,163,90,0.07); }
+  .debug-table tr:hover td { background: rgba(14,165,233,0.05); }
   .debug-table tr:hover td.col-marker { background: var(--surface2); }
   .debug-cell-ok   { color: var(--ok); }
   .debug-cell-high { color: var(--danger); font-weight: 600; }
   .debug-cell-low  { color: var(--warn);   font-weight: 600; }
   .debug-cell-none { color: var(--muted);  }
-  .debug-section-header { background: rgba(237,163,90,0.12) !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); padding: 10px 16px; }
-  .debug-table tr.debug-section-row:hover td { background: rgba(237,163,90,0.12); }
+  .debug-section-header { background: rgba(14,165,233,0.07) !important; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); padding: 10px 16px; }
+  .debug-table tr.debug-section-row:hover td { background: rgba(14,165,233,0.07); }
 
   .year-divider {
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
-    color: var(--muted); margin: 28px 0 16px; display: flex; align-items: center; gap: 12px;
+    color: var(--muted); margin: 24px 0 12px; display: flex; align-items: center; gap: 12px;
   }
   .year-divider:first-child { margin-top: 0; }
   .year-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -545,59 +592,59 @@ const STYLES = `
   }
   .history-empty-icon { font-size: 48px; margin-bottom: 20px; }
   .history-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
-  .history-empty-sub { font-size: 14px; font-weight: 300; }
+  .history-empty-sub { font-size: 14px; font-weight: 400; }
 
   /* ── Profile screen ── */
   .profile-screen { max-width: 560px; margin: 0 auto; }
-  .form-group { margin-bottom: 24px; }
+  .form-group { margin-bottom: 22px; }
   .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; display: block; }
-  .form-input { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; background: rgba(255,255,255,0.6); font-family: 'Open Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .form-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface2); font-family: 'Inter', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border-color 0.2s; }
   .form-input:focus { border-color: var(--accent); }
   .form-input::placeholder { color: var(--muted); }
   .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
-  .radio-option { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.15s; user-select: none; }
-  .radio-option:hover { border-color: rgba(237,163,90,0.5); color: var(--text); }
-  .radio-option.selected { border-color: var(--accent); background: rgba(237,163,90,0.1); color: var(--text); }
+  .radio-option { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.15s; user-select: none; }
+  .radio-option:hover { border-color: rgba(14,165,233,0.4); color: var(--text); }
+  .radio-option.selected { border-color: var(--accent); background: rgba(14,165,233,0.07); color: var(--text); }
   .radio-option input { display: none; }
   .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
   .checkbox-option { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--muted); transition: all 0.15s; user-select: none; }
-  .checkbox-option:hover { border-color: rgba(237,163,90,0.5); color: var(--text); }
-  .checkbox-option.selected { border-color: var(--accent); background: rgba(237,163,90,0.1); color: var(--text); }
+  .checkbox-option:hover { border-color: rgba(14,165,233,0.4); color: var(--text); }
+  .checkbox-option.selected { border-color: var(--accent); background: rgba(14,165,233,0.07); color: var(--text); }
   .checkbox-option input { display: none; }
-  .profile-actions { display: flex; gap: 12px; margin-top: 32px; }
+  .profile-actions { display: flex; gap: 12px; margin-top: 28px; }
   .profile-error { font-size: 13px; color: var(--danger); margin-top: 12px; }
   .danger-zone { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
   .danger-zone-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
-  .btn-delete { background: none; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'Open Sans', sans-serif; }
-  .btn-delete:hover { background: rgba(184,72,56,0.08); }
+  .btn-delete { background: none; border: 1px solid var(--danger); color: var(--danger); border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .btn-delete:hover { background: rgba(239,68,68,0.06); }
   .delete-confirm-text { font-size: 13px; color: var(--text); line-height: 1.5; }
-  .btn-delete-confirm { background: var(--danger); color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; }
+  .btn-delete-confirm { background: var(--danger); color: white; border: none; border-radius: 10px; padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
   .btn-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
   /* ── Trends screen ── */
-  .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
-  .chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; color: var(--muted); transition: all 0.15s; font-family: 'Open Sans', sans-serif; text-transform: capitalize; }
-  .chip:hover { border-color: rgba(237,163,90,0.5); color: var(--text); }
-  .chip.chip-active { border-color: var(--accent); background: rgba(237,163,90,0.12); color: var(--text); font-weight: 600; }
-  .trend-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+  .chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; color: var(--muted); transition: all 0.15s; font-family: 'Inter', sans-serif; text-transform: capitalize; }
+  .chip:hover { border-color: rgba(14,165,233,0.4); color: var(--text); }
+  .chip.chip-active { border-color: var(--accent); background: rgba(14,165,233,0.08); color: var(--text); font-weight: 600; }
+  .trend-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
   .trend-chart-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; text-transform: capitalize; }
-  .trend-chart-unit { font-size: 12px; color: var(--muted); margin-bottom: 24px; }
+  .trend-chart-unit { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
   .trends-empty { text-align: center; padding: 80px 40px; color: var(--muted); }
   .trends-empty-icon { font-size: 48px; margin-bottom: 20px; }
   .trends-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
-  .trends-empty-sub { font-size: 14px; font-weight: 300; }
+  .trends-empty-sub { font-size: 14px; font-weight: 400; }
 
   /* ── Domain cards ── */
-  .domain-cards { display: flex; gap: 12px; overflow-x: auto; margin-bottom: 28px; padding-bottom: 4px; scrollbar-width: none; }
+  .domain-cards { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 24px; padding-bottom: 4px; scrollbar-width: none; }
   .domain-cards::-webkit-scrollbar { display: none; }
   .domain-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 14px 16px; cursor: pointer; flex-shrink: 0; min-width: 130px;
+    padding: 12px 14px; cursor: pointer; flex-shrink: 0; min-width: 120px;
     transition: all 0.2s; position: relative; overflow: hidden; text-align: left;
   }
   .domain-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
-  .domain-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
-  .domain-card.dc-active { border-color: rgba(237,163,90,0.6); background: rgba(237,163,90,0.07); }
+  .domain-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+  .domain-card.dc-active { border-color: rgba(14,165,233,0.5); background: rgba(14,165,233,0.05); }
   .domain-card-emoji { font-size: 18px; margin-bottom: 6px; display: block; }
   .domain-card-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
   .domain-card-count { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
@@ -619,11 +666,11 @@ const STYLES = `
   .chip-group-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
   /* ── Optimal ranges ── */
-  .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(237,163,90,0.55); border-left: 2px solid rgba(237,163,90,0.9); border-right: 2px solid rgba(237,163,90,0.9); z-index: 1; }
+  .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(14,165,233,0.22); border-left: 2px solid rgba(14,165,233,0.5); border-right: 2px solid rgba(14,165,233,0.5); z-index: 1; }
 
   /* ── Trend stats ── */
-  .trend-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-  .trend-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; min-width: 90px; }
+  .trend-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .trend-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; min-width: 80px; }
   .trend-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
   .trend-stat-value { font-size: 18px; font-weight: 800; line-height: 1; }
   .trend-stat-unit { font-size: 11px; color: var(--muted); margin-left: 3px; font-weight: 400; }
@@ -631,18 +678,18 @@ const STYLES = `
   .trend-stat.s-high .trend-stat-value { color: var(--danger); }
   .trend-stat.s-low  .trend-stat-value { color: var(--warn); }
   .trend-stat.s-neutral .trend-stat-value { color: var(--text); }
-  .trend-legend { display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+  .trend-legend { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
   .trend-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 
   /* ── Sync toast ── */
   .sync-toast {
-    position: fixed; bottom: 24px; right: 24px;
+    position: fixed; bottom: calc(72px + env(safe-area-inset-bottom)); right: 16px;
     padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
-    z-index: 1000; animation: fadeIn 0.2s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    z-index: 1000; animation: fadeIn 0.2s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     display: flex; align-items: center; gap: 8px;
   }
-  .sync-toast-saved { background: var(--surface2); color: var(--ok);     border: 1px solid rgba(82,122,72,0.3); }
-  .sync-toast-error { background: var(--surface);  color: var(--danger); border: 1px solid rgba(184,72,56,0.3); }
+  .sync-toast-saved { background: var(--surface); color: var(--ok);     border: 1px solid rgba(16,185,129,0.3); }
+  .sync-toast-error { background: var(--surface); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
 
   /* ── Onboarding card ── */
   .toggle-row { display: flex; align-items: flex-start; gap: 14px; cursor: pointer; }
@@ -654,36 +701,84 @@ const STYLES = `
   .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
   .toggle-label { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
   .toggle-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
-  .settings-info-box { background: rgba(140,115,90,0.06); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 8px; }
+  .settings-info-box { background: rgba(15,23,42,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: var(--muted); line-height: 1.65; margin-top: 8px; }
   .settings-info-box strong { color: var(--text); font-weight: 600; }
 
   .onboarding-card {
-    background: rgba(237,163,90,0.08); border: 1px solid rgba(237,163,90,0.3);
-    border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
-    display: flex; gap: 16px; align-items: flex-start;
+    background: rgba(14,165,233,0.06); border: 1px solid rgba(14,165,233,0.2);
+    border-radius: 16px; padding: 18px 22px; margin-bottom: 28px;
+    display: flex; gap: 14px; align-items: flex-start;
   }
   .onboarding-icon  { font-size: 26px; flex-shrink: 0; }
   .onboarding-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
   .onboarding-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-  @media (max-width: 768px) {
-    .summary-cards { grid-template-columns: repeat(2, 1fr); }
-    .markers-grid  { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-    .history-grid  { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-    .main { padding: 40px 20px; }
-    .results-title { font-size: 24px; }
+  @media (max-width: 680px) {
+    .markers-grid  { grid-template-columns: 1fr; }
+    .main { padding: 24px 12px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+    .results-title { font-size: 20px; }
+    .score-card { flex-direction: column; text-align: center; }
   }
 
   @media (max-width: 600px) {
-    .header { padding: 16px 20px; padding-top: calc(16px + env(safe-area-inset-top)); }
-    .header-email { display: none; }
-    .main { padding: 32px 16px; }
+    .header { padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top)); }
     .upload-title { font-size: 28px; }
-    .drop-zone { padding: 40px 20px; }
-    .markers-grid { grid-template-columns: 1fr; }
+    .drop-zone { padding: 36px 16px; }
     .auth-card { padding: 36px 24px; }
+    .lifestyle-grid { grid-template-columns: 1fr; }
   }
 `;
+
+function computeHealthScore(markers) {
+  if (!markers || markers.length === 0) return null;
+  var inRange = markers.filter(function(m) {
+    return getStatus(m.value, m.low, m.high) === "ok";
+  }).length;
+  var pct = Math.round((inRange / markers.length) * 100);
+  var label, cls;
+  if (pct >= 90)      { label = t("score_excellent"); cls = "score-excellent"; }
+  else if (pct >= 75) { label = t("score_good");      cls = "score-good"; }
+  else if (pct >= 55) { label = t("score_fair");      cls = "score-fair"; }
+  else                { label = t("score_review");    cls = "score-review"; }
+  return { pct: pct, inRange: inRange, total: markers.length, label: label, cls: cls };
+}
+
+function HealthScoreCard({ markers }) {
+  var score = computeHealthScore(markers);
+  if (!score) return null;
+  var r = 34;
+  var circ = 2 * Math.PI * r;
+  var dash = (score.pct / 100) * circ;
+  var colorMap = { "score-excellent": "#10B981", "score-good": "#0EA5E9", "score-fair": "#F97316", "score-review": "#EF4444" };
+  var color = colorMap[score.cls] || "#0EA5E9";
+  var subKey = "score_sub_" + score.cls.replace("score-", "");
+  return (
+    <div className={"score-card " + score.cls}>
+      <div className="score-ring-wrap">
+        <svg width="88" height="88" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r={r} fill="none" stroke="var(--dim)" strokeWidth="6" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke={color} strokeWidth="6"
+            strokeDasharray={dash + " " + circ}
+            strokeLinecap="round"
+            transform="rotate(-90 44 44)"
+          />
+        </svg>
+        <div className="score-ring-pct">
+          <span className="score-ring-num">{score.pct}</span>
+          <span className="score-ring-unit">%</span>
+        </div>
+      </div>
+      <div className="score-info">
+        <div className="score-label">{score.label}</div>
+        <div className="score-sub">{t(subKey)}</div>
+        <div className="score-progress-track">
+          <div className="score-progress-fill" style={{ width: score.pct + "%" }} />
+        </div>
+        <div className="score-tally">{score.inRange} / {score.total} markers in range</div>
+      </div>
+    </div>
+  );
+}
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -1062,6 +1157,20 @@ var STRINGS = {
     cond_thyroid: "Thyroid Disorder",
     cond_anemia: "Anemia",
     cond_other: "Other",
+    score_excellent: "Excellent",
+    score_good: "Good",
+    score_fair: "Fair",
+    score_review: "Needs Review",
+    score_sub_excellent: "Your results look great",
+    score_sub_good: "Most markers in healthy range",
+    score_sub_fair: "Some markers need attention",
+    score_sub_review: "Several markers need attention",
+    section_attention: "Needs Attention",
+    section_allclear: "All Clear",
+    nav_home: "Home",
+    nav_history: "History",
+    nav_trends: "Trends",
+    nav_profile: "Profile",
   },
   tr: {
     auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
@@ -1191,6 +1300,20 @@ var STRINGS = {
     cond_thyroid: "Tiroid Bozuklu\u011fu",
     cond_anemia: "Anemi",
     cond_other: "Di\u011fer",
+    score_excellent: "M\u00fckemmel",
+    score_good: "\u0130yi",
+    score_fair: "Orta",
+    score_review: "\u0130ncelenmeli",
+    score_sub_excellent: "Sonu\u00e7lar\u0131n\u0131z harika g\u00f6r\u00fcn\u00fcyor",
+    score_sub_good: "\u00c7o\u011fu belirte\u00e7 sa\u011fl\u0131kl\u0131 aral\u0131kta",
+    score_sub_fair: "Baz\u0131 belirte\u00e7ler dikkat gerektiriyor",
+    score_sub_review: "Birka\u00e7 belirte\u00e7 dikkat gerektiriyor",
+    section_attention: "Dikkat Gerektiriyor",
+    section_allclear: "Normal",
+    nav_home: "Ana Sayfa",
+    nav_history: "Ge\u00e7mi\u015f",
+    nav_trends: "E\u011filimler",
+    nav_profile: "Profil",
   }
 };
 
@@ -1678,7 +1801,7 @@ function getTrendData(history, canonicalName, unitSystem) {
 function TrendDot(props) {
   var { cx, cy, payload } = props;
   if (cx === undefined || cy === undefined) return null;
-  var colorMap = { ok: "#527A48", high: "#B84838", low: "#C97B28" };
+  var colorMap = { ok: "#10B981", high: "#EF4444", low: "#F97316" };
   var fill = colorMap[payload && payload.status] || colorMap.ok;
   return <circle cx={cx} cy={cy} r={5} fill={fill} stroke="var(--bg)" strokeWidth={2} />;
 }
@@ -1935,6 +2058,7 @@ export default function App() {
   // ── Trends state ──
   const [selectedTrendMarker, setSelectedTrendMarker] = useState(null);
   const [selectedTrendDomain, setSelectedTrendDomain] = useState(null); // null = All
+  const [allClearExpanded, setAllClearExpanded] = useState(false);
 
   // ── Sync toast ──
   const [syncToast, setSyncToast] = useState(null); // null | "saved" | "error"
@@ -2276,6 +2400,7 @@ export default function App() {
         setResults(cached);
         setFromCache(true);
         setActiveTab("markers");
+        setAllClearExpanded(false);
         setStage("results");
         return;
       }
@@ -2318,6 +2443,7 @@ export default function App() {
       setResults(data);
       setFromCache(false);
       setActiveTab("markers");
+      setAllClearExpanded(false);
       setStage("results");
     } catch (e) {
       Sentry.captureException(e);
@@ -2336,6 +2462,7 @@ export default function App() {
 
   // ── History card click ──
   function handleHistoryItem(item) {
+    setAllClearExpanded(false);
     setResults({
       reportId:            item.id,
       patientName:         item.patient_name,
@@ -2528,56 +2655,61 @@ export default function App() {
         <header className="header">
           <div className="logo">vita<span>scan</span></div>
           <div className="header-right">
-            {profile && (
-              <button
-                className="icon-btn"
-                title={t("hdr_edit_profile")}
-                aria-label={t("hdr_edit_profile")}
-                onClick={function() {
-                  setProfileForm({
-                    full_name:      profile.full_name      || "",
-                    age:            profile.age            ? String(profile.age) : "",
-                    biological_sex: profile.biological_sex || "",
-                    conditions:     profile.conditions     || [],
-                  });
-                  setProfileError(null);
-                  setStage("profile");
-                }}
-              >
-                👤
-              </button>
-            )}
-            <button
-              className="icon-btn"
-              title={t("hdr_trends")}
-              aria-label={t("hdr_trends")}
-              onClick={function() { setStage("trends"); }}
+            <div
+              className="header-avatar"
+              title={user.email}
+              onClick={function() {
+                setProfileForm({
+                  full_name:      profile ? (profile.full_name      || "") : "",
+                  age:            profile ? (profile.age            ? String(profile.age) : "") : "",
+                  biological_sex: profile ? (profile.biological_sex || "") : "",
+                  conditions:     profile ? (profile.conditions     || []) : [],
+                });
+                setProfileError(null);
+                setStage("profile");
+              }}
             >
-              📈
-            </button>
-            <button
-              className="icon-btn"
-              title={t("hdr_debug")}
-              aria-label={t("hdr_debug")}
-              onClick={function() { setStage("debug"); }}
-            >
-              🧪
-            </button>
-            <button
-              className="icon-btn"
-              title={t("hdr_history")}
-              aria-label={t("hdr_history")}
-              onClick={function() { setStage("history"); }}
-            >
-              🕐
-            </button>
-            <div className="header-avatar" title={user.email}>{avatarLetter}</div>
-            <span className="header-email">{user.email}</span>
-            <button className="btn btn-ghost" style={{ padding: "8px 16px" }} onClick={handleSignOut}>
-              {t("hdr_sign_out")}
-            </button>
+              {avatarLetter}
+            </div>
           </div>
         </header>
+
+        <nav className="bottom-nav">
+          {[
+            { id: "upload",  icon: "🏠", label: t("nav_home")    },
+            { id: "history", icon: "📋", label: t("nav_history") },
+            { id: "trends",  icon: "📈", label: t("nav_trends")  },
+            { id: "profile", icon: "👤", label: t("nav_profile") },
+          ].map(function(tab) {
+            var isActive = tab.id === stage || (tab.id === "upload" && (stage === "results" || stage === "loading"));
+            return (
+              <button
+                key={tab.id}
+                className={"bottom-nav-tab" + (isActive ? " active" : "")}
+                onClick={function() {
+                  if (tab.id === "upload") {
+                    setStage("upload");
+                    setResults(null);
+                  } else if (tab.id === "profile") {
+                    setProfileForm({
+                      full_name:      profile ? (profile.full_name      || "") : "",
+                      age:            profile ? (profile.age            ? String(profile.age) : "") : "",
+                      biological_sex: profile ? (profile.biological_sex || "") : "",
+                      conditions:     profile ? (profile.conditions     || []) : [],
+                    });
+                    setProfileError(null);
+                    setStage("profile");
+                  } else {
+                    setStage(tab.id);
+                  }
+                }}
+              >
+                <span className="bottom-nav-icon">{tab.icon}</span>
+                <span className="bottom-nav-label">{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
         <main className="main">
 
@@ -2777,7 +2909,41 @@ export default function App() {
                 />
               </div>
               {error && <p style={{ color: "var(--danger)", marginTop: 20, fontSize: 14 }}>{error}</p>}
-              <p style={{ marginTop: 24, fontSize: 12, color: "var(--muted)" }}>{t("upload_privacy")}</p>
+              <p style={{ marginTop: 20, fontSize: 12, color: "var(--muted)" }}>{t("upload_privacy")}</p>
+              {history.length > 0 && (function() {
+                var recent = history.slice().sort(function(a, b) {
+                  var da = a.report_date ? new Date(a.report_date) : new Date(a.created_at);
+                  var db = b.report_date ? new Date(b.report_date) : new Date(b.created_at);
+                  return db - da;
+                }).slice(0, 5);
+                return (
+                  <div className="recent-strip">
+                    <div className="recent-strip-title">Recent Reports</div>
+                    {recent.map(function(item) {
+                      var itemMarkers = item.markers || [];
+                      var score = computeHealthScore(itemMarkers);
+                      var dateLabel = item.report_date && item.report_date !== "Unknown"
+                        ? item.report_date
+                        : new Date(item.created_at).toLocaleDateString();
+                      var pillCls = score ? "score-pill-" + score.cls.replace("score-", "") : "";
+                      return (
+                        <div key={item.id} className="recent-strip-item" onClick={function() { handleHistoryItem(item); }}>
+                          <span className="recent-strip-icon">🧬</span>
+                          <div className="recent-strip-info">
+                            <div className="recent-strip-name">
+                              {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : t("history_fallback_name")}
+                            </div>
+                            <div className="recent-strip-date">{dateLabel}</div>
+                          </div>
+                          {score && (
+                            <span className={"report-score-pill " + pillCls}>{score.pct}%</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -2835,7 +3001,7 @@ export default function App() {
                   return (
                     <div key={year}>
                       <div className="year-divider">{year}</div>
-                      <div className="history-grid">
+                      <div className="history-list">
                         {byYear[year].map(function(item) {
                           var itemMarkers = item.markers || [];
                           var itemCounts = {
@@ -2851,11 +3017,17 @@ export default function App() {
                           return (
                             <div key={item.id} className="report-card" onClick={function() { if (!isConfirming) handleHistoryItem(item); }}>
                               <button className="report-card-delete" title="Delete report" onClick={function(e) { e.stopPropagation(); setDeletingReportId(item.id); }}>✕</button>
+                              <div className="report-card-date-badge">📅 {dateLabel}</div>
                               {item.lab_name && <div className="report-card-lab">{item.lab_name}</div>}
-                              <div className="report-card-name">
-                                {item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : t("history_fallback_name")}
+                              <div className="report-card-name" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                                <span>{item.patient_name && item.patient_name !== "Unknown" ? item.patient_name : t("history_fallback_name")}</span>
+                                {(function() {
+                                  var sc = computeHealthScore(itemMarkers);
+                                  if (!sc) return null;
+                                  var pc = "score-pill-" + sc.cls.replace("score-", "");
+                                  return <span className={"report-score-pill " + pc}>{sc.pct}%</span>;
+                                })()}
                               </div>
-                              <div className="report-card-date">{dateLabel}</div>
                               <div className="report-card-stats">
                                 <div className="report-stat s-total">
                                   <div className="report-stat-num">{itemCounts.total}</div>
@@ -3191,23 +3363,23 @@ export default function App() {
                         <LineChart data={trendData} margin={{ top: 10, right: 20, left: 4, bottom: manyPoints ? 32 : 4 }}>
                           <XAxis
                             dataKey="date"
-                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }}
+                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Inter" }}
                             angle={manyPoints ? -35 : 0}
                             textAnchor={manyPoints ? "end" : "middle"}
                             interval={0}
                           />
                           <YAxis
                             domain={[yMin, yMax]}
-                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Open Sans" }}
+                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Inter" }}
                             tickFormatter={tickFmt}
                             width={52}
                           />
                           <Tooltip content={<TrendTooltip />} />
                           {refLow !== undefined && refHigh !== undefined && (
-                            <ReferenceArea y1={refLow} y2={refHigh} fill="rgba(82,122,72,0.10)" strokeOpacity={0} />
+                            <ReferenceArea y1={refLow} y2={refHigh} fill="rgba(16,185,129,0.10)" strokeOpacity={0} />
                           )}
                           {optLow !== null && optHigh !== null && (
-                            <ReferenceArea y1={optLow} y2={optHigh} fill="rgba(237,163,90,0.18)" strokeOpacity={0} />
+                            <ReferenceArea y1={optLow} y2={optHigh} fill="rgba(14,165,233,0.15)" strokeOpacity={0} />
                           )}
                           <Line
                             type="monotone"
@@ -3222,12 +3394,12 @@ export default function App() {
                         </LineChart>
                       </ResponsiveContainer>
                       <div className="trend-legend">
-                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#527A48" /></svg>{t("legend_normal")}</div>
-                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#B84838" /></svg>{t("legend_high")}</div>
-                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#C97B28" /></svg>{t("legend_low")}</div>
-                        <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(82,122,72,0.18)", borderRadius: 2 }} />{t("legend_lab_range")}</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#10B981" /></svg>{t("legend_normal")}</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#EF4444" /></svg>{t("legend_high")}</div>
+                        <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#F97316" /></svg>{t("legend_low")}</div>
+                        <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(16,185,129,0.15)", borderRadius: 2 }} />{t("legend_lab_range")}</div>
                         {optLow !== null && (
-                          <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(237,163,90,0.45)", border: "1px solid rgba(237,163,90,0.8)", borderRadius: 2 }} />{t("legend_optimal")}</div>
+                          <div className="trend-legend-item"><div style={{ width: 16, height: 10, background: "rgba(14,165,233,0.2)", border: "1px solid rgba(14,165,233,0.5)", borderRadius: 2 }} />{t("legend_optimal")}</div>
                         )}
                       </div>
                     </div>
@@ -3249,143 +3421,130 @@ export default function App() {
                     {fromCache && <span className="cached-badge">{t("badge_cached")}</span>}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button className="btn btn-ghost" onClick={function() { setStage("history"); }}>
-                    {t("btn_history")}
-                  </button>
-                  <button className="btn btn-ghost" onClick={function() { setStage("upload"); setResults(null); }}>
-                    {t("btn_new_report")}
-                  </button>
-                </div>
+                <button className="btn btn-ghost" onClick={function() { setStage("upload"); setResults(null); }}>
+                  {t("btn_new_report")}
+                </button>
               </div>
 
-              <div className="summary-cards">
-                <div className="summary-card c-total">
-                  <div className="s-num">{counts.total}</div>
-                  <div className="s-label">{t("s_label_markers")}</div>
-                  {counts.total > 0 && (
-                    <div className="summary-ratio-bar">
-                      <div style={{ width: (counts.ok   / counts.total * 100) + "%", background: "var(--ok)",     height: "100%" }}></div>
-                      <div style={{ width: (counts.high / counts.total * 100) + "%", background: "var(--danger)", height: "100%" }}></div>
-                      <div style={{ width: (counts.low  / counts.total * 100) + "%", background: "var(--warn)",   height: "100%" }}></div>
-                    </div>
-                  )}
-                </div>
-                <div className="summary-card c-ok">
-                  <div className="s-num">{counts.ok}</div>
-                  <div className="s-label">{t("stat_normal")}</div>
-                  <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.ok / counts.total * 100) + "%" : "0%" }}></div></div>
-                </div>
-                <div className="summary-card c-danger">
-                  <div className="s-num">{counts.high}</div>
-                  <div className="s-label">{t("stat_high")}</div>
-                  <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.high / counts.total * 100) + "%" : "0%" }}></div></div>
-                </div>
-                <div className="summary-card c-warn">
-                  <div className="s-num">{counts.low}</div>
-                  <div className="s-label">{t("stat_low")}</div>
-                  <div className="summary-ratio-bar"><div className="summary-ratio-fill" style={{ width: counts.total ? (counts.low / counts.total * 100) + "%" : "0%" }}></div></div>
-                </div>
-              </div>
+              <HealthScoreCard markers={markers} />
 
-              <div className="tabs">
-                {[
-                  { id: "markers",   label: t("tab_markers")  },
-                  { id: "insights",  label: t("tab_insights") },
-                  { id: "lifestyle", label: t("tab_lifestyle") },
-                ].map(function(tab) {
-                  return (
-                    <button key={tab.id} className={"tab" + (activeTab === tab.id ? " active" : "")} onClick={function() { setActiveTab(tab.id); }}>
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {activeTab === "markers" && (
-                <>
-                  {categorizeMarkers(markers).map(function(section) {
-                    var abnormal = section.markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; }).length;
-                    return (
-                      <div key={section.id} className="health-section">
-                        <div className="health-section-header" style={{ borderBottomColor: section.color || "var(--border)" }}>
-                          <span className="health-section-emoji" style={{ background: section.color ? section.color + "18" : "transparent", borderRadius: 8, padding: "4px 6px" }}>{section.emoji}</span>
-                          <span className="health-section-label" style={{ color: section.color || "var(--text)" }}>{localizeSection(section.label)}</span>
-                          {abnormal > 0 && <span className="health-section-alert">{tp("section_oor", { n: abnormal })}</span>}
+              {(function() {
+                var oorMarkers = markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; });
+                var okMarkers  = markers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok";  });
+                return (
+                  <>
+                    {oorMarkers.length > 0 && (
+                      <>
+                        <div className="attention-header">
+                          <span className="attention-header-label">{t("section_attention")}</span>
                         </div>
-                        <div className="markers-grid">
-                          {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} showOptimalRanges={showOptimalRanges} />; })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </>
-              )}
-
-              {activeTab === "insights" && (
-                <div className="insights-panel">
-                  <h3><div className="insight-icon blue">🔬</div>{t("insights_title")}</h3>
-                  {results.interpretationStale && (
-                    <div className="stale-notice">
-                      <div className="stale-notice-text">{t("stale_notice")}</div>
-                      <button className="btn-refresh" onClick={handleRefreshInterpretation} disabled={refreshingInterpretation}>
-                        {refreshingInterpretation ? t("btn_refreshing") : t("btn_refresh")}
-                      </button>
-                    </div>
-                  )}
-                  {results.interpretation && results.interpretation.trim() ? (
-                    results.interpretation.split("\n").filter(Boolean).map(function(p, i) {
-                      return <p key={i} className="insight-text" style={{ marginBottom: 14 }}>{p}</p>;
-                    })
-                  ) : (
-                    <div className="tab-empty">
-                      <div className="tab-empty-icon">🔬</div>
-                      <div className="tab-empty-text">{t("no_interpretation")}</div>
-                      <div className="tab-empty-sub">{t("no_interpretation_sub")}</div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "lifestyle" && (
-                <div className="insights-panel">
-                  <h3><div className="insight-icon teal">🌿</div>{t("lifestyle_title")}</h3>
-                  {lifestyle.length > 0 ? (
-                    <>
-                      <p className="insight-text" style={{ marginBottom: 20 }}>{t("lifestyle_intro")}</p>
-                      <div className="lifestyle-grid">
-                        {lifestyle.map(function(item, i) {
+                        {categorizeMarkers(oorMarkers).map(function(section) {
+                          var abnormal = section.markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; }).length;
                           return (
-                            <div key={i} className="lifestyle-item">
-                              <span className="lifestyle-emoji">{item.emoji}</span>
-                              <div>
-                                <div className="lifestyle-label">{item.label}</div>
-                                <div className="lifestyle-desc">{item.desc}</div>
+                            <div key={section.id} className="health-section">
+                              <div className="health-section-header" style={{ borderBottomColor: section.color || "var(--border)" }}>
+                                <span className="health-section-emoji" style={{ background: section.color ? section.color + "18" : "transparent", borderRadius: 8, padding: "4px 6px" }}>{section.emoji}</span>
+                                <span className="health-section-label" style={{ color: section.color || "var(--text)" }}>{localizeSection(section.label)}</span>
+                                {abnormal > 0 && <span className="health-section-alert">{tp("section_oor", { n: abnormal })}</span>}
+                              </div>
+                              <div className="markers-grid">
+                                {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} showOptimalRanges={showOptimalRanges} />; })}
                               </div>
                             </div>
                           );
                         })}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="tab-empty">
-                      <div className="tab-empty-icon">🌿</div>
-                      <div className="tab-empty-text">{t("no_lifestyle")}</div>
-                      <div className="tab-empty-sub">{t("no_lifestyle_sub")}</div>
-                    </div>
-                  )}
-                </div>
-              )}
+                      </>
+                    )}
 
-              <div className="disclaimer">
-                <span className="disclaimer-icon">⚠</span>
-                <span>{t("disclaimer")}</span>
-              </div>
+                    <div className="insights-panel">
+                      <h3><div className="insight-icon blue">🔬</div>{t("insights_title")}</h3>
+                      {results.interpretationStale && (
+                        <div className="stale-notice">
+                          <div className="stale-notice-text">{t("stale_notice")}</div>
+                          <button className="btn-refresh" onClick={handleRefreshInterpretation} disabled={refreshingInterpretation}>
+                            {refreshingInterpretation ? t("btn_refreshing") : t("btn_refresh")}
+                          </button>
+                        </div>
+                      )}
+                      {results.interpretation && results.interpretation.trim() ? (
+                        results.interpretation.split("\n").filter(Boolean).map(function(p, i) {
+                          return <p key={i} className="insight-text" style={{ marginBottom: 14 }}>{p}</p>;
+                        })
+                      ) : (
+                        <div className="tab-empty">
+                          <div className="tab-empty-icon">🔬</div>
+                          <div className="tab-empty-text">{t("no_interpretation")}</div>
+                          <div className="tab-empty-sub">{t("no_interpretation_sub")}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="insights-panel">
+                      <h3><div className="insight-icon teal">🌿</div>{t("lifestyle_title")}</h3>
+                      {lifestyle.length > 0 ? (
+                        <>
+                          <p className="insight-text" style={{ marginBottom: 16 }}>{t("lifestyle_intro")}</p>
+                          <div className="lifestyle-grid">
+                            {lifestyle.map(function(item, i) {
+                              return (
+                                <div key={i} className="lifestyle-item">
+                                  <span className="lifestyle-emoji">{item.emoji}</span>
+                                  <div>
+                                    <div className="lifestyle-label">{item.label}</div>
+                                    <div className="lifestyle-desc">{item.desc}</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="tab-empty">
+                          <div className="tab-empty-icon">🌿</div>
+                          <div className="tab-empty-text">{t("no_lifestyle")}</div>
+                          <div className="tab-empty-sub">{t("no_lifestyle_sub")}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {okMarkers.length > 0 && (
+                      <>
+                        <div
+                          className="allclear-toggle"
+                          onClick={function() { setAllClearExpanded(function(v) { return !v; }); }}
+                        >
+                          <span className="allclear-toggle-icon">✅</span>
+                          <span className="allclear-toggle-label">{t("section_allclear")}</span>
+                          <span className="allclear-count-pill">{okMarkers.length}</span>
+                          <span className={"allclear-chevron" + (allClearExpanded ? " open" : "")}>▼</span>
+                        </div>
+                        {allClearExpanded && categorizeMarkers(okMarkers).map(function(section) {
+                          return (
+                            <div key={section.id} className="health-section">
+                              <div className="health-section-header" style={{ borderBottomColor: section.color || "var(--border)" }}>
+                                <span className="health-section-emoji" style={{ background: section.color ? section.color + "18" : "transparent", borderRadius: 8, padding: "4px 6px" }}>{section.emoji}</span>
+                                <span className="health-section-label" style={{ color: section.color || "var(--text)" }}>{localizeSection(section.label)}</span>
+                              </div>
+                              <div className="markers-grid">
+                                {section.markers.map(function(m, i) { return <MarkerCard key={i} marker={m} unitSystem={unitSystem} showOptimalRanges={showOptimalRanges} />; })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+
+                    <div className="disclaimer">
+                      <span className="disclaimer-icon">⚠</span>
+                      <span>{t("disclaimer")}</span>
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
 
         </main>
-        <footer className="app-footer" dangerouslySetInnerHTML={{ __html: t("footer") }} />
       </div>
       {syncToast && (
         <div className={"sync-toast sync-toast-" + syncToast}>
