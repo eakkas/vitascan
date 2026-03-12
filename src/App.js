@@ -2022,7 +2022,6 @@ export default function App() {
   // ── Core stage state ──
   const [stage,     setStage]     = useState("upload");
   const [results,   setResults]   = useState(null);
-  const [activeTab, setActiveTab] = useState("markers");
   const [dragOver,  setDragOver]  = useState(false);
   const [error,     setError]     = useState(null);
   const [fromCache, setFromCache] = useState(false);
@@ -2399,7 +2398,6 @@ export default function App() {
       if (cacheValid) {
         setResults(cached);
         setFromCache(true);
-        setActiveTab("markers");
         setAllClearExpanded(false);
         setStage("results");
         return;
@@ -2442,7 +2440,6 @@ export default function App() {
 
       setResults(data);
       setFromCache(false);
-      setActiveTab("markers");
       setAllClearExpanded(false);
       setStage("results");
     } catch (e) {
@@ -2473,7 +2470,6 @@ export default function App() {
       interpretationStale: item.interpretation_stale || false,
     });
     setFromCache(false);
-    setActiveTab("markers");
     setStage("results");
   }
 
@@ -2860,6 +2856,12 @@ export default function App() {
                   )}
                 </div>
               </form>
+
+              <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid var(--border)" }}>
+                <button className="btn btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={handleSignOut}>
+                  {t("hdr_sign_out")}
+                </button>
+              </div>
 
               {profile !== null && (
                 <div className="danger-zone">
