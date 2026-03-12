@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VitaScan — Trends v2 Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F0F4F8;
+    --surface: #FFFFFF;
+    --surface2: #F8FAFC;
+    --border: rgba(15,23,42,0.07);
+    --accent: #0EA5E9;
+    --accent2: #2DD4BF;
+    --ok: #10B981;
+    --danger: #EF4444;
+    --warn: #F97316;
+    --text: #0F172A;
+    --muted: #94A3B8;
+    --dim: rgba(15,23,42,0.07);
+  }
+
+  body {
+    font-family: "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 0 0 100px;
+  }
+
+  .phone {
+    width: 390px;
+    min-height: 844px;
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 52px 20px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-title { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+  .header-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Main scroll area */
+  .main { padding: 16px 16px 0; display: flex; flex-direction: column; gap: 14px; }
+
+  /* Progress card */
+  .progress-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    overflow: hidden;
+  }
+  .progress-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .progress-timeline {
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    height: 64px;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .progress-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .progress-delta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ok);
+    font-weight: 700;
+  }
+  .progress-delta-arrow {
+    width: 20px; height: 20px;
+    background: rgba(16,185,129,0.12);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .progress-reports { font-size: 12px; color: var(--muted); }
+
+  /* Score dot + line SVG */
+  .score-svg { width: 100%; height: 64px; }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-badge {
+    background: var(--danger);
+    color: white;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .section-badge-ok {
+    background: rgba(16,185,129,0.12);
+    color: var(--ok);
+  }
+  .section-toggle {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+    cursor: pointer;
+    border: none; background: none;
+  }
+
+  /* Marker list card */
+  .marker-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  /* Marker row */
+  .marker-row {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .marker-row:last-child { border-bottom: none; }
+  .marker-row:hover { background: var(--surface2); }
+  .marker-row.expanded { background: var(--surface2); }
+
+  .marker-row-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .marker-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .marker-dot-ok     { background: var(--ok); }
+  .marker-dot-high   { background: var(--danger); }
+  .marker-dot-low    { background: var(--warn); }
+
+  .marker-name {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .marker-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .marker-unit {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: 2px;
+    font-weight: 400;
+  }
+  .marker-arrow {
+    font-size: 14px;
+    margin-left: 6px;
+    flex-shrink: 0;
+  }
+  .arrow-up    { color: var(--danger); }
+  .arrow-down  { color: var(--warn); }
+  .arrow-flat  { color: var(--ok); }
+  .arrow-imp   { color: var(--ok); }
+
+  /* Inline sparkline */
+  .marker-sparkline {
+    margin-top: 8px;
+    height: 28px;
+    margin-left: 19px; /* align with name */
+  }
+  .spark-svg { width: 100%; height: 28px; overflow: visible; }
+
+  /* Expanded accordion panel */
+  .marker-accordion {
+    border-top: 1px solid var(--border);
+    padding: 16px;
+    background: white;
+  }
+  .chart-placeholder {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 13px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+
+  /* Fake chart rendering */
+  .fake-chart { position: absolute; inset: 0; }
+  .chart-area {
+    position: absolute;
+    inset: 20px 16px 36px 44px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+  }
+  .stat-box {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .stat-lbl {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .stat-val {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--danger);
+  }
+  .stat-val-ok { color: var(--ok); }
+  .stat-val-neutral { color: var(--text); }
+  .stat-unit { font-size: 10px; color: var(--muted); font-weight: 400; }
+
+  /* Legend */
+  .legend-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-rect {
+    width: 14px; height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Delta tag */
+  .delta-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 20px;
+    margin-left: 4px;
+  }
+  .delta-tag-bad  { background: rgba(239,68,68,0.1);  color: var(--danger); }
+  .delta-tag-ok   { background: rgba(16,185,129,0.1); color: var(--ok); }
+  .delta-tag-warn { background: rgba(249,115,22,0.1); color: var(--warn); }
+  .delta-tag-neu  { background: var(--dim); color: var(--muted); }
+
+  /* Trending well section */
+  .trending-well-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .well-row {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .well-row:last-child { border-bottom: none; }
+  .well-name { font-size: 14px; font-weight: 500; flex: 1; color: var(--text); }
+  .well-value { font-size: 13px; color: var(--muted); }
+  .well-arrow { font-size: 13px; color: var(--ok); margin-left: 4px; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 390px;
+    height: 64px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: stretch;
+  }
+  .nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    font-family: "Inter", sans-serif;
+  }
+  .nav-tab.active { color: var(--accent); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+
+  /* Annotation label */
+  .annotation {
+    position: absolute;
+    right: -160px;
+    background: #1E293B;
+    color: white;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    font-weight: 500;
+    pointer-events: none;
+  }
+  .annotation::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 4px solid transparent;
+    border-right-color: #1E293B;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">Trends</div>
+    <button class="header-pill">SI · mmol/L ▾</button>
+  </div>
+
+  <div class="main">
+
+    <!-- 1. Progress card -->
+    <div class="progress-card" style="position:relative">
+      <div class="progress-label">Your Progress</div>
+      <!-- SVG score timeline -->
+      <svg class="score-svg" viewBox="0 0 350 64" preserveAspectRatio="none">
+        <!-- Reference line -->
+        <line x1="0" y1="32" x2="350" y2="32" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+        <!-- Connecting line -->
+        <polyline points="28,48 112,42 196,35 280,24 322,16"
+          fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+        <!-- Fill area -->
+        <polygon points="28,48 112,42 196,35 280,24 322,16 322,64 28,64"
+          fill="url(#areaGrad)" opacity="0.08"/>
+        <defs>
+          <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0EA5E9"/>
+            <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <!-- Dots with score labels -->
+        <!-- Report 1: 68% -->
+        <circle cx="28" cy="48" r="5" fill="var(--warn)" stroke="white" stroke-width="2"/>
+        <text x="28" y="62" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">Mar</text>
+        <text x="28" y="42" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">68%</text>
+        <!-- Report 2: 72% -->
+        <circle cx="112" cy="42" r="5" fill="var(--warn)" stroke="white" stroke-width="2"/>
+        <text x="112" y="62" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">May</text>
+        <text x="112" y="36" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">72%</text>
+        <!-- Report 3: 77% -->
+        <circle cx="196" cy="35" r="5" fill="var(--accent)" stroke="white" stroke-width="2"/>
+        <text x="196" y="62" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">Jul</text>
+        <text x="196" y="29" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">77%</text>
+        <!-- Report 4: 83% -->
+        <circle cx="280" cy="24" r="5" fill="var(--ok)" stroke="white" stroke-width="2"/>
+        <text x="280" y="62" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">Oct</text>
+        <text x="280" y="18" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="Inter">83%</text>
+        <!-- Report 5: 87% (latest, larger dot) -->
+        <circle cx="322" cy="16" r="7" fill="var(--ok)" stroke="white" stroke-width="2"/>
+        <text x="322" y="62" text-anchor="middle" font-size="9" fill="var(--text)" font-weight="bold" font-family="Inter">Now</text>
+        <text x="322" y="8" text-anchor="middle" font-size="10" fill="var(--ok)" font-weight="bold" font-family="Inter">87%</text>
+      </svg>
+      <div class="progress-footer" style="margin-top:6px">
+        <div class="progress-delta">
+          <div class="progress-delta-arrow">↑</div>
+          +19 pts over 5 reports
+        </div>
+        <div class="progress-reports">Good</div>
+      </div>
+    </div>
+
+    <!-- 2. Watch List section -->
+    <div class="section-header">
+      <div class="section-title" style="color:var(--danger)">
+        Watch List
+        <span class="section-badge">3</span>
+      </div>
+    </div>
+
+    <div class="marker-list">
+
+      <!-- Row 1: Glucose, out of range, collapsed -->
+      <div class="marker-row">
+        <div class="marker-row-top">
+          <div class="marker-dot marker-dot-high"></div>
+          <div class="marker-name">Glucose</div>
+          <span class="delta-tag delta-tag-bad">+0.4 vs last</span>
+          <div class="marker-value">5.9<span class="marker-unit">mmol/L</span></div>
+          <div class="marker-arrow arrow-up">↑</div>
+        </div>
+        <!-- Sparkline: 4.8, 5.1, 5.5, 5.9 — rising -->
+        <div class="marker-sparkline">
+          <svg class="spark-svg" viewBox="0 0 200 28" preserveAspectRatio="none">
+            <!-- Ref range band -->
+            <rect x="0" y="6" width="200" height="14" fill="rgba(16,185,129,0.08)" rx="2"/>
+            <!-- Line -->
+            <polyline points="10,20 57,16 113,11 170,6"
+              fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+            <!-- Dots -->
+            <circle cx="10"  cy="20" r="3.5" fill="var(--ok)"    stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="57"  cy="16" r="3.5" fill="var(--ok)"    stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="113" cy="11" r="3.5" fill="var(--warn)"   stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="170" cy="6"  r="4"   fill="var(--danger)" stroke="var(--bg)" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Row 2: LDL Cholesterol, collapsed -->
+      <div class="marker-row">
+        <div class="marker-row-top">
+          <div class="marker-dot marker-dot-high"></div>
+          <div class="marker-name">LDL Cholesterol</div>
+          <span class="delta-tag delta-tag-warn">−0.2 vs last</span>
+          <div class="marker-value">3.8<span class="marker-unit">mmol/L</span></div>
+          <div class="marker-arrow arrow-down" style="color:var(--ok)">↓</div>
+        </div>
+        <div class="marker-sparkline">
+          <svg class="spark-svg" viewBox="0 0 200 28" preserveAspectRatio="none">
+            <rect x="0" y="6" width="200" height="14" fill="rgba(16,185,129,0.08)" rx="2"/>
+            <polyline points="10,4 57,5 113,5 170,9"
+              fill="none" stroke="var(--warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+            <circle cx="10"  cy="4" r="3.5" fill="var(--danger)" stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="57"  cy="5" r="3.5" fill="var(--danger)" stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="113" cy="5" r="3.5" fill="var(--danger)" stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="170" cy="9" r="4"   fill="var(--danger)" stroke="var(--bg)" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Row 3: TSH — EXPANDED -->
+      <div class="marker-row expanded">
+        <div class="marker-row-top">
+          <div class="marker-dot marker-dot-high"></div>
+          <div class="marker-name">TSH</div>
+          <span class="delta-tag delta-tag-bad">+0.8 vs last</span>
+          <div class="marker-value">4.2<span class="marker-unit">mIU/L</span></div>
+          <div class="marker-arrow arrow-up">↑</div>
+        </div>
+        <div class="marker-sparkline">
+          <svg class="spark-svg" viewBox="0 0 200 28" preserveAspectRatio="none">
+            <rect x="0" y="8" width="200" height="13" fill="rgba(16,185,129,0.08)" rx="2"/>
+            <polyline points="10,18 57,14 113,12 170,5"
+              fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+            <circle cx="10"  cy="18" r="3.5" fill="var(--ok)"    stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="57"  cy="14" r="3.5" fill="var(--ok)"    stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="113" cy="12" r="3.5" fill="var(--ok)"    stroke="var(--bg)" stroke-width="1.5"/>
+            <circle cx="170" cy="5"  r="4"   fill="var(--danger)" stroke="var(--bg)" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Accordion panel for TSH -->
+      <div class="marker-accordion">
+        <!-- Fake chart -->
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:14px; height:200px; position:relative; overflow:hidden; margin-bottom:14px;">
+          <!-- Chart SVG -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 330 200" preserveAspectRatio="none">
+            <!-- Y axis ticks -->
+            <text x="8"  y="30"  font-size="9" fill="var(--muted)" font-family="Inter">5.0</text>
+            <text x="8"  y="70"  font-size="9" fill="var(--muted)" font-family="Inter">4.0</text>
+            <text x="8"  y="110" font-size="9" fill="var(--muted)" font-family="Inter">3.0</text>
+            <text x="8"  y="150" font-size="9" fill="var(--muted)" font-family="Inter">2.0</text>
+            <text x="8"  y="188" font-size="9" fill="var(--muted)" font-family="Inter">1.0</text>
+            <!-- grid lines -->
+            <line x1="36" y1="26"  x2="318" y2="26"  stroke="var(--border)" stroke-width="1"/>
+            <line x1="36" y1="66"  x2="318" y2="66"  stroke="var(--border)" stroke-width="1"/>
+            <line x1="36" y1="106" x2="318" y2="106" stroke="var(--border)" stroke-width="1"/>
+            <line x1="36" y1="146" x2="318" y2="146" stroke="var(--border)" stroke-width="1"/>
+            <!-- Lab range shading: 0.5–4.0 mIU/L → y ~66–186 -->
+            <rect x="36" y="66" width="282" height="120" fill="rgba(16,185,129,0.08)"/>
+            <!-- Optimal range shading: 1.0–2.5 mIU/L → y ~106–166 -->
+            <rect x="36" y="106" width="282" height="60"  fill="rgba(14,165,233,0.12)"/>
+            <!-- Line: 2.1, 2.8, 3.4, 4.2 (rising) -->
+            <!-- map values: 1.0→186, 5.0→26, range=160px, per unit=40px -->
+            <!-- 2.1 → 186-44=142, 2.8→186-72=114, 3.4→186-96=90, 4.2→186-128=58 -->
+            <polyline points="90,142 160,114 232,90 304,58"
+              fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- X labels -->
+            <text x="90"  y="198" font-size="9" fill="var(--muted)" text-anchor="middle" font-family="Inter">Mar</text>
+            <text x="160" y="198" font-size="9" fill="var(--muted)" text-anchor="middle" font-family="Inter">May</text>
+            <text x="232" y="198" font-size="9" fill="var(--muted)" text-anchor="middle" font-family="Inter">Jul</text>
+            <text x="304" y="198" font-size="9" fill="var(--muted)" text-anchor="middle" font-family="Inter">Oct</text>
+            <!-- Dots -->
+            <circle cx="90"  cy="142" r="5" fill="var(--ok)"     stroke="var(--bg)" stroke-width="2"/>
+            <circle cx="160" cy="114" r="5" fill="var(--ok)"     stroke="var(--bg)" stroke-width="2"/>
+            <circle cx="232" cy="90"  r="5" fill="var(--ok)"     stroke="var(--bg)" stroke-width="2"/>
+            <circle cx="304" cy="58"  r="6" fill="var(--danger)"  stroke="var(--bg)" stroke-width="2"/>
+          </svg>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-lbl">Latest</div>
+            <div class="stat-val">4.2<span class="stat-unit"> mIU/L</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Min</div>
+            <div class="stat-val stat-val-ok">2.1<span class="stat-unit"> mIU/L</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Max</div>
+            <div class="stat-val">4.2<span class="stat-unit"> mIU/L</span></div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-lbl">Avg</div>
+            <div class="stat-val stat-val-neutral">3.1<span class="stat-unit"> mIU/L</span></div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend-row">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--ok)"></div>Normal</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div>High</div>
+          <div class="legend-item"><div class="legend-rect" style="background:rgba(16,185,129,0.15)"></div>Lab range</div>
+          <div class="legend-item"><div class="legend-rect" style="background:rgba(14,165,233,0.18);border:1px solid rgba(14,165,233,0.4)"></div>Optimal</div>
+        </div>
+      </div>
+
+    </div><!-- /marker-list watch -->
+
+    <!-- 3. Trending Well section -->
+    <div class="section-header">
+      <div class="section-title" style="color:var(--ok)">
+        Trending Well
+        <span class="section-badge section-badge-ok">11</span>
+      </div>
+      <button class="section-toggle">Show all ▾</button>
+    </div>
+
+    <div class="marker-list">
+      <div class="well-row">
+        <div class="marker-dot marker-dot-ok"></div>
+        <div class="well-name">Hemoglobin</div>
+        <!-- tiny sparkline: flat/good -->
+        <svg width="54" height="20" viewBox="0 0 54 20" style="flex-shrink:0">
+          <rect x="0" y="5" width="54" height="10" fill="rgba(16,185,129,0.08)" rx="2"/>
+          <polyline points="4,12 18,11 33,10 49,11"
+            fill="none" stroke="var(--ok)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="4"  cy="12" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="18" cy="11" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="33" cy="10" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="49" cy="11" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+        </svg>
+        <div class="well-value">14.2 <span style="color:var(--muted);font-size:11px">g/dL</span></div>
+        <div class="well-arrow">→</div>
+      </div>
+      <div class="well-row">
+        <div class="marker-dot marker-dot-ok"></div>
+        <div class="well-name">Creatinine</div>
+        <svg width="54" height="20" viewBox="0 0 54 20" style="flex-shrink:0">
+          <rect x="0" y="5" width="54" height="10" fill="rgba(16,185,129,0.08)" rx="2"/>
+          <polyline points="4,13 18,12 33,11 49,10"
+            fill="none" stroke="var(--ok)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="4"  cy="13" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="18" cy="12" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="33" cy="11" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="49" cy="10" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+        </svg>
+        <div class="well-value">0.9 <span style="color:var(--muted);font-size:11px">mg/dL</span></div>
+        <div class="well-arrow">↓</div>
+      </div>
+      <div class="well-row" style="border-bottom:none">
+        <div class="marker-dot marker-dot-ok"></div>
+        <div class="well-name">Ferritin</div>
+        <svg width="54" height="20" viewBox="0 0 54 20" style="flex-shrink:0">
+          <rect x="0" y="5" width="54" height="10" fill="rgba(16,185,129,0.08)" rx="2"/>
+          <polyline points="4,11 18,10 33,9 49,8"
+            fill="none" stroke="var(--ok)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="4"  cy="11" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="18" cy="10" r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="33" cy="9"  r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+          <circle cx="49" cy="8"  r="2.5" fill="var(--ok)" stroke="white" stroke-width="1"/>
+        </svg>
+        <div class="well-value">87 <span style="color:var(--muted);font-size:11px">ng/mL</span></div>
+        <div class="well-arrow">→</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:8px 0 4px;font-size:12px;color:var(--muted)">+ 8 more markers</div>
+
+  </div><!-- /main -->
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <button class="nav-tab"><span class="nav-icon">🏠</span>Home</button>
+    <button class="nav-tab"><span class="nav-icon">📋</span>History</button>
+    <button class="nav-tab active"><span class="nav-icon">📈</span>Trends</button>
+    <button class="nav-tab"><span class="nav-icon">👤</span>Profile</button>
+  </div>
+
+</div><!-- /phone -->
+
+<!-- Annotation callouts -->
+<div style="position:fixed;top:140px;right:calc(50% - 310px);width:140px;display:flex;flex-direction:column;gap:28px;pointer-events:none">
+  <div style="background:#1E293B;color:white;font-size:11px;padding:7px 10px;border-radius:8px;font-family:Inter,sans-serif;font-weight:500;line-height:1.4">
+    ← Health score per report over time (new)
+  </div>
+  <div style="background:#1E293B;color:white;font-size:11px;padding:7px 10px;border-radius:8px;font-family:Inter,sans-serif;font-weight:500;line-height:1.4;margin-top:140px">
+    ← Inline sparkline + delta tag per marker (new)
+  </div>
+  <div style="background:#1E293B;color:white;font-size:11px;padding:7px 10px;border-radius:8px;font-family:Inter,sans-serif;font-weight:500;line-height:1.4;margin-top:50px">
+    ← Accordion: chart + stats expand inline (new)
+  </div>
+  <div style="background:#1E293B;color:white;font-size:11px;padding:7px 10px;border-radius:8px;font-family:Inter,sans-serif;font-weight:500;line-height:1.4;margin-top:180px">
+    ← Trending Well collapsed by default (new)
+  </div>
+</div>
+
+</body>
+</html>

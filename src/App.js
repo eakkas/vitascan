@@ -622,63 +622,66 @@ const STYLES = `
   .btn-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
   /* ── Trends screen ── */
-  .chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
-  .chip { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; color: var(--muted); transition: all 0.15s; font-family: 'Inter', sans-serif; text-transform: capitalize; }
-  .chip:hover { border-color: rgba(14,165,233,0.4); color: var(--text); }
-  .chip.chip-active { border-color: var(--accent); background: rgba(14,165,233,0.08); color: var(--text); font-weight: 600; }
-  .trend-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-  .trend-chart-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; text-transform: capitalize; }
-  .trend-chart-unit { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
   .trends-empty { text-align: center; padding: 80px 40px; color: var(--muted); }
   .trends-empty-icon { font-size: 48px; margin-bottom: 20px; }
   .trends-empty-text { font-size: 18px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
   .trends-empty-sub { font-size: 14px; font-weight: 400; }
 
-  /* ── Domain cards ── */
-  .domain-cards { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 24px; padding-bottom: 4px; scrollbar-width: none; }
-  .domain-cards::-webkit-scrollbar { display: none; }
-  .domain-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    padding: 12px 14px; cursor: pointer; flex-shrink: 0; min-width: 120px;
-    transition: all 0.2s; position: relative; overflow: hidden; text-align: left;
-  }
-  .domain-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 3px 0 0 3px; }
-  .domain-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
-  .domain-card.dc-active { border-color: rgba(14,165,233,0.5); background: rgba(14,165,233,0.05); }
-  .domain-card-emoji { font-size: 18px; margin-bottom: 6px; display: block; }
-  .domain-card-label { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.3; }
-  .domain-card-count { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-  .domain-card-bar { display: flex; height: 3px; border-radius: 3px; overflow: hidden; background: var(--dim); }
-  .domain-card-bar div { height: 100%; }
-  .domain-card-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; }
-  .dc-status-ok   { color: var(--ok); }
-  .dc-status-warn { color: var(--warn); }
-  .dc-status-all  { color: var(--danger); }
+  /* ── Progress card ── */
+  .trends-progress-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px 20px 14px; }
+  .trends-progress-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 12px; }
+  .trends-progress-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .trends-progress-delta { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+  .trends-progress-delta-arrow { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .trends-progress-sub { font-size: 12px; color: var(--muted); }
 
-  /* ── Chip dots for out-of-range ── */
-  .chip-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 5px; vertical-align: middle; flex-shrink: 0; }
-  .chip-dot-high { background: var(--danger); }
-  .chip-dot-low  { background: var(--warn); }
+  /* ── Section headers ── */
+  .trends-section-header { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-top: 6px; }
+  .trends-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; display: flex; align-items: center; gap: 8px; }
+  .trends-section-title.danger { color: var(--danger); }
+  .trends-section-title.ok     { color: var(--ok); }
+  .trends-section-badge { border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .trends-section-title.danger .trends-section-badge { background: var(--danger); color: white; }
+  .trends-section-title.ok     .trends-section-badge { background: rgba(16,185,129,0.12); color: var(--ok); }
+  .trends-section-toggle { font-size: 12px; color: var(--accent); font-weight: 600; cursor: pointer; border: none; background: none; font-family: 'Inter', sans-serif; }
 
-  /* ── Chip groups (stacked sections) ── */
-  .chip-groups { display: flex; flex-direction: column; gap: 16px; margin-bottom: 28px; }
-  .chip-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
-  .chip-group-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* ── Marker list ── */
+  .trend-marker-list { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+  .trend-marker-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+  .trend-marker-row:hover { background: var(--surface2); }
+  .trend-marker-row.tmr-expanded { background: var(--surface2); }
+  .trend-marker-row.tmr-last { border-bottom: none; }
+  .trend-marker-top { display: flex; align-items: center; gap: 9px; padding: 13px 16px 0; }
+  .trend-sparkline-wrap { padding: 7px 16px 11px 35px; }
+  .trend-marker-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .trend-marker-name { font-size: 14px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: capitalize; }
+  .trend-marker-value { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .trend-marker-unit { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .trend-marker-arrow { font-size: 13px; flex-shrink: 0; }
+
+  /* ── Delta tag ── */
+  .trend-delta { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .trend-delta-bad  { background: rgba(239,68,68,0.10);  color: var(--danger); }
+  .trend-delta-ok   { background: rgba(16,185,129,0.10); color: var(--ok); }
+  .trend-delta-neu  { background: var(--dim); color: var(--muted); }
+
+  /* ── Accordion chart panel ── */
+  .trend-accordion { border-top: 1px solid var(--border); padding: 16px; }
 
   /* ── Optimal ranges ── */
   .range-bar-optimal { position: absolute; top: 0; height: 100%; background: rgba(14,165,233,0.22); border-left: 2px solid rgba(14,165,233,0.5); border-right: 2px solid rgba(14,165,233,0.5); z-index: 1; }
 
-  /* ── Trend stats ── */
-  .trend-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-  .trend-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; min-width: 80px; }
+  /* ── Trend stats + legend (inside accordion) ── */
+  .trend-stats { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .trend-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; min-width: 72px; }
   .trend-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
-  .trend-stat-value { font-size: 18px; font-weight: 800; line-height: 1; }
+  .trend-stat-value { font-size: 17px; font-weight: 800; line-height: 1; }
   .trend-stat-unit { font-size: 11px; color: var(--muted); margin-left: 3px; font-weight: 400; }
-  .trend-stat.s-ok   .trend-stat-value { color: var(--ok); }
-  .trend-stat.s-high .trend-stat-value { color: var(--danger); }
-  .trend-stat.s-low  .trend-stat-value { color: var(--warn); }
+  .trend-stat.s-ok      .trend-stat-value { color: var(--ok); }
+  .trend-stat.s-high    .trend-stat-value { color: var(--danger); }
+  .trend-stat.s-low     .trend-stat-value { color: var(--warn); }
   .trend-stat.s-neutral .trend-stat-value { color: var(--text); }
-  .trend-legend { display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .trend-legend { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
   .trend-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 
   /* ── Sync toast ── */
@@ -1824,6 +1827,84 @@ function TrendTooltip(props) {
   );
 }
 
+function TrendSparkline({ points }) {
+  if (!points || points.length < 2) return null;
+  var W = 100, H = 28;
+  var vals = points.map(function(p) { return p.value; });
+  var lows  = points.map(function(p) { return p.low;  }).filter(function(v) { return v !== undefined && v !== null; });
+  var highs = points.map(function(p) { return p.high; }).filter(function(v) { return v !== undefined && v !== null; });
+  var allV = vals.concat(lows).concat(highs);
+  var minV = Math.min.apply(null, allV);
+  var maxV = Math.max.apply(null, allV);
+  var pad  = (maxV - minV) * 0.25 || 1;
+  minV -= pad; maxV += pad;
+  var range = maxV - minV || 1;
+  var toY = function(v) { return H - ((v - minV) / range) * H; };
+  var toX = function(i) { return points.length === 1 ? W / 2 : (i / (points.length - 1)) * W; };
+  var coords = points.map(function(p, i) { return toX(i) + "," + toY(p.value); }).join(" ");
+  var refLow  = lows.length  ? lows[lows.length - 1]   : null;
+  var refHigh = highs.length ? highs[highs.length - 1] : null;
+  var cMap = { ok: "#10B981", high: "#EF4444", low: "#F97316" };
+  var lineColor = cMap[points[points.length - 1].status] || cMap.ok;
+  return (
+    <svg width="100%" height={H} viewBox={"0 0 " + W + " " + H} preserveAspectRatio="none" style={{ display: "block" }}>
+      {refLow !== null && refHigh !== null && (
+        <rect x="0" y={toY(refHigh)} width={W} height={Math.max(0, toY(refLow) - toY(refHigh))} fill="rgba(16,185,129,0.08)" />
+      )}
+      <polyline points={coords} fill="none" stroke={lineColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+      {points.map(function(p, i) {
+        var fill = cMap[p.status] || cMap.ok;
+        return <circle key={i} cx={toX(i)} cy={toY(p.value)} r={i === points.length - 1 ? 3.5 : 2.5} fill={fill} stroke="var(--bg)" strokeWidth="1.5" />;
+      })}
+    </svg>
+  );
+}
+
+function ProgressCard({ scoreHistory, scoreDelta }) {
+  var W = 320, H = 58;
+  var n = scoreHistory.length;
+  var toX = function(i) { return n === 1 ? W / 2 : 20 + (i / (n - 1)) * (W - 40); };
+  var toY = function(pct) { return H - 6 - (pct / 100) * (H - 18); };
+  var pts = scoreHistory.map(function(s, i) { return { x: toX(i), y: toY(s.pct), pct: s.pct, date: s.date }; });
+  var poly = pts.map(function(p) { return p.x + "," + p.y; }).join(" ");
+  var cFor = function(pct) { return pct >= 80 ? "#10B981" : pct >= 60 ? "#0EA5E9" : "#F97316"; };
+  var fmtDate = function(str) {
+    var d = new Date(str);
+    if (!isNaN(d.getTime())) return d.toLocaleDateString("en", { month: "short" });
+    return (str || "").split(/[\s,\-/]+/)[0] || str;
+  };
+  var last = scoreHistory[scoreHistory.length - 1];
+  var improving = scoreDelta >= 0;
+  return (
+    <div className="trends-progress-card">
+      <div className="trends-progress-label">Your Progress</div>
+      <svg width="100%" height={H} viewBox={"0 0 " + W + " " + H} preserveAspectRatio="xMidYMid meet">
+        <polyline points={poly} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
+        {pts.map(function(p, i) {
+          var col = cFor(p.pct);
+          var isLast = i === n - 1;
+          return (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r={isLast ? 6 : 4.5} fill={col} stroke="white" strokeWidth="2" />
+              <text x={p.x} y={p.y - 9} textAnchor="middle" fontSize="9" fontFamily="Inter" fontWeight={isLast ? "bold" : "normal"} fill={isLast ? col : "var(--muted)"}>{p.pct}%</text>
+              <text x={p.x} y={H} textAnchor="middle" fontSize="9" fontFamily="Inter" fill="var(--muted)">{fmtDate(p.date)}</text>
+            </g>
+          );
+        })}
+      </svg>
+      <div className="trends-progress-footer">
+        <div className="trends-progress-delta" style={{ color: improving ? "var(--ok)" : "var(--danger)" }}>
+          <div className="trends-progress-delta-arrow" style={{ background: improving ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)" }}>
+            {improving ? "↑" : "↓"}
+          </div>
+          {improving ? "+" : ""}{scoreDelta} pts across {n} reports
+        </div>
+        <div className="trends-progress-sub">{last.pct >= 80 ? "Good" : last.pct >= 60 ? "Fair" : "Needs attention"}</div>
+      </div>
+    </div>
+  );
+}
+
 function categorizeMarkers(markers) {
   var sections = {};
   var other = [];
@@ -2055,8 +2136,8 @@ export default function App() {
   });
 
   // ── Trends state ──
-  const [selectedTrendMarker, setSelectedTrendMarker] = useState(null);
-  const [selectedTrendDomain, setSelectedTrendDomain] = useState(null); // null = All
+  const [expandedTrendMarker, setExpandedTrendMarker] = useState(null);
+  const [trendingWellExpanded, setTrendingWellExpanded] = useState(false);
   const [allClearExpanded, setAllClearExpanded] = useState(false);
 
   // ── Sync toast ──
@@ -3218,164 +3299,73 @@ export default function App() {
                     </div>
                   );
                 }
-                // Pre-compute latest status for every trending marker (one pass per marker)
-                var markerLatestStatus = {};
+
+                // Pre-compute data for every trending marker
+                var markerData = {};
                 trendMarkers.forEach(function(name) {
                   var pts = getTrendData(history, name, unitSystem);
-                  var latest = pts[pts.length - 1];
-                  markerLatestStatus[name] = latest ? latest.status : "ok";
+                  var latest = pts[pts.length - 1] || {};
+                  var delta = pts.length >= 2
+                    ? parseFloat((pts[pts.length - 1].value - pts[pts.length - 2].value).toFixed(2))
+                    : null;
+                  markerData[name] = {
+                    pts: pts,
+                    sparkPts: pts.slice(-5),
+                    latestStatus: latest.status || "ok",
+                    latest: latest,
+                    delta: delta,
+                  };
                 });
 
-                // Build domain summary cards (only domains with 1+ trending markers)
-                var domainSummaries = MARKER_SECTIONS.map(function(s) {
-                  var dm = trendMarkers.filter(function(n) { return getMarkerCategory(n) === s.label; });
-                  if (dm.length === 0) return null;
-                  var outOfRange = dm.filter(function(n) { return markerLatestStatus[n] !== "ok"; }).length;
-                  var okCount = dm.length - outOfRange;
-                  return { id: s.id, label: s.label, emoji: s.emoji, color: s.color, markers: dm, total: dm.length, outOfRange: outOfRange, okCount: okCount };
+                // Health score for each report (chronological)
+                var scoreHistory = history.slice().reverse().map(function(report) {
+                  var rm = report.markers || [];
+                  if (!rm.length) return null;
+                  var inRange = rm.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok"; }).length;
+                  var pct = Math.round((inRange / rm.length) * 100);
+                  var dateStr = report.report_date && report.report_date !== "Unknown"
+                    ? report.report_date
+                    : new Date(report.created_at).toLocaleDateString();
+                  return { pct: pct, date: dateStr };
                 }).filter(Boolean);
+                var scoreDelta = scoreHistory.length >= 2
+                  ? scoreHistory[scoreHistory.length - 1].pct - scoreHistory[0].pct
+                  : null;
 
-                // Markers filtered by selected domain; sorted out-of-range first within each domain group
-                var visibleMarkers = (selectedTrendDomain
-                  ? trendMarkers.filter(function(n) { return getMarkerCategory(n) === selectedTrendDomain; })
-                  : trendMarkers
-                ).slice().sort(function(a, b) {
-                  var aOut = markerLatestStatus[a] !== "ok" ? 0 : 1;
-                  var bOut = markerLatestStatus[b] !== "ok" ? 0 : 1;
-                  if (aOut !== bOut) return aOut - bOut;
-                  // secondary: section order
-                  var catA = getMarkerCategory(a) || "Other";
-                  var catB = getMarkerCategory(b) || "Other";
-                  var secIdx = {};
-                  MARKER_SECTIONS.forEach(function(s, i) { secIdx[s.label] = i; });
-                  return (secIdx[catA] || 999) - (secIdx[catB] || 999);
-                });
+                // Split markers
+                var watchList    = trendMarkers.filter(function(n) { return markerData[n].latestStatus !== "ok"; });
+                var trendingWell = trendMarkers.filter(function(n) { return markerData[n].latestStatus === "ok"; });
 
-                var activeName = (selectedTrendMarker && visibleMarkers.indexOf(selectedTrendMarker) !== -1)
-                  ? selectedTrendMarker : visibleMarkers[0];
-                var trendData = getTrendData(history, activeName, unitSystem);
-                var samplePoint = trendData[trendData.length - 1] || {};
-                var yValues = trendData.map(function(d) { return d.value; });
-                var allLow  = trendData.map(function(d) { return d.low; });
-                var allHigh = trendData.map(function(d) { return d.high; });
-                var optRange = showOptimalRanges ? getOptimalRange(activeName) : null;
-                var optLow  = optRange ? displayConvert(optRange.low,  activeName, unitSystem) : null;
-                var optHigh = optRange ? displayConvert(optRange.high, activeName, unitSystem) : null;
-                var allY = yValues.concat(allLow).concat(allHigh);
-                if (optLow  !== null) allY.push(optLow);
-                if (optHigh !== null) allY.push(optHigh);
-                var yMin = parseFloat((Math.min.apply(null, allY) * 0.85).toFixed(2));
-                var yMax = parseFloat((Math.max.apply(null, allY) * 1.15).toFixed(2));
-                var refLow  = allLow[0]  !== undefined ? allLow[0]  : samplePoint.low;
-                var refHigh = allHigh[0] !== undefined ? allHigh[0] : samplePoint.high;
-
-                // Stats
-                var latestVal = samplePoint.value;
-                var latestStatus = samplePoint.status || "ok";
-                var minVal = parseFloat(Math.min.apply(null, yValues).toFixed(2));
-                var maxVal = parseFloat(Math.max.apply(null, yValues).toFixed(2));
-                var avgVal = parseFloat((yValues.reduce(function(a, b) { return a + b; }, 0) / yValues.length).toFixed(2));
-
-                var tickFmt = function(v) {
-                  var n = parseFloat(v);
-                  return isNaN(n) ? v : (n % 1 === 0 ? n : parseFloat(n.toFixed(2)));
-                };
-                var manyPoints = trendData.length >= 5;
-
-                return (
-                  <>
-                    {/* Domain summary cards */}
-                    <div className="domain-cards">
-                      <button
-                        className={"domain-card" + (selectedTrendDomain === null ? " dc-active" : "")}
-                        style={{ "--dc-color": "var(--accent)" }}
-                        onClick={function() { setSelectedTrendDomain(null); setSelectedTrendMarker(null); }}
-                      >
-                        <span className="domain-card-emoji">📊</span>
-                        <div className="domain-card-label">{t("trends_all_domains")}</div>
-                        <div className="domain-card-count">{tp("trends_n_markers", { n: trendMarkers.length, s: trendMarkers.length !== 1 ? "s" : "" })}</div>
-                        <div className="domain-card-bar">
-                          <div style={{ width: (trendMarkers.filter(function(n) { return markerLatestStatus[n] === "ok"; }).length / trendMarkers.length * 100) + "%", background: "var(--ok)" }} />
-                          <div style={{ width: (trendMarkers.filter(function(n) { return markerLatestStatus[n] !== "ok"; }).length / trendMarkers.length * 100) + "%", background: "var(--danger)" }} />
-                        </div>
-                      </button>
-                      {domainSummaries.map(function(d) {
-                        var isActive = selectedTrendDomain === d.label;
-                        var statusCls = d.outOfRange === 0 ? "dc-status-ok" : d.outOfRange === d.total ? "dc-status-all" : "dc-status-warn";
-                        var statusText = d.outOfRange === 0 ? t("trends_all_normal") : tp("trends_n_oor", { n: d.outOfRange });
-                        return (
-                          <button
-                            key={d.id}
-                            className={"domain-card" + (isActive ? " dc-active" : "")}
-                            style={{ "--dc-color": d.color }}
-                            onClick={function() {
-                              setSelectedTrendDomain(isActive ? null : d.label);
-                              setSelectedTrendMarker(null);
-                            }}
-                          >
-                            <span className="domain-card-emoji">{d.emoji}</span>
-                            <div className="domain-card-label">{localizeSection(d.label)}</div>
-                            <div className="domain-card-count">{tp("trends_n_markers", { n: d.total, s: d.total !== 1 ? "s" : "" })}</div>
-                            <div className="domain-card-bar">
-                              <div style={{ width: (d.okCount / d.total * 100) + "%", background: "var(--ok)" }} />
-                              <div style={{ width: (d.outOfRange / d.total * 100) + "%", background: d.outOfRange === d.total ? "var(--danger)" : "var(--warn)" }} />
-                            </div>
-                            <div className={"domain-card-status " + statusCls}>{statusText}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Flat marker chips for the selected domain */}
-                    <div className="chip-list" style={{ marginBottom: 24 }}>
-                      {visibleMarkers.map(function(name) {
-                        var st = markerLatestStatus[name];
-                        return (
-                          <button key={name} className={"chip" + (name === activeName ? " chip-active" : "")} onClick={function() { setSelectedTrendMarker(name); }}>
-                            {st !== "ok" && <span className={"chip-dot chip-dot-" + st} />}
-                            {name}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="trend-stats">
-                      <div className={"trend-stat s-" + latestStatus}>
-                        <div className="trend-stat-label">{t("trends_latest")}</div>
-                        <div className="trend-stat-value">{latestVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
-                      </div>
-                      <div className="trend-stat s-neutral">
-                        <div className="trend-stat-label">{t("trends_min")}</div>
-                        <div className="trend-stat-value">{minVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
-                      </div>
-                      <div className="trend-stat s-neutral">
-                        <div className="trend-stat-label">{t("trends_max")}</div>
-                        <div className="trend-stat-value">{maxVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
-                      </div>
-                      <div className="trend-stat s-neutral">
-                        <div className="trend-stat-label">{t("trends_avg")}</div>
-                        <div className="trend-stat-value">{avgVal}<span className="trend-stat-unit">{samplePoint.unit || ""}</span></div>
-                      </div>
-                    </div>
-
-                    <div className="trend-chart-wrap">
-                      <div className="trend-chart-title">{activeName}</div>
-                      <div className="trend-chart-unit">{samplePoint.unit || ""}</div>
-                      <ResponsiveContainer width="100%" height={320}>
-                        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 4, bottom: manyPoints ? 32 : 4 }}>
-                          <XAxis
-                            dataKey="date"
-                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Inter" }}
-                            angle={manyPoints ? -35 : 0}
-                            textAnchor={manyPoints ? "end" : "middle"}
-                            interval={0}
-                          />
-                          <YAxis
-                            domain={[yMin, yMax]}
-                            tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Inter" }}
-                            tickFormatter={tickFmt}
-                            width={52}
-                          />
+                // Render the inline accordion chart for an expanded marker
+                var renderAccordion = function(name) {
+                  var d = markerData[name];
+                  if (!d || !d.pts.length) return null;
+                  var trendData = d.pts;
+                  var sp = trendData[trendData.length - 1] || {};
+                  var yVals   = trendData.map(function(x) { return x.value; });
+                  var allLow  = trendData.map(function(x) { return x.low; });
+                  var allHigh = trendData.map(function(x) { return x.high; });
+                  var optRange = showOptimalRanges ? getOptimalRange(name) : null;
+                  var optLow   = optRange ? displayConvert(optRange.low,  name, unitSystem) : null;
+                  var optHigh  = optRange ? displayConvert(optRange.high, name, unitSystem) : null;
+                  var allY = yVals.concat(allLow).concat(allHigh);
+                  if (optLow  !== null) allY.push(optLow);
+                  if (optHigh !== null) allY.push(optHigh);
+                  var yMin    = parseFloat((Math.min.apply(null, allY) * 0.85).toFixed(2));
+                  var yMax    = parseFloat((Math.max.apply(null, allY) * 1.15).toFixed(2));
+                  var refLow  = allLow[0]  !== undefined ? allLow[0]  : sp.low;
+                  var refHigh = allHigh[0] !== undefined ? allHigh[0] : sp.high;
+                  var minVal  = parseFloat(Math.min.apply(null, yVals).toFixed(2));
+                  var maxVal  = parseFloat(Math.max.apply(null, yVals).toFixed(2));
+                  var avgVal  = parseFloat((yVals.reduce(function(a, b) { return a + b; }, 0) / yVals.length).toFixed(2));
+                  var many    = trendData.length >= 5;
+                  var tickFmt = function(v) { var n = parseFloat(v); return isNaN(n) ? v : (n % 1 === 0 ? n : parseFloat(n.toFixed(2))); };
+                  return (
+                    <div className="trend-accordion">
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: many ? 28 : 4 }}>
+                          <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Inter" }} angle={many ? -35 : 0} textAnchor={many ? "end" : "middle"} interval={0} />
+                          <YAxis domain={[yMin, yMax]} tick={{ fontSize: 11, fill: "var(--muted)", fontFamily: "Inter" }} tickFormatter={tickFmt} width={46} />
                           <Tooltip content={<TrendTooltip />} />
                           {refLow !== undefined && refHigh !== undefined && (
                             <ReferenceArea y1={refLow} y2={refHigh} fill="rgba(16,185,129,0.10)" strokeOpacity={0} />
@@ -3383,18 +3373,27 @@ export default function App() {
                           {optLow !== null && optHigh !== null && (
                             <ReferenceArea y1={optLow} y2={optHigh} fill="rgba(14,165,233,0.15)" strokeOpacity={0} />
                           )}
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke="var(--accent)"
-                            strokeWidth={2}
-                            dot={<TrendDot />}
-                            activeDot={{ r: 6 }}
-                            animationDuration={600}
-                            animationEasing="ease-out"
-                          />
+                          <Line type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} dot={<TrendDot />} activeDot={{ r: 6 }} animationDuration={500} animationEasing="ease-out" />
                         </LineChart>
                       </ResponsiveContainer>
+                      <div className="trend-stats">
+                        <div className={"trend-stat s-" + (sp.status || "ok")}>
+                          <div className="trend-stat-label">{t("trends_latest")}</div>
+                          <div className="trend-stat-value">{sp.value}<span className="trend-stat-unit">{sp.unit || ""}</span></div>
+                        </div>
+                        <div className="trend-stat s-neutral">
+                          <div className="trend-stat-label">{t("trends_min")}</div>
+                          <div className="trend-stat-value">{minVal}<span className="trend-stat-unit">{sp.unit || ""}</span></div>
+                        </div>
+                        <div className="trend-stat s-neutral">
+                          <div className="trend-stat-label">{t("trends_max")}</div>
+                          <div className="trend-stat-value">{maxVal}<span className="trend-stat-unit">{sp.unit || ""}</span></div>
+                        </div>
+                        <div className="trend-stat s-neutral">
+                          <div className="trend-stat-label">{t("trends_avg")}</div>
+                          <div className="trend-stat-value">{avgVal}<span className="trend-stat-unit">{sp.unit || ""}</span></div>
+                        </div>
+                      </div>
                       <div className="trend-legend">
                         <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#10B981" /></svg>{t("legend_normal")}</div>
                         <div className="trend-legend-item"><svg width="10" height="10"><circle cx="5" cy="5" r="5" fill="#EF4444" /></svg>{t("legend_high")}</div>
@@ -3405,6 +3404,87 @@ export default function App() {
                         )}
                       </div>
                     </div>
+                  );
+                };
+
+                // Render a single marker row
+                var renderRow = function(name, isLast) {
+                  var d = markerData[name];
+                  var isExpanded = expandedTrendMarker === name;
+                  var st = d.latestStatus;
+                  var dotColor = st === "ok" ? "var(--ok)" : st === "high" ? "var(--danger)" : "var(--warn)";
+                  var arrow = d.delta === null ? "→" : d.delta > 0 ? "↑" : d.delta < 0 ? "↓" : "→";
+                  var arrowColor = st === "ok" ? "var(--ok)" : st === "high"
+                    ? (d.delta !== null && d.delta < 0 ? "var(--ok)" : "var(--danger)")
+                    : (d.delta !== null && d.delta > 0 ? "var(--ok)" : "var(--warn)");
+                  var deltaClass = st === "ok" ? "trend-delta-neu"
+                    : st === "high" ? (d.delta !== null && d.delta < 0 ? "trend-delta-ok" : "trend-delta-bad")
+                    : (d.delta !== null && d.delta > 0 ? "trend-delta-ok" : "trend-delta-bad");
+                  var deltaSign = d.delta !== null && d.delta > 0 ? "+" : "";
+                  return (
+                    <div
+                      key={name}
+                      className={"trend-marker-row" + (isExpanded ? " tmr-expanded" : "") + (isLast ? " tmr-last" : "")}
+                      onClick={function() { setExpandedTrendMarker(isExpanded ? null : name); }}
+                    >
+                      <div className="trend-marker-top">
+                        <div className="trend-marker-dot" style={{ background: dotColor }} />
+                        <div className="trend-marker-name">{name}</div>
+                        {d.delta !== null && (
+                          <span className={"trend-delta " + deltaClass}>{deltaSign}{d.delta} {d.latest.unit || ""}</span>
+                        )}
+                        <div className="trend-marker-value">
+                          {d.latest.value}<span className="trend-marker-unit"> {d.latest.unit || ""}</span>
+                        </div>
+                        <div className="trend-marker-arrow" style={{ color: arrowColor }}>{arrow}</div>
+                      </div>
+                      <div className="trend-sparkline-wrap">
+                        <TrendSparkline points={d.sparkPts} />
+                      </div>
+                      {isExpanded && renderAccordion(name)}
+                    </div>
+                  );
+                };
+
+                return (
+                  <>
+                    {/* Progress card */}
+                    {scoreHistory.length >= 2 && scoreDelta !== null && (
+                      <ProgressCard scoreHistory={scoreHistory} scoreDelta={scoreDelta} />
+                    )}
+
+                    {/* Watch List */}
+                    {watchList.length > 0 && (
+                      <>
+                        <div className="trends-section-header">
+                          <div className="trends-section-title danger">
+                            Watch List <span className="trends-section-badge">{watchList.length}</span>
+                          </div>
+                        </div>
+                        <div className="trend-marker-list">
+                          {watchList.map(function(name, i) { return renderRow(name, i === watchList.length - 1); })}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Trending Well */}
+                    {trendingWell.length > 0 && (
+                      <>
+                        <div className="trends-section-header">
+                          <div className="trends-section-title ok">
+                            Trending Well <span className="trends-section-badge">{trendingWell.length}</span>
+                          </div>
+                          <button className="trends-section-toggle" onClick={function(e) { e.stopPropagation(); setTrendingWellExpanded(function(v) { return !v; }); }}>
+                            {trendingWellExpanded ? "Collapse ▲" : "Show all ▾"}
+                          </button>
+                        </div>
+                        {trendingWellExpanded && (
+                          <div className="trend-marker-list">
+                            {trendingWell.map(function(name, i) { return renderRow(name, i === trendingWell.length - 1); })}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </>
                 );
               })()}
