@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import * as Sentry from "@sentry/react";
 import { supabase } from './supabase';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContainer } from "recharts";
@@ -1834,35 +1834,52 @@ function TrendTooltip(props) {
 }
 
 function TrendSparkline({ points }) {
-  if (!points || points.length < 2) return null;
-  var W = 100, H = 28;
-  var vals = points.map(function(p) { return p.value; });
+  var containerRef = useRef(null);
+  var [w, setW] = useState(0);
+  useEffect(function() {
+    if (!containerRef.current) return;
+    var ro = new ResizeObserver(function(entries) {
+      if (entries[0]) setW(entries[0].contentRect.width);
+    });
+    ro.observe(containerRef.current);
+    return function() { ro.disconnect(); };
+  }, []);
+
+  var H = 28;
+  if (!points || points.length < 2) return <div ref={containerRef} style={{ width: "100%", height: H }} />;
+
+  var vals  = points.map(function(p) { return p.value; });
   var lows  = points.map(function(p) { return p.low;  }).filter(function(v) { return v !== undefined && v !== null; });
   var highs = points.map(function(p) { return p.high; }).filter(function(v) { return v !== undefined && v !== null; });
-  var allV = vals.concat(lows).concat(highs);
-  var minV = Math.min.apply(null, allV);
-  var maxV = Math.max.apply(null, allV);
-  var pad  = (maxV - minV) * 0.25 || 1;
+  var allV  = vals.concat(lows).concat(highs);
+  var minV  = Math.min.apply(null, allV);
+  var maxV  = Math.max.apply(null, allV);
+  var pad   = (maxV - minV) * 0.25 || 1;
   minV -= pad; maxV += pad;
-  var range = maxV - minV || 1;
-  var toY = function(v) { return H - ((v - minV) / range) * H; };
-  var toX = function(i) { return points.length === 1 ? W / 2 : (i / (points.length - 1)) * W; };
-  var coords = points.map(function(p, i) { return toX(i) + "," + toY(p.value); }).join(" ");
-  var refLow  = lows.length  ? lows[lows.length - 1]   : null;
-  var refHigh = highs.length ? highs[highs.length - 1] : null;
-  var cMap = { ok: "#10B981", high: "#EF4444", low: "#F97316" };
+  var range    = maxV - minV || 1;
+  var toY      = function(v) { return H - ((v - minV) / range) * H; };
+  var toX      = function(i) { return w <= 0 ? 0 : (points.length === 1 ? w / 2 : (i / (points.length - 1)) * w); };
+  var coords   = points.map(function(p, i) { return toX(i) + "," + toY(p.value); }).join(" ");
+  var refLow   = lows.length  ? lows[lows.length - 1]   : null;
+  var refHigh  = highs.length ? highs[highs.length - 1] : null;
+  var cMap     = { ok: "#10B981", high: "#EF4444", low: "#F97316" };
   var lineColor = cMap[points[points.length - 1].status] || cMap.ok;
+
   return (
-    <svg width="100%" height={H} viewBox={"0 0 " + W + " " + H} preserveAspectRatio="none" style={{ display: "block" }}>
-      {refLow !== null && refHigh !== null && (
-        <rect x="0" y={toY(refHigh)} width={W} height={Math.max(0, toY(refLow) - toY(refHigh))} fill="rgba(16,185,129,0.08)" />
+    <div ref={containerRef} style={{ width: "100%", height: H }}>
+      {w > 0 && (
+        <svg width={w} height={H}>
+          {refLow !== null && refHigh !== null && (
+            <rect x="0" y={toY(refHigh)} width={w} height={Math.max(0, toY(refLow) - toY(refHigh))} fill="rgba(16,185,129,0.08)" />
+          )}
+          <polyline points={coords} fill="none" stroke={lineColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
+          {points.map(function(p, i) {
+            var fill = cMap[p.status] || cMap.ok;
+            return <circle key={i} cx={toX(i)} cy={toY(p.value)} r={i === points.length - 1 ? 3.5 : 2.5} fill={fill} stroke="var(--bg)" strokeWidth="1.5" />;
+          })}
+        </svg>
       )}
-      <polyline points={coords} fill="none" stroke={lineColor} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.85" />
-      {points.map(function(p, i) {
-        var fill = cMap[p.status] || cMap.ok;
-        return <circle key={i} cx={toX(i)} cy={toY(p.value)} r={i === points.length - 1 ? 3.5 : 2.5} fill={fill} stroke="var(--bg)" strokeWidth="1.5" />;
-      })}
-    </svg>
+    </div>
   );
 }
 
