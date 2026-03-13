@@ -629,8 +629,14 @@ const STYLES = `
 
   /* ── Progress card ── */
   .trends-progress-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px 20px 14px; }
-  .trends-progress-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 12px; }
-  .trends-progress-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .trends-progress-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
+  .trends-progress-timeline { position: relative; display: flex; justify-content: space-between; align-items: center; padding: 20px 0 18px; }
+  .trends-progress-line { position: absolute; left: 6px; right: 6px; top: 50%; height: 2px; background: linear-gradient(to right, var(--border), var(--accent), var(--ok)); opacity: 0.35; transform: translateY(-50%); pointer-events: none; }
+  .trends-progress-point { display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; z-index: 1; }
+  .trends-progress-pct { font-size: 10px; font-family: 'Inter', sans-serif; line-height: 1; }
+  .trends-progress-dot { border-radius: 50%; border: 2.5px solid white; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); flex-shrink: 0; }
+  .trends-progress-date { font-size: 10px; color: var(--muted); font-family: 'Inter', sans-serif; line-height: 1; }
+  .trends-progress-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
   .trends-progress-delta { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
   .trends-progress-delta-arrow { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
   .trends-progress-sub { font-size: 12px; color: var(--muted); }
@@ -1861,13 +1867,7 @@ function TrendSparkline({ points }) {
 }
 
 function ProgressCard({ scoreHistory, scoreDelta }) {
-  var W = 320, H = 58;
-  var n = scoreHistory.length;
-  var toX = function(i) { return n === 1 ? W / 2 : 20 + (i / (n - 1)) * (W - 40); };
-  var toY = function(pct) { return H - 6 - (pct / 100) * (H - 18); };
-  var pts = scoreHistory.map(function(s, i) { return { x: toX(i), y: toY(s.pct), pct: s.pct, date: s.date }; });
-  var poly = pts.map(function(p) { return p.x + "," + p.y; }).join(" ");
-  var cFor = function(pct) { return pct >= 80 ? "#10B981" : pct >= 60 ? "#0EA5E9" : "#F97316"; };
+  var cFor = function(pct) { return pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--accent)" : "var(--warn)"; };
   var fmtDate = function(str) {
     var d = new Date(str);
     if (!isNaN(d.getTime())) return d.toLocaleDateString("en", { month: "short" });
@@ -1878,26 +1878,27 @@ function ProgressCard({ scoreHistory, scoreDelta }) {
   return (
     <div className="trends-progress-card">
       <div className="trends-progress-label">Your Progress</div>
-      <svg width="100%" height={H} viewBox={"0 0 " + W + " " + H} preserveAspectRatio="xMidYMid meet">
-        <polyline points={poly} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
-        {pts.map(function(p, i) {
-          var col = cFor(p.pct);
-          var isLast = i === n - 1;
+      <div className="trends-progress-timeline">
+        <div className="trends-progress-line" />
+        {scoreHistory.map(function(s, i) {
+          var isLast = i === scoreHistory.length - 1;
+          var col = cFor(s.pct);
+          var dotSize = isLast ? 14 : 10;
           return (
-            <g key={i}>
-              <circle cx={p.x} cy={p.y} r={isLast ? 6 : 4.5} fill={col} stroke="white" strokeWidth="2" />
-              <text x={p.x} y={p.y - 9} textAnchor="middle" fontSize="9" fontFamily="Inter" fontWeight={isLast ? "bold" : "normal"} fill={isLast ? col : "var(--muted)"}>{p.pct}%</text>
-              <text x={p.x} y={H} textAnchor="middle" fontSize="9" fontFamily="Inter" fill="var(--muted)">{fmtDate(p.date)}</text>
-            </g>
+            <div key={i} className="trends-progress-point">
+              <div className="trends-progress-pct" style={{ color: isLast ? col : "var(--muted)", fontWeight: isLast ? 700 : 400 }}>{s.pct}%</div>
+              <div className="trends-progress-dot" style={{ width: dotSize, height: dotSize, background: col }} />
+              <div className="trends-progress-date">{fmtDate(s.date)}</div>
+            </div>
           );
         })}
-      </svg>
+      </div>
       <div className="trends-progress-footer">
         <div className="trends-progress-delta" style={{ color: improving ? "var(--ok)" : "var(--danger)" }}>
           <div className="trends-progress-delta-arrow" style={{ background: improving ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)" }}>
             {improving ? "↑" : "↓"}
           </div>
-          {improving ? "+" : ""}{scoreDelta} pts across {n} reports
+          {improving ? "+" : ""}{scoreDelta} pts across {scoreHistory.length} reports
         </div>
         <div className="trends-progress-sub">{last.pct >= 80 ? "Good" : last.pct >= 60 ? "Fair" : "Needs attention"}</div>
       </div>
