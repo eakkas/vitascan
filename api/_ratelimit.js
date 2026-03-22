@@ -28,4 +28,11 @@ const interpretationLimit = new Ratelimit({
   prefix: "rl:interpretation",
 });
 
-module.exports = { analyzeLimit, markerInfoLimit, interpretationLimit };
+// 50 chat messages per user per hour
+const chatLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(50, "1 h"),
+  prefix: "rl:chat",
+});
+
+module.exports = { analyzeLimit, markerInfoLimit, interpretationLimit, chatLimit };

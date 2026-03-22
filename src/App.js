@@ -690,6 +690,37 @@ const STYLES = `
   .trend-legend { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
   .trend-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 
+  /* ── Chat FAB ── */
+  .chat-fab { position: fixed; bottom: calc(76px + env(safe-area-inset-bottom)); right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 4px 20px rgba(14,165,233,0.38); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 100; transition: transform 0.15s, box-shadow 0.15s; font-family: 'Inter', sans-serif; }
+  .chat-fab:hover { transform: scale(1.07); box-shadow: 0 6px 24px rgba(14,165,233,0.5); }
+  .chat-fab:active { transform: scale(0.95); }
+
+  /* ── Chat overlay ── */
+  .chat-overlay { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; background: var(--bg); animation: slideUp 0.26s cubic-bezier(0.34,1.4,0.64,1); }
+  @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .chat-overlay-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 52px 20px 14px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .chat-overlay-title { font-size: 17px; font-weight: 700; flex: 1; letter-spacing: -0.3px; }
+  .chat-overlay-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--dim); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; color: var(--muted); font-family: 'Inter', sans-serif; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+  .chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 32px 28px 16px; text-align: center; }
+  .chat-empty-icon { font-size: 42px; }
+  .chat-empty-text { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 280px; }
+  .chat-starters { padding: 12px 16px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+  .chat-starter { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 14px; font-family: 'Inter', sans-serif; color: var(--text); text-align: left; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .chat-starter:hover { border-color: rgba(14,165,233,0.4); background: rgba(14,165,233,0.04); }
+  .chat-msg { display: flex; flex-direction: column; max-width: 84%; }
+  .chat-msg-user  { align-self: flex-end;  align-items: flex-end; }
+  .chat-msg-model { align-self: flex-start; align-items: flex-start; }
+  .chat-bubble { padding: 11px 14px; border-radius: 18px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+  .chat-msg-user  .chat-bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+  .chat-msg-model .chat-bubble { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+  .chat-typing { align-self: flex-start; padding: 12px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; border-bottom-left-radius: 4px; font-size: 18px; letter-spacing: 3px; color: var(--muted); }
+  .chat-input-row { display: flex; align-items: flex-end; gap: 10px; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; }
+  .chat-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 22px; padding: 10px 16px; font-size: 14px; font-family: 'Inter', sans-serif; color: var(--text); outline: none; resize: none; line-height: 1.4; max-height: 100px; }
+  .chat-input:focus { border-color: rgba(14,165,233,0.5); }
+  .chat-send { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: opacity 0.15s; font-family: 'Inter', sans-serif; }
+  .chat-send:disabled { opacity: 0.35; cursor: not-allowed; }
+
   /* ── Sync toast ── */
   .sync-toast {
     position: fixed; bottom: calc(72px + env(safe-area-inset-bottom)); right: 16px;
@@ -1180,6 +1211,13 @@ var STRINGS = {
     nav_history: "History",
     nav_trends: "Trends",
     nav_profile: "Profile",
+    chat_title: "Ask AI",
+    chat_placeholder: "Ask about your results…",
+    chat_empty: "Ask me anything about your blood test results. I have full context on your markers and trends.",
+    chat_starter_1: "Summarise my latest results",
+    chat_starter_2: "What should I focus on improving?",
+    chat_starter_3: "Explain my out-of-range markers",
+    chat_error: "Something went wrong. Please try again.",
   },
   tr: {
     auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
@@ -1323,6 +1361,13 @@ var STRINGS = {
     nav_history: "Ge\u00e7mi\u015f",
     nav_trends: "E\u011filimler",
     nav_profile: "Profil",
+    chat_title: "Yapay Zekaya Sor",
+    chat_placeholder: "Sonuçlarınız hakkında sorun…",
+    chat_empty: "Kan tahlil sonuçlarınız hakkında her şeyi sorabilirsiniz. Belirteçleriniz ve trendleriniz hakkında tam bağlamım var.",
+    chat_starter_1: "Son sonuçlarımı özetle",
+    chat_starter_2: "Neyi iyileştirmeye odaklanmalıyım?",
+    chat_starter_3: "Aralık dışı belirteçlerimi açıkla",
+    chat_error: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
   }
 };
 
@@ -1833,6 +1878,39 @@ function TrendTooltip(props) {
   );
 }
 
+function buildChatContext(results, markers, history, profile, unitSystem) {
+  var lines = [];
+  if (profile) {
+    var pParts = [];
+    if (profile.age) pParts.push("age " + profile.age);
+    if (profile.biological_sex) pParts.push(profile.biological_sex);
+    if (profile.conditions && profile.conditions.length) pParts.push("known conditions: " + profile.conditions.join(", "));
+    if (pParts.length) lines.push("Patient: " + pParts.join(", ") + ".");
+  }
+  if (results && markers && markers.length) {
+    lines.push("\nLatest report (" + (results.reportDate || "recent") + ", " + markers.length + " markers):");
+    markers.forEach(function(m) {
+      var status = getStatus(m.value, m.low, m.high);
+      var flag = status === "ok" ? "normal" : status === "high" ? "HIGH" : "LOW";
+      lines.push("  " + m.name + ": " + m.value + " " + (m.unit || "") + " (ref " + m.low + "\u2013" + m.high + " " + (m.unit || "") + ") \u2014 " + flag);
+    });
+  }
+  if (history && history.length >= 2) {
+    var trendMarkers = getTrendMarkers(history);
+    if (trendMarkers.length) {
+      lines.push("\nTrend data across " + history.length + " reports:");
+      trendMarkers.slice(0, 20).forEach(function(name) {
+        var pts = getTrendData(history, name, unitSystem);
+        if (pts.length >= 2) {
+          var trend = pts.map(function(p) { return p.date + ": " + p.value + " " + (p.unit || ""); }).join(" \u2192 ");
+          lines.push("  " + name + ": " + trend);
+        }
+      });
+    }
+  }
+  return lines.join("\n");
+}
+
 function TrendSparkline({ points }) {
   var containerRef = useRef(null);
   var [w, setW] = useState(0);
@@ -2158,6 +2236,19 @@ export default function App() {
   const [trendingWellExpanded, setTrendingWellExpanded] = useState(false);
   const [allClearExpanded, setAllClearExpanded] = useState(false);
 
+  // ── Chat state ──
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatScrollRef = useRef(null);
+
+  useEffect(function() {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
   // ── Sync toast ──
   const [syncToast, setSyncToast] = useState(null); // null | "saved" | "error"
   function showSyncToast(type) {
@@ -2182,6 +2273,32 @@ export default function App() {
   function handleOptimalRangesChange(val) {
     setShowOptimalRanges(val);
     localStorage.setItem("vitascan_optimal_ranges", val ? "true" : "false");
+  }
+
+  async function handleChatSend(textOverride) {
+    var text = (textOverride !== undefined ? textOverride : chatInput).trim();
+    if (!text || chatLoading) return;
+    setChatInput("");
+    var userMsg = { role: "user", text: text };
+    var newMessages = chatMessages.concat([userMsg]);
+    setChatMessages(newMessages);
+    setChatLoading(true);
+    try {
+      var session = await supabase.auth.getSession();
+      var token = session.data.session ? session.data.session.access_token : null;
+      var ctx = buildChatContext(results, markers, history, profile, unitSystem);
+      var res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ messages: newMessages, context: ctx }),
+      });
+      var data = await res.json();
+      setChatMessages(newMessages.concat([{ role: "model", text: data.reply || t("chat_error") }]));
+    } catch (e) {
+      setChatMessages(newMessages.concat([{ role: "model", text: t("chat_error") }]));
+    } finally {
+      setChatLoading(false);
+    }
   }
 
   // ── Language preference ──
@@ -3646,6 +3763,66 @@ export default function App() {
 
         </main>
       </div>
+      {/* Chat FAB */}
+      <button className="chat-fab" onClick={function() { setChatOpen(true); }} title={t("chat_title")}>
+        💬
+      </button>
+
+      {/* Chat overlay */}
+      {chatOpen && (
+        <div className="chat-overlay">
+          <div className="chat-overlay-header">
+            <div className="chat-overlay-title">✨ {t("chat_title")}</div>
+            <button className="chat-overlay-close" onClick={function() { setChatOpen(false); }}>✕</button>
+          </div>
+
+          {chatMessages.length === 0 ? (
+            <>
+              <div className="chat-empty-state">
+                <div className="chat-empty-icon">🔬</div>
+                <div className="chat-empty-text">{t("chat_empty")}</div>
+              </div>
+              <div className="chat-starters">
+                {[t("chat_starter_1"), t("chat_starter_2"), t("chat_starter_3")].map(function(s) {
+                  return (
+                    <button key={s} className="chat-starter" onClick={function() { handleChatSend(s); }}>
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="chat-messages" ref={chatScrollRef}>
+              {chatMessages.map(function(msg, i) {
+                return (
+                  <div key={i} className={"chat-msg chat-msg-" + msg.role}>
+                    <div className="chat-bubble">{msg.text}</div>
+                  </div>
+                );
+              })}
+              {chatLoading && <div className="chat-typing">···</div>}
+              <div style={{ height: 16 }} />
+            </div>
+          )}
+
+          <div className="chat-input-row">
+            <input
+              className="chat-input"
+              type="text"
+              placeholder={t("chat_placeholder")}
+              value={chatInput}
+              onChange={function(e) { setChatInput(e.target.value); }}
+              onKeyDown={function(e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
+              disabled={chatLoading}
+            />
+            <button className="chat-send" onClick={function() { handleChatSend(); }} disabled={!chatInput.trim() || chatLoading}>
+              ↑
+            </button>
+          </div>
+        </div>
+      )}
+
       {syncToast && (
         <div className={"sync-toast sync-toast-" + syncToast}>
           {syncToast === "saved" ? t("toast_saved") : t("toast_error")}
