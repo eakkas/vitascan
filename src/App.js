@@ -711,6 +711,32 @@ const STYLES = `
   .pattern-banner-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
   .pattern-banner-desc  { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
+  /* ── Bio Age Card ── */
+  .bio-age-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
+  .bio-age-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bio-age-icon { font-size: 20px; }
+  .bio-age-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text); }
+  .bio-age-body { display: flex; align-items: center; gap: 18px; }
+  .bio-age-number { font-size: 52px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .bio-age-number.ba-younger { color: var(--ok); }
+  .bio-age-number.ba-older   { color: var(--danger); }
+  .bio-age-number.ba-neutral { color: var(--accent); }
+  .bio-age-info { flex: 1; min-width: 0; }
+  .bio-age-label { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .bio-age-delta { font-size: 13px; font-weight: 500; }
+  .bio-age-delta.ba-younger { color: var(--ok); }
+  .bio-age-delta.ba-older   { color: var(--danger); }
+  .bio-age-delta.ba-neutral { color: var(--muted); }
+  .bio-age-timeline { display: flex; gap: 0; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); overflow-x: auto; }
+  .bio-age-tl-item { flex: 1; min-width: 48px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bio-age-tl-age  { font-size: 14px; font-weight: 700; }
+  .bio-age-tl-bar  { width: 3px; height: 18px; border-radius: 2px; }
+  .bio-age-tl-date { font-size: 10px; color: var(--muted); text-align: center; white-space: nowrap; }
+  .bio-age-footer  { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+  .bio-age-needs   { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .bio-age-needs-title   { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+  .bio-age-needs-markers { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
   /* ── Chat FAB ── */
   .chat-fab { position: fixed; bottom: calc(76px + env(safe-area-inset-bottom)); right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 4px 20px rgba(14,165,233,0.38); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 100; transition: transform 0.15s, box-shadow 0.15s; font-family: 'Inter', sans-serif; }
   .chat-fab:hover { transform: scale(1.07); box-shadow: 0 6px 24px rgba(14,165,233,0.5); }
@@ -2083,6 +2109,139 @@ function detectPatterns(markers) {
     if (matched) found.push(pattern);
   });
   return found;
+}
+
+// PhenoAge biological age algorithm (Levine et al., 2018, EBioMedicine)
+// Input: normalized markers (canonical names, US preferred units)
+// Returns { age, missing } — age is number, missing is [] if computable; or { missing } if not enough data
+function computeBioAge(markers) {
+  var albumin    = markers.find(function(m) { return m.name === "Albumin"; });
+  var creatinine = markers.find(function(m) { return m.name === "Creatinine"; });
+  var glucose    = markers.find(function(m) { return m.name === "Glucose"; });
+  var crp        = markers.find(function(m) { return m.name === "hs-CRP"; }) ||
+                   markers.find(function(m) { return m.name === "CRP"; });
+  var mcv        = markers.find(function(m) { return m.name === "MCV"; });
+  var rdw        = markers.find(function(m) { return m.name === "RDW"; });
+  var alp        = markers.find(function(m) { return m.name === "ALP"; });
+  var wbc        = markers.find(function(m) { return m.name === "WBC"; });
+  // Lymphocyte %: exclude absolute counts (typically < 5 K/µL)
+  var lymph      = markers.find(function(m) { return m.name === "Lymphocytes" && m.value >= 5 && m.value <= 90; });
+
+  var needed  = { albumin: albumin, creatinine: creatinine, glucose: glucose, crp: crp,
+                  mcv: mcv, rdw: rdw, alp: alp, wbc: wbc, lymphocytes: lymph };
+  var nameMap = { albumin: "Albumin", creatinine: "Creatinine", glucose: "Glucose",
+                  crp: "CRP / hs-CRP", mcv: "MCV", rdw: "RDW",
+                  alp: "Alkaline Phosphatase (ALP)", wbc: "WBC", lymphocytes: "Lymphocytes %" };
+  var missing = Object.keys(needed)
+    .filter(function(k) { return !needed[k]; })
+    .map(function(k) { return nameMap[k]; });
+
+  if (missing.length > 0) return { missing: missing };
+
+  // Convert to SI units required by PhenoAge formula
+  var alb_gL   = albumin.value    * 10;      // g/dL → g/L
+  var cre_umol = creatinine.value * 88.4;    // mg/dL → µmol/L
+  var glu_mmol = glucose.value    * 0.05551; // mg/dL → mmol/L
+  var crp_mgL  = Math.max(crp.value, 0);     // mg/L (already normalized)
+
+  var xb = -19.9067
+    + alb_gL              * (-0.0095)
+    + cre_umol            *   0.0336
+    + glu_mmol            *   0.1953
+    + Math.log(crp_mgL + 1) * 0.0954
+    + lymph.value         * (-0.0120)
+    + mcv.value           *   0.0268
+    + rdw.value           *   0.3306
+    + alp.value           *   0.00188
+    + wbc.value           *   0.0554;
+
+  var gamma     = 0.0076927;
+  var mortScore = 1 - Math.exp(-Math.exp(xb) * (Math.exp(gamma * 120) - 1) / gamma);
+  if (mortScore >= 1) mortScore = 0.9999;
+  if (mortScore <= 0) return { missing: [] };
+
+  var rawAge = 141.50225 + Math.log(-0.00553 * Math.log(1 - mortScore)) / 0.090165;
+  return { age: Math.round(Math.max(1, Math.min(120, rawAge)) * 10) / 10, missing: [] };
+}
+
+function BioAgeCard({ markers, chronologicalAge, history }) {
+  var result = markers && markers.length ? computeBioAge(markers) : null;
+
+  // Build bio age timeline from history (chronological order, newest-first in array → reverse)
+  var timeline = [];
+  if (history && history.length >= 2) {
+    history.slice().reverse().forEach(function(report) {
+      var norm = normalizeMarkers(report.markers || []);
+      var r = computeBioAge(norm);
+      if (r && r.age !== undefined) {
+        var dateStr = report.report_date
+          ? report.report_date.slice(0, 7)
+          : new Date(report.created_at).toLocaleDateString("en", { year: "2-digit", month: "short" });
+        timeline.push({ age: r.age, date: dateStr });
+      }
+    });
+  }
+
+  if (!result) return null;
+
+  // Not enough markers — show what's missing
+  if (result.missing && result.missing.length > 0) {
+    return (
+      <div className="bio-age-card">
+        <div className="bio-age-header">
+          <span className="bio-age-icon">🧬</span>
+          <span className="bio-age-title">Biological Age</span>
+        </div>
+        <div className="bio-age-needs">
+          <div className="bio-age-needs-title">Need {result.missing.length} more marker{result.missing.length !== 1 ? "s" : ""} for this calculation</div>
+          <div className="bio-age-needs-markers">Ask your doctor to include: {result.missing.join(" · ")}</div>
+        </div>
+        <div className="bio-age-footer">PhenoAge (Levine et al., 2018) uses 9 standard blood markers to estimate biological age.</div>
+      </div>
+    );
+  }
+
+  var age   = result.age;
+  var chAge = chronologicalAge ? Number(chronologicalAge) : null;
+  var delta = chAge ? Math.round((age - chAge) * 10) / 10 : null;
+  var cls   = delta === null ? "ba-neutral" : delta < -2 ? "ba-younger" : delta > 2 ? "ba-older" : "ba-neutral";
+  var deltaLabel = delta === null
+    ? "Add your age in Profile to compare"
+    : delta < -2 ? Math.abs(delta).toFixed(1) + " yrs younger than your age"
+    : delta >  2 ? delta.toFixed(1) + " yrs older than your age"
+    : "Consistent with your chronological age";
+
+  return (
+    <div className="bio-age-card">
+      <div className="bio-age-header">
+        <span className="bio-age-icon">🧬</span>
+        <span className="bio-age-title">Biological Age</span>
+      </div>
+      <div className="bio-age-body">
+        <div className={"bio-age-number " + cls}>{age.toFixed(1)}</div>
+        <div className="bio-age-info">
+          <div className="bio-age-label">years</div>
+          <div className={"bio-age-delta " + cls}>{deltaLabel}</div>
+        </div>
+      </div>
+      {timeline.length >= 2 && (
+        <div className="bio-age-timeline">
+          {timeline.map(function(pt, i) {
+            var ptDelta = chAge ? pt.age - chAge : 0;
+            var col = ptDelta < -2 ? "var(--ok)" : ptDelta > 2 ? "var(--danger)" : "var(--accent)";
+            return (
+              <div key={i} className="bio-age-tl-item">
+                <div className="bio-age-tl-age" style={{ color: col }}>{pt.age.toFixed(0)}</div>
+                <div className="bio-age-tl-bar" style={{ background: col }} />
+                <div className="bio-age-tl-date">{pt.date}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <div className="bio-age-footer">PhenoAge algorithm · Levine et al., 2018 · Always consult your doctor</div>
+    </div>
+  );
 }
 
 function buildChatContext(results, markers, history, profile, unitSystem) {
@@ -3851,6 +4010,8 @@ export default function App() {
               </div>
 
               <HealthScoreCard markers={markers} />
+
+              <BioAgeCard markers={markers} chronologicalAge={profile && profile.age} history={history} />
 
               {(function() {
                 var priorities = computePriorities(markers, history, unitSystem);
