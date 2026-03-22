@@ -1598,7 +1598,7 @@ var CANONICAL_MAP = [
   { keywords: ["hematocrit", "haematocrit"],                        canonical: "Hematocrit" },
   { keywords: ["platelet", "plt"],                                   canonical: "Platelets" },
   { keywords: ["neutrophil"],                                        canonical: "Neutrophils" },
-  { keywords: ["lymphocyte"],                                        canonical: "Lymphocytes" },
+  { keywords: ["lymphocyte", "lymphs", "# lymph", "lymph #", "lymph %", "% lymph"], canonical: "Lymphocytes" },
   { keywords: ["monocyte"],                                          canonical: "Monocytes" },
   { keywords: ["eosinophil"],                                        canonical: "Eosinophils" },
   { keywords: ["basophil"],                                          canonical: "Basophils" },
@@ -2125,12 +2125,17 @@ function computeBioAge(markers) {
   var alp        = markers.find(function(m) { return m.name === "ALP"; });
   var wbc        = markers.find(function(m) { return m.name === "WBC"; });
 
-  // Lymphocyte %: prefer direct % reading (value 5–90), otherwise derive from absolute ÷ WBC
+  // Lymphocyte %: prefer direct % reading (value 5–90), otherwise derive from absolute ÷ WBC.
+  // Handle unit scale mismatch: some labs report WBC in K/µL but Lymph absolute in /µL (×1000),
+  // which would give a derived % of ~32000% — detect and correct by dividing lymph value by 1000.
   var lymph = markers.find(function(m) { return m.name === "Lymphocytes" && m.value >= 5 && m.value <= 90; });
   if (!lymph && wbc && wbc.value > 0) {
     var lymphAbs = markers.find(function(m) { return m.name === "Lymphocytes"; });
     if (lymphAbs) {
-      var derived = (lymphAbs.value / wbc.value) * 100;
+      var lymphVal = lymphAbs.value;
+      var derived  = (lymphVal / wbc.value) * 100;
+      // If ratio is implausibly large, try rescaling lymph by /1000 (unit mismatch correction)
+      if (derived > 90 && derived > 0) derived = (lymphVal / 1000 / wbc.value) * 100;
       if (derived >= 5 && derived <= 90) {
         lymph = { name: "Lymphocytes", value: parseFloat(derived.toFixed(2)), unit: "%" };
       }
