@@ -2217,24 +2217,19 @@ function BioAgeCard({ markers, chronologicalAge, history, reportDate }) {
   var timeline = [];
   if (history && history.length >= 2) {
     history.slice().reverse().forEach(function(report) {
+      // Strict: only add a timeline point when this single report has all 9 markers.
+      // Cross-report mixing introduces variance from different physiological states,
+      // making the timeline misleading.
       var norm = normalizeMarkers(report.markers || []);
-      // Try strict first
       var r = computeBioAge(norm);
-      if (!r.age) {
-        // Try cross-report for this history point
-        var g = gatherBioAgeMarkers(norm, history, report.report_date || report.created_at, 180);
-        r = computeBioAge(g.markers);
-      }
       if (r && r.age !== undefined) {
-        var dateStr = report.report_date
-          ? report.report_date.slice(0, 7)
-          : new Date(report.created_at).toLocaleDateString("en", { year: "2-digit", month: "short" });
+        var rawDate = report.report_date || report.created_at;
+        var d = new Date(rawDate);
+        var dateStr = isNaN(d.getTime())
+          ? rawDate
+          : d.toLocaleDateString("en", { month: "short", year: "2-digit" });
         timeline.push({ age: r.age, date: dateStr });
       }
-    });
-    // Deduplicate consecutive identical ages (same report counted twice via strict + cross)
-    timeline = timeline.filter(function(pt, i) {
-      return i === 0 || pt.date !== timeline[i - 1].date;
     });
   }
 
