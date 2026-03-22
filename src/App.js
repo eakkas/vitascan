@@ -690,6 +690,19 @@ const STYLES = `
   .trend-legend { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
   .trend-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 
+  /* ── Priorities card ── */
+  .priorities-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 18px 20px; }
+  .priorities-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .priorities-card-icon { font-size: 17px; }
+  .priorities-card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text); }
+  .priority-item { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0 0; margin-top: 12px; border-top: 1px solid var(--border); }
+  .priority-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--dim); font-size: 11px; font-weight: 800; color: var(--muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .priority-body { flex: 1; min-width: 0; }
+  .priority-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .priority-name { font-size: 14px; font-weight: 600; text-transform: capitalize; }
+  .priority-value { font-size: 12px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .priority-action { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
   /* ── Chat FAB ── */
   .chat-fab { position: fixed; bottom: calc(76px + env(safe-area-inset-bottom)); right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 4px 20px rgba(14,165,233,0.38); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 100; transition: transform 0.15s, box-shadow 0.15s; font-family: 'Inter', sans-serif; }
   .chat-fab:hover { transform: scale(1.07); box-shadow: 0 6px 24px rgba(14,165,233,0.5); }
@@ -1876,6 +1889,135 @@ function TrendTooltip(props) {
       </div>
     </div>
   );
+}
+
+var PRIORITY_WEIGHTS = [
+  // weight 3 — critical
+  { keys: ["hba1c", "a1c", "glycated hemoglobin", "glycated haemoglobin"], w: 3 },
+  { keys: ["glucose", "blood glucose", "fasting glucose", "plasma glucose"], w: 3 },
+  { keys: ["ldl", "ldl-c", "ldl cholesterol"], w: 3 },
+  { keys: ["tsh", "thyroid stimulating"], w: 3 },
+  { keys: ["creatinine"], w: 3 },
+  { keys: ["egfr", "glomerular filtration"], w: 3 },
+  { keys: ["hemoglobin", "haemoglobin", "hgb"], w: 3, exclude: ["a1c", "glycated"] },
+  { keys: ["wbc", "white blood cell", "white blood count", "leukocyte"], w: 3 },
+  { keys: ["platelet"], w: 3 },
+  { keys: ["alt", "alanine aminotransferase", "alanine transaminase"], w: 3 },
+  { keys: ["ast", "aspartate aminotransferase", "aspartate transaminase"], w: 3 },
+  { keys: ["apob", "apolipoprotein b"], w: 3 },
+  { keys: ["lp(a)", "lipoprotein(a)", "lipoprotein a"], w: 3 },
+  // weight 2 — high
+  { keys: ["cholesterol"], w: 2 },
+  { keys: ["triglyceride"], w: 2 },
+  { keys: ["hdl", "hdl cholesterol"], w: 2 },
+  { keys: ["crp", "c-reactive protein", "c reactive protein"], w: 2 },
+  { keys: ["homocysteine"], w: 2 },
+  { keys: ["ferritin"], w: 2 },
+  { keys: ["vitamin d", "25-oh", "25(oh)"], w: 2 },
+  { keys: ["vitamin b12", "b12", "cobalamin"], w: 2 },
+  { keys: ["folate", "folic acid"], w: 2 },
+  { keys: ["testosterone"], w: 2 },
+  { keys: ["free t4", "thyroxine"], w: 2 },
+  { keys: ["free t3", "triiodothyronine"], w: 2 },
+  { keys: ["insulin"], w: 2 },
+  { keys: ["uric acid"], w: 2 },
+  { keys: ["sodium"], w: 2 },
+  { keys: ["potassium"], w: 2 },
+  { keys: ["magnesium"], w: 2 },
+];
+
+var ACTION_RULES = [
+  { match: ["hba1c", "a1c", "glycated"], high: "Reduce refined carbs and sugar; discuss diabetes screening with your doctor.", low: null },
+  { match: ["glucose", "blood sugar", "blood glucose"], high: "Reduce refined carbs; confirm fasting protocol and repeat the test.", low: "Eat regularly to prevent hypoglycemia; discuss with your doctor." },
+  { match: ["ldl"], high: "Review saturated fat intake; discuss cardiovascular risk management with your doctor.", low: null },
+  { match: ["hdl"], low: "Increase aerobic exercise and healthy fats (olive oil, nuts, fatty fish).", high: null },
+  { match: ["triglyceride"], high: "Reduce sugar, refined carbs, and alcohol; increase omega-3 intake.", low: null },
+  { match: ["tsh", "thyroid stimulating"], high: "Elevated TSH may indicate hypothyroidism; discuss thyroid evaluation with your doctor.", low: "Suppressed TSH may indicate hyperthyroidism; discuss with your doctor." },
+  { match: ["free t4", "thyroxine"], low: "Low T4 may indicate hypothyroidism; discuss with your doctor.", high: "Elevated T4; discuss thyroid evaluation with your doctor." },
+  { match: ["free t3", "triiodothyronine"], low: "Low T3; discuss thyroid function with your doctor.", high: null },
+  { match: ["vitamin d", "25-oh"], low: "Consider Vitamin D3 supplementation; discuss optimal dose with your doctor.", high: "Vitamin D is high; reduce supplementation and consult your doctor." },
+  { match: ["b12", "cobalamin"], low: "Increase B12-rich foods (meat, fish, dairy) or consider supplementation.", high: null },
+  { match: ["ferritin"], low: "Increase iron-rich foods or discuss iron supplementation with your doctor.", high: "High ferritin may indicate iron overload or inflammation; consult your doctor." },
+  { match: ["creatinine"], high: "Elevated creatinine suggests reduced kidney function; consult your doctor.", low: null },
+  { match: ["egfr", "glomerular"], low: "Low eGFR indicates reduced kidney function; follow up with your doctor.", high: null },
+  { match: ["alt", "alanine"], high: "Elevated liver enzyme; avoid alcohol, review medications, and consult your doctor.", low: null },
+  { match: ["ast", "aspartate"], high: "Elevated liver enzyme; avoid alcohol, review medications, and consult your doctor.", low: null },
+  { match: ["crp", "c-reactive"], high: "Elevated inflammation marker; work with your doctor to identify the underlying cause.", low: null },
+  { match: ["uric acid"], high: "Reduce purine-rich foods (red meat, shellfish) and alcohol.", low: null },
+  { match: ["hemoglobin", "haemoglobin", "hgb"], low: "Low hemoglobin may indicate anemia; check iron, B12, and folate levels.", high: null },
+  { match: ["wbc", "white blood", "leukocyte"], high: "Elevated WBC may indicate infection or inflammation; consult your doctor.", low: "Low WBC may indicate immune suppression; consult your doctor." },
+  { match: ["platelet"], low: "Low platelets; consult your doctor and avoid aspirin/NSAIDs.", high: "Elevated platelets; discuss follow-up with your doctor." },
+  { match: ["testosterone"], low: "Low testosterone; discuss sleep, exercise, and weight with your doctor.", high: null },
+  { match: ["homocysteine"], high: "Increase folate, B6, and B12-rich foods or discuss supplementation.", low: null },
+  { match: ["cholesterol"], high: "Review diet and lifestyle; discuss cardiovascular risk assessment with your doctor.", low: null },
+  { match: ["sodium"], high: "Reduce salt and processed food intake.", low: "Discuss fluid balance and diet with your doctor." },
+  { match: ["potassium"], high: "Reduce high-potassium foods; consult your doctor.", low: "Increase leafy greens and legumes; consult your doctor." },
+  { match: ["magnesium"], low: "Increase leafy greens, nuts, and seeds or consider supplementation.", high: null },
+  { match: ["iron"], low: "Increase red meat, legumes, or discuss iron supplementation with your doctor.", high: "High iron; reduce iron-rich foods and discuss with your doctor." },
+  { match: ["folate", "folic"], low: "Increase leafy greens and legumes or consider supplementation.", high: null },
+  { match: ["apob", "apolipoprotein b"], high: "Elevated ApoB is a key cardiovascular risk marker; discuss with your doctor.", low: null },
+];
+
+function getMarkerClinicalWeight(name) {
+  var n = (name || "").toLowerCase();
+  for (var i = 0; i < PRIORITY_WEIGHTS.length; i++) {
+    var rule = PRIORITY_WEIGHTS[i];
+    var hasExclude = rule.exclude && rule.exclude.some(function(ex) { return n.includes(ex); });
+    if (!hasExclude && rule.keys.some(function(k) { return n.includes(k); })) return rule.w;
+  }
+  return 1;
+}
+
+function getMarkerAction(name, status) {
+  var n = (name || "").toLowerCase();
+  for (var i = 0; i < ACTION_RULES.length; i++) {
+    var rule = ACTION_RULES[i];
+    if (rule.match.some(function(k) { return n.includes(k); })) {
+      if (status === "high" && rule.high) return rule.high;
+      if (status === "low"  && rule.low)  return rule.low;
+    }
+  }
+  return status === "high"
+    ? "This marker is above range. Discuss the cause and next steps with your doctor."
+    : "This marker is below range. Discuss the cause and next steps with your doctor.";
+}
+
+function computePriorities(markers, history, unitSystem) {
+  var oor = markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; });
+  if (!oor.length) return [];
+  var scored = oor.map(function(m) {
+    var status = getStatus(m.value, m.low, m.high);
+    var score = getMarkerClinicalWeight(m.name);
+    // Severity: how far out of range (capped at +1)
+    var pct = 0;
+    if (status === "high" && m.high > 0) pct = (m.value - m.high) / m.high;
+    if (status === "low"  && m.low  > 0) pct = (m.low - m.value) / m.low;
+    score += Math.min(pct * 2, 1);
+    // Trend: worsening boosts score, improving reduces it
+    var trendDir = 0;
+    if (history && history.length >= 2) {
+      var pts = getTrendData(history, normalizeMarkerName(m.name), unitSystem);
+      if (pts.length >= 2) {
+        var prev = pts[pts.length - 2], curr = pts[pts.length - 1];
+        trendDir = (status === "high")
+          ? (curr.value > prev.value ? 1 : -1)
+          : (curr.value < prev.value ? 1 : -1);
+      }
+    }
+    score += trendDir * 0.5;
+    return { m: m, status: status, score: score, trendDir: trendDir };
+  });
+  scored.sort(function(a, b) { return b.score - a.score; });
+  return scored.slice(0, 3).map(function(item) {
+    return {
+      name:    item.m.name,
+      value:   item.m.value,
+      unit:    item.m.unit,
+      status:  item.status,
+      trendDir: item.trendDir,
+      action:  getMarkerAction(item.m.name, item.status),
+    };
+  });
 }
 
 function buildChatContext(results, markers, history, profile, unitSystem) {
@@ -3644,6 +3786,37 @@ export default function App() {
               </div>
 
               <HealthScoreCard markers={markers} />
+
+              {(function() {
+                var priorities = computePriorities(markers, history, unitSystem);
+                if (!priorities.length) return null;
+                var statusColor = function(s) { return s === "high" ? "var(--danger)" : "var(--warn)"; };
+                var trendArrow  = function(d) { return d === 1 ? " ↑" : d === -1 ? " ↓" : ""; };
+                return (
+                  <div className="priorities-card">
+                    <div className="priorities-card-header">
+                      <span className="priorities-card-icon">🎯</span>
+                      <span className="priorities-card-title">Focus This Quarter</span>
+                    </div>
+                    {priorities.map(function(p, i) {
+                      return (
+                        <div key={i} className="priority-item">
+                          <div className="priority-rank">{i + 1}</div>
+                          <div className="priority-body">
+                            <div className="priority-top">
+                              <span className="priority-name">{p.name}</span>
+                              <span className="priority-value" style={{ color: statusColor(p.status) }}>
+                                {p.value} {p.unit}{trendArrow(p.trendDir)}
+                              </span>
+                            </div>
+                            <div className="priority-action">{p.action}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {(function() {
                 var oorMarkers = markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; });
