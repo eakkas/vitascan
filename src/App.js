@@ -2124,8 +2124,18 @@ function computeBioAge(markers) {
   var rdw        = markers.find(function(m) { return m.name === "RDW"; });
   var alp        = markers.find(function(m) { return m.name === "ALP"; });
   var wbc        = markers.find(function(m) { return m.name === "WBC"; });
-  // Lymphocyte %: exclude absolute counts (typically < 5 K/µL)
-  var lymph      = markers.find(function(m) { return m.name === "Lymphocytes" && m.value >= 5 && m.value <= 90; });
+
+  // Lymphocyte %: prefer direct % reading (value 5–90), otherwise derive from absolute ÷ WBC
+  var lymph = markers.find(function(m) { return m.name === "Lymphocytes" && m.value >= 5 && m.value <= 90; });
+  if (!lymph && wbc && wbc.value > 0) {
+    var lymphAbs = markers.find(function(m) { return m.name === "Lymphocytes"; });
+    if (lymphAbs) {
+      var derived = (lymphAbs.value / wbc.value) * 100;
+      if (derived >= 5 && derived <= 90) {
+        lymph = { name: "Lymphocytes", value: parseFloat(derived.toFixed(2)), unit: "%" };
+      }
+    }
+  }
 
   var needed  = { albumin: albumin, creatinine: creatinine, glucose: glucose, crp: crp,
                   mcv: mcv, rdw: rdw, alp: alp, wbc: wbc, lymphocytes: lymph };
@@ -2139,21 +2149,16 @@ function computeBioAge(markers) {
   if (missing.length > 0) return { missing: missing };
 
   // Convert to SI units required by PhenoAge formula
-  var alb_gL   = albumin.value    * 10;      // g/dL → g/L
-  var cre_umol = creatinine.value * 88.4;    // mg/dL → µmol/L
-  var glu_mmol = glucose.value    * 0.05551; // mg/dL → mmol/L
-  var crp_mgL  = Math.max(crp.value, 0);     // mg/L (already normalized)
-
   var xb = -19.9067
-    + alb_gL              * (-0.0095)
-    + cre_umol            *   0.0336
-    + glu_mmol            *   0.1953
-    + Math.log(crp_mgL + 1) * 0.0954
-    + lymph.value         * (-0.0120)
-    + mcv.value           *   0.0268
-    + rdw.value           *   0.3306
-    + alp.value           *   0.00188
-    + wbc.value           *   0.0554;
+    + albumin.value    * 10      * (-0.0095)   // g/dL → g/L
+    + creatinine.value * 88.4    *   0.0336    // mg/dL → µmol/L
+    + glucose.value    * 0.05551 *   0.1953    // mg/dL → mmol/L
+    + Math.log(Math.max(crp.value, 0) + 1)    *   0.0954
+    + lymph.value                * (-0.0120)
+    + mcv.value                  *   0.0268
+    + rdw.value                  *   0.3306
+    + alp.value                  *   0.00188
+    + wbc.value                  *   0.0554;
 
   var gamma     = 0.0076927;
   var mortScore = 1 - Math.exp(-Math.exp(xb) * (Math.exp(gamma * 120) - 1) / gamma);
@@ -2164,15 +2169,61 @@ function computeBioAge(markers) {
   return { age: Math.round(Math.max(1, Math.min(120, rawAge)) * 10) / 10, missing: [] };
 }
 
-function BioAgeCard({ markers, chronologicalAge, history }) {
-  var result = markers && markers.length ? computeBioAge(markers) : null;
+// Assembles the best set of markers for bio age by filling gaps from nearby reports.
+// Uses the most recent value for each missing marker within maxDays of the reference date.
+// Returns { markers, crossReport, oldestDate, refDate }
+function gatherBioAgeMarkers(primaryMarkers, history, referenceDate, maxDays) {
+  var MAX_DAYS = maxDays || 180;
+  var refDate  = referenceDate ? new Date(referenceDate) : new Date();
+  var maxMs    = MAX_DAYS * 24 * 60 * 60 * 1000;
 
-  // Build bio age timeline from history (chronological order, newest-first in array → reverse)
+  var merged      = primaryMarkers.slice();
+  var presentNames = {};
+  primaryMarkers.forEach(function(m) { presentNames[m.name] = true; });
+
+  var oldestDate = null;
+  // history is newest-first — iterating naturally gives most recent values first
+  if (history) {
+    for (var i = 0; i < history.length; i++) {
+      var report  = history[i];
+      var rDate   = report.report_date ? new Date(report.report_date) : new Date(report.created_at);
+      var diff    = Math.abs(refDate - rDate);
+      if (diff < 1000 * 60) continue; // same report (< 1 min apart)
+      if (diff > maxMs) continue;     // outside time window
+
+      var normMarkers = normalizeMarkers(report.markers || []);
+      normMarkers.forEach(function(m) {
+        if (!presentNames[m.name]) {
+          presentNames[m.name] = true;
+          merged.push(m);
+          if (!oldestDate || rDate < oldestDate) oldestDate = rDate;
+        }
+      });
+    }
+  }
+
+  return { markers: merged, crossReport: !!oldestDate, oldestDate: oldestDate, refDate: refDate, maxDays: MAX_DAYS };
+}
+
+function BioAgeCard({ markers, chronologicalAge, history, reportDate }) {
+  if (!markers || !markers.length) return null;
+
+  // Gather best available markers across reports (fills gaps within 6 months)
+  var gathered = gatherBioAgeMarkers(markers, history, reportDate, 180);
+  var result   = computeBioAge(gathered.markers);
+
+  // Build timeline: for each history report, try single-report first, then ±180-day cross-report
   var timeline = [];
   if (history && history.length >= 2) {
     history.slice().reverse().forEach(function(report) {
       var norm = normalizeMarkers(report.markers || []);
+      // Try strict first
       var r = computeBioAge(norm);
+      if (!r.age) {
+        // Try cross-report for this history point
+        var g = gatherBioAgeMarkers(norm, history, report.report_date || report.created_at, 180);
+        r = computeBioAge(g.markers);
+      }
       if (r && r.age !== undefined) {
         var dateStr = report.report_date
           ? report.report_date.slice(0, 7)
@@ -2180,11 +2231,15 @@ function BioAgeCard({ markers, chronologicalAge, history }) {
         timeline.push({ age: r.age, date: dateStr });
       }
     });
+    // Deduplicate consecutive identical ages (same report counted twice via strict + cross)
+    timeline = timeline.filter(function(pt, i) {
+      return i === 0 || pt.date !== timeline[i - 1].date;
+    });
   }
 
   if (!result) return null;
 
-  // Not enough markers — show what's missing
+  // Not enough markers even after cross-report gathering — show what's still missing
   if (result.missing && result.missing.length > 0) {
     return (
       <div className="bio-age-card">
@@ -2203,13 +2258,20 @@ function BioAgeCard({ markers, chronologicalAge, history }) {
 
   var age   = result.age;
   var chAge = chronologicalAge ? Number(chronologicalAge) : null;
-  var delta = chAge ? Math.round((age - chAge) * 10) / 10 : null;
+  var delta = chAge !== null ? Math.round((age - chAge) * 10) / 10 : null;
   var cls   = delta === null ? "ba-neutral" : delta < -2 ? "ba-younger" : delta > 2 ? "ba-older" : "ba-neutral";
   var deltaLabel = delta === null
     ? "Add your age in Profile to compare"
     : delta < -2 ? Math.abs(delta).toFixed(1) + " yrs younger than your age"
     : delta >  2 ? delta.toFixed(1) + " yrs older than your age"
     : "Consistent with your chronological age";
+
+  // Footer: note if cross-report data was used
+  var footerNote = "PhenoAge algorithm · Levine et al., 2018 · Always consult your doctor";
+  if (gathered.crossReport && gathered.oldestDate) {
+    var span = Math.round(Math.abs(gathered.refDate - gathered.oldestDate) / (1000 * 60 * 60 * 24));
+    footerNote = "Estimated using most recent values across reports (within " + span + " days) · " + footerNote;
+  }
 
   return (
     <div className="bio-age-card">
@@ -2239,7 +2301,7 @@ function BioAgeCard({ markers, chronologicalAge, history }) {
           })}
         </div>
       )}
-      <div className="bio-age-footer">PhenoAge algorithm · Levine et al., 2018 · Always consult your doctor</div>
+      <div className="bio-age-footer">{footerNote}</div>
     </div>
   );
 }
@@ -4011,7 +4073,7 @@ export default function App() {
 
               <HealthScoreCard markers={markers} />
 
-              <BioAgeCard markers={markers} chronologicalAge={profile && profile.age} history={history} />
+              <BioAgeCard markers={markers} chronologicalAge={profile && profile.age} history={history} reportDate={results && results.reportDate} />
 
               {(function() {
                 var priorities = computePriorities(markers, history, unitSystem);
