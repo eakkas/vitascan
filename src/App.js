@@ -2211,36 +2211,34 @@ function gatherBioAgeMarkers(primaryMarkers, history, referenceDate, maxDays) {
   return { markers: merged, crossReport: !!oldestDate, oldestDate: oldestDate, refDate: refDate, maxDays: MAX_DAYS };
 }
 
-function BioAgeCard({ markers, chronologicalAge, history, reportDate }) {
-  if (!markers || !markers.length) return null;
+// BioAgeCard: always shows one consistent biological age computed from the most recent
+// available value for each of the 9 markers across all history (1-year window).
+// Not tied to any specific report — the same number appears everywhere in the app.
+function BioAgeCard({ history, chronologicalAge }) {
+  if (!history || !history.length) return null;
 
-  // Gather best available markers across reports (fills gaps within 6 months)
-  var gathered = gatherBioAgeMarkers(markers, history, reportDate, 180);
+  // Use all history newest-first; gatherBioAgeMarkers picks the most recent value per marker
+  var gathered = gatherBioAgeMarkers([], history, new Date(), 365);
   var result   = computeBioAge(gathered.markers);
 
-  // Build timeline: for each history report, try single-report first, then ±180-day cross-report
+  // Timeline: only include reports that independently had all 9 markers (no cross-report mixing)
   var timeline = [];
-  if (history && history.length >= 2) {
-    history.slice().reverse().forEach(function(report) {
-      // Strict: only add a timeline point when this single report has all 9 markers.
-      // Cross-report mixing introduces variance from different physiological states,
-      // making the timeline misleading.
-      var norm = normalizeMarkers(report.markers || []);
-      var r = computeBioAge(norm);
-      if (r && r.age !== undefined) {
-        var rawDate = report.report_date || report.created_at;
-        var d = new Date(rawDate);
-        var dateStr = isNaN(d.getTime())
-          ? rawDate
-          : d.toLocaleDateString("en", { month: "short", year: "2-digit" });
-        timeline.push({ age: r.age, date: dateStr });
-      }
-    });
-  }
+  history.slice().reverse().forEach(function(report) {
+    var norm = normalizeMarkers(report.markers || []);
+    var r = computeBioAge(norm);
+    if (r && r.age !== undefined) {
+      var rawDate = report.report_date || report.created_at;
+      var d = new Date(rawDate);
+      var dateStr = isNaN(d.getTime())
+        ? rawDate
+        : d.toLocaleDateString("en", { month: "short", year: "2-digit" });
+      timeline.push({ age: r.age, date: dateStr });
+    }
+  });
 
   if (!result) return null;
 
-  // Not enough markers even after cross-report gathering — show what's still missing
+  // Not enough markers across all history — show what's still missing
   if (result.missing && result.missing.length > 0) {
     return (
       <div className="bio-age-card">
@@ -2249,7 +2247,7 @@ function BioAgeCard({ markers, chronologicalAge, history, reportDate }) {
           <span className="bio-age-title">Biological Age</span>
         </div>
         <div className="bio-age-needs">
-          <div className="bio-age-needs-title">Need {result.missing.length} more marker{result.missing.length !== 1 ? "s" : ""} for this calculation</div>
+          <div className="bio-age-needs-title">Need {result.missing.length} more marker{result.missing.length !== 1 ? "s" : ""} to calculate</div>
           <div className="bio-age-needs-markers">Ask your doctor to include: {result.missing.join(" · ")}</div>
         </div>
         <div className="bio-age-footer">PhenoAge (Levine et al., 2018) uses 9 standard blood markers to estimate biological age.</div>
@@ -2267,12 +2265,7 @@ function BioAgeCard({ markers, chronologicalAge, history, reportDate }) {
     : delta >  2 ? delta.toFixed(1) + " yrs older than your age"
     : "Consistent with your chronological age";
 
-  // Footer: note if cross-report data was used
-  var footerNote = "PhenoAge algorithm · Levine et al., 2018 · Always consult your doctor";
-  if (gathered.crossReport && gathered.oldestDate) {
-    var span = Math.round(Math.abs(gathered.refDate - gathered.oldestDate) / (1000 * 60 * 60 * 24));
-    footerNote = "Estimated using most recent values across reports (within " + span + " days) · " + footerNote;
-  }
+  var footerNote = "Based on most recent values across your reports · PhenoAge (Levine et al., 2018) · Always consult your doctor";
 
   return (
     <div className="bio-age-card">
@@ -3369,6 +3362,9 @@ export default function App() {
                 <div className="results-title">{profile ? t("profile_edit_title") : t("profile_new_title")}</div>
                 <div className="results-meta">{t("profile_meta")}</div>
               </div>
+
+              {history.length > 0 && <BioAgeCard history={history} chronologicalAge={profile && profile.age} />}
+
               <form onSubmit={saveProfile}>
                 <div className="form-group">
                   <label className="form-label">{t("lbl_full_name")}</label>
@@ -4074,7 +4070,7 @@ export default function App() {
 
               <HealthScoreCard markers={markers} />
 
-              <BioAgeCard markers={markers} chronologicalAge={profile && profile.age} history={history} reportDate={results && results.reportDate} />
+              <BioAgeCard history={history} chronologicalAge={profile && profile.age} />
 
               {(function() {
                 var priorities = computePriorities(markers, history, unitSystem);
