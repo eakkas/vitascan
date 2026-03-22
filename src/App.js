@@ -703,6 +703,14 @@ const STYLES = `
   .priority-value { font-size: 12px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
   .priority-action { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
+  /* ── Pattern banners ── */
+  .patterns-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+  .pattern-banner { display: flex; align-items: flex-start; gap: 12px; background: rgba(249,115,22,0.07); border: 1px solid rgba(249,115,22,0.22); border-radius: 14px; padding: 12px 14px; }
+  .pattern-banner-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .pattern-banner-body { flex: 1; min-width: 0; }
+  .pattern-banner-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .pattern-banner-desc  { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
   /* ── Chat FAB ── */
   .chat-fab { position: fixed; bottom: calc(76px + env(safe-area-inset-bottom)); right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: white; border: none; box-shadow: 0 4px 20px rgba(14,165,233,0.38); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; z-index: 100; transition: transform 0.15s, box-shadow 0.15s; font-family: 'Inter', sans-serif; }
   .chat-fab:hover { transform: scale(1.07); box-shadow: 0 6px 24px rgba(14,165,233,0.5); }
@@ -2018,6 +2026,63 @@ function computePriorities(markers, history, unitSystem) {
       action:  getMarkerAction(item.m.name, item.status),
     };
   });
+}
+
+var MARKER_PATTERNS = [
+  // Iron
+  { id: "iron_deficiency",   icon: "🩸", title: "Iron Deficiency Pattern",      desc: "Low Ferritin with elevated TIBC is a classic sign of iron-deficiency anemia. Consider iron supplementation after discussing with your doctor.",          needs: [{ keys: ["ferritin"], status: "low" }, { keys: ["tibc", "total iron binding"], status: "high" }] },
+  { id: "iron_deficiency2",  icon: "🩸", title: "Possible Iron Deficiency",      desc: "Low Ferritin alongside low Hemoglobin suggests iron-deficiency anemia. Discuss iron testing and supplementation with your doctor.",                       needs: [{ keys: ["ferritin"], status: "low" }, { keys: ["hemoglobin", "haemoglobin", "hgb"], status: "low" }] },
+  { id: "iron_overload",     icon: "⚠️", title: "Possible Iron Overload",        desc: "High Ferritin with elevated serum Iron may indicate hemochromatosis or chronic inflammation. Follow up with your doctor.",                                  needs: [{ keys: ["ferritin"], status: "high" }, { keys: ["serum iron", "iron, serum"], status: "high" }] },
+  // Thyroid
+  { id: "hypothyroid",       icon: "🦋", title: "Hypothyroidism Pattern",        desc: "Elevated TSH with low Free T4 is consistent with primary hypothyroidism. Discuss thyroid hormone replacement therapy with your doctor.",                    needs: [{ keys: ["tsh", "thyroid stimulating"], status: "high" }, { keys: ["free t4", "ft4", "thyroxine"], status: "low" }] },
+  { id: "hyperthyroid",      icon: "🦋", title: "Hyperthyroidism Pattern",       desc: "Suppressed TSH with high Free T4 is consistent with hyperthyroidism. Discuss further thyroid evaluation with your doctor.",                                   needs: [{ keys: ["tsh", "thyroid stimulating"], status: "low" }, { keys: ["free t4", "ft4", "thyroxine"], status: "high" }] },
+  { id: "subclin_hypo",      icon: "🦋", title: "Subclinical Hypothyroidism",    desc: "Elevated TSH with normal T4 may indicate subclinical hypothyroidism. Monitor closely and discuss with your doctor.",                                         needs: [{ keys: ["tsh", "thyroid stimulating"], status: "high" }, { keys: ["free t4", "ft4"], status: "ok" }] },
+  // Metabolic / Diabetes
+  { id: "diabetes_risk",     icon: "🍬", title: "Metabolic Risk Pattern",        desc: "Elevated Glucose together with high HbA1c strongly suggests impaired glucose regulation or diabetes. Discuss urgent follow-up with your doctor.",            needs: [{ keys: ["glucose", "blood glucose", "fasting glucose"], status: "high" }, { keys: ["hba1c", "a1c", "glycated"], status: "high" }] },
+  { id: "insulin_resist",    icon: "🍬", title: "Possible Insulin Resistance",   desc: "High fasting Insulin with elevated Glucose is a common sign of insulin resistance. Focus on reducing refined carbs and increasing physical activity.",        needs: [{ keys: ["insulin", "fasting insulin"], status: "high" }, { keys: ["glucose", "blood glucose"], status: "high" }] },
+  { id: "metabolic_syn",     icon: "🍬", title: "Metabolic Syndrome Markers",    desc: "Elevated Triglycerides with low HDL is a hallmark of metabolic syndrome. Lifestyle changes (diet, exercise) are the first-line intervention.",              needs: [{ keys: ["triglyceride"], status: "high" }, { keys: ["hdl", "hdl cholesterol"], status: "low" }] },
+  // Cardiovascular
+  { id: "cardio_risk",       icon: "❤️", title: "Elevated Cardiovascular Risk",  desc: "High LDL Cholesterol alongside elevated CRP suggests both lipid burden and active inflammation — a higher-risk combination. Discuss with your doctor.",      needs: [{ keys: ["ldl", "ldl cholesterol"], status: "high" }, { keys: ["crp", "c-reactive"], status: "high" }] },
+  { id: "homocys_b12",       icon: "❤️", title: "Elevated Homocysteine + Low B12", desc: "High Homocysteine with low B12 is often B12 deficiency. B12 supplementation typically lowers homocysteine and reduces cardiovascular risk.",               needs: [{ keys: ["homocysteine"], status: "high" }, { keys: ["b12", "cobalamin", "vitamin b12"], status: "low" }] },
+  { id: "homocys_folate",    icon: "❤️", title: "Elevated Homocysteine + Low Folate", desc: "High Homocysteine with low Folate is often folate deficiency. Increasing dietary folate or supplementation can reduce homocysteine levels.",             needs: [{ keys: ["homocysteine"], status: "high" }, { keys: ["folate", "folic acid"], status: "low" }] },
+  // Liver
+  { id: "liver_stress",      icon: "🫀", title: "Liver Stress Pattern",           desc: "Both ALT and AST are elevated, which points to liver stress or damage. Avoid alcohol, review all medications, and consult your doctor promptly.",            needs: [{ keys: ["alt", "alanine aminotransferase", "alanine transaminase"], status: "high" }, { keys: ["ast", "aspartate aminotransferase", "aspartate transaminase"], status: "high" }] },
+  // Kidney
+  { id: "kidney_pattern",    icon: "🫘", title: "Kidney Function Concern",        desc: "Elevated Creatinine with low eGFR together confirm reduced kidney function. Prioritise follow-up with your doctor.",                                          needs: [{ keys: ["creatinine"], status: "high" }, { keys: ["egfr", "glomerular filtration"], status: "low" }] },
+  // Inflammation
+  { id: "inflam_uric",       icon: "🔥", title: "Inflammation + High Uric Acid", desc: "Elevated CRP alongside high Uric Acid may indicate chronic inflammation or gout. Reduce purine-rich foods and discuss with your doctor.",                      needs: [{ keys: ["crp", "c-reactive"], status: "high" }, { keys: ["uric acid"], status: "high" }] },
+  // Vitamin D
+  { id: "vitd_pth",          icon: "☀️", title: "Possible Vitamin D Deficiency",  desc: "Low Vitamin D with elevated PTH (secondary hyperparathyroidism) is a classic deficiency pattern. Supplementation is usually the first-line treatment.",     needs: [{ keys: ["vitamin d", "25-oh", "25(oh)"], status: "low" }, { keys: ["pth", "parathyroid"], status: "high" }] },
+  // Anemia patterns
+  { id: "b12_anemia",        icon: "🩸", title: "Possible B12 Deficiency Anemia", desc: "Low B12 with elevated MCV (large red cells) is a classic macrocytic anemia pattern. B12 supplementation or injection may be needed.",                       needs: [{ keys: ["b12", "cobalamin", "vitamin b12"], status: "low" }, { keys: ["mcv", "mean cell volume", "mean corpuscular volume"], status: "high" }] },
+  { id: "folate_anemia",     icon: "🩸", title: "Possible Folate Deficiency Anemia", desc: "Low Folate with high MCV suggests macrocytic anemia from folate deficiency. Increase leafy greens or consider supplementation.",                          needs: [{ keys: ["folate", "folic acid"], status: "low" }, { keys: ["mcv", "mean cell volume"], status: "high" }] },
+  // Testosterone
+  { id: "low_t_shbg",        icon: "⚡", title: "Low Free Testosterone Pattern",  desc: "Low Testosterone with elevated SHBG means more testosterone is bound and unavailable. Discuss with your doctor — lifestyle factors often help.",              needs: [{ keys: ["testosterone"], status: "low" }, { keys: ["shbg", "sex hormone binding"], status: "high" }] },
+];
+
+function detectPatterns(markers) {
+  if (!markers || !markers.length) return [];
+  // Build a quick lookup: canonical name fragment → status
+  var statusMap = {};
+  markers.forEach(function(m) {
+    statusMap[m.name.toLowerCase()] = getStatus(m.value, m.low, m.high);
+  });
+  var hasStatus = function(keyArr, requiredStatus) {
+    return markers.some(function(m) {
+      var n = m.name.toLowerCase();
+      var st = getStatus(m.value, m.low, m.high);
+      return keyArr.some(function(k) { return n.includes(k); }) &&
+             (requiredStatus === "ok" ? st === "ok" : st === requiredStatus);
+    });
+  };
+  var found = [];
+  MARKER_PATTERNS.forEach(function(pattern) {
+    var matched = pattern.needs.every(function(req) {
+      return hasStatus(req.keys, req.status);
+    });
+    if (matched) found.push(pattern);
+  });
+  return found;
 }
 
 function buildChatContext(results, markers, history, profile, unitSystem) {
@@ -3828,6 +3893,25 @@ export default function App() {
                         <div className="attention-header">
                           <span className="attention-header-label">{t("section_attention")}</span>
                         </div>
+                        {(function() {
+                          var patterns = detectPatterns(markers);
+                          if (!patterns.length) return null;
+                          return (
+                            <div className="patterns-list">
+                              {patterns.map(function(p) {
+                                return (
+                                  <div key={p.id} className="pattern-banner">
+                                    <div className="pattern-banner-icon">{p.icon}</div>
+                                    <div className="pattern-banner-body">
+                                      <div className="pattern-banner-title">{p.title}</div>
+                                      <div className="pattern-banner-desc">{p.desc}</div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                         {categorizeMarkers(oorMarkers).map(function(section) {
                           var abnormal = section.markers.filter(function(m) { return getStatus(m.value, m.low, m.high) !== "ok"; }).length;
                           return (
