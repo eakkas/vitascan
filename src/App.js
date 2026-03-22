@@ -2192,13 +2192,14 @@ function gatherBioAgeMarkers(primaryMarkers, history, referenceDate, maxDays) {
       if (diff > maxMs) continue;     // outside time window
 
       var normMarkers = normalizeMarkers(report.markers || []);
+      var prevLen = merged.length;
       normMarkers.forEach(function(m) {
         if (!presentNames[m.name]) {
           presentNames[m.name] = true;
           merged.push(m);
-          if (!oldestDate || rDate < oldestDate) oldestDate = rDate;
         }
       });
+      if (merged.length > prevLen && (!oldestDate || rDate < oldestDate)) oldestDate = rDate;
     }
   }
 
@@ -2992,7 +2993,7 @@ export default function App() {
       if (err) { setAuthError(err.message); setAuthBusy(false); return; }
       if (data?.url) { await Browser.open({ url: data.url, windowName: '_self' }); }
     } else {
-      var { error: err2 } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+      var { error: err2 } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
       if (err2) { setAuthError(err2.message); setAuthBusy(false); }
     }
   }
