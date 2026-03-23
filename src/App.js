@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import * as Sentry from "@sentry/react";
 import { supabase } from './supabase';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceArea, ReferenceLine, ResponsiveContainer } from "recharts";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
@@ -710,6 +710,30 @@ const STYLES = `
   .pattern-banner-body { flex: 1; min-width: 0; }
   .pattern-banner-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
   .pattern-banner-desc  { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── Life Events ── */
+  .events-section { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 16px 18px; margin-bottom: 16px; }
+  .events-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .events-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text); }
+  .events-add-btn { font-size: 13px; font-weight: 600; color: var(--accent); background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.2); border-radius: 20px; padding: 5px 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .events-add-btn:hover { background: rgba(14,165,233,0.18); }
+  .events-empty { font-size: 13px; color: var(--muted); line-height: 1.5; padding: 4px 0; }
+  .events-list { display: flex; flex-direction: column; gap: 8px; }
+  .event-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; background: var(--surface2); border-radius: 12px; }
+  .event-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .event-body { flex: 1; min-width: 0; }
+  .event-label { font-size: 13px; font-weight: 600; color: var(--text); }
+  .event-date  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .event-delete { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; font-family: 'Inter', sans-serif; }
+  .event-delete:hover { color: var(--danger); }
+  .event-modal-overlay { position: fixed; inset: 0; z-index: 300; background: rgba(15,23,42,0.45); display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.15s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .event-modal { background: var(--surface); border-radius: 24px 24px 0 0; padding: 28px 20px calc(28px + env(safe-area-inset-bottom)); width: 100%; max-width: 680px; animation: slideUp 0.22s cubic-bezier(0.34,1.2,0.64,1); }
+  .event-modal-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+  .event-type-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .event-type-pill { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface2); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; color: var(--text); }
+  .event-type-pill.selected { border-color: var(--accent); background: rgba(14,165,233,0.1); color: var(--accent); font-weight: 600; }
+  .event-modal-actions { display: flex; gap: 10px; margin-top: 20px; }
 
   /* ── Bio Age Card ── */
   .bio-age-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; }
@@ -2111,6 +2135,38 @@ function detectPatterns(markers) {
   return found;
 }
 
+// ── Life events ──
+var EVENT_TYPES = [
+  { id: "supplement", label: "Supplement", icon: "💊" },
+  { id: "diet",       label: "Diet",       icon: "🥗" },
+  { id: "illness",    label: "Illness",    icon: "🤒" },
+  { id: "medication", label: "Medication", icon: "💉" },
+  { id: "exercise",   label: "Exercise",   icon: "🏃" },
+  { id: "other",      label: "Other",      icon: "📝" },
+];
+
+// Returns events that should be overlaid on a trend chart as ReferenceLine markers.
+// Matches each event to the nearest trendData date within 90 days.
+function getChartEventLines(events, trendData) {
+  if (!events || !events.length || !trendData || !trendData.length) return [];
+  var results = [];
+  events.forEach(function(ev) {
+    var evMs = new Date(ev.date).getTime();
+    if (isNaN(evMs)) return;
+    var best = null, bestDiff = Infinity;
+    trendData.forEach(function(pt) {
+      var ptMs = new Date(pt.rawDate || pt.date).getTime();
+      if (isNaN(ptMs)) return;
+      var diff = Math.abs(evMs - ptMs);
+      if (diff < bestDiff) { bestDiff = diff; best = pt; }
+    });
+    if (!best || bestDiff > 90 * 24 * 60 * 60 * 1000) return;
+    var typeObj = EVENT_TYPES.find(function(t) { return t.id === ev.type; }) || EVENT_TYPES[5];
+    results.push({ date: best.date, label: ev.label, icon: typeObj.icon, id: ev.id });
+  });
+  return results;
+}
+
 // PhenoAge biological age algorithm (Levine et al., 2018, EBioMedicine)
 // Input: normalized markers (canonical names, US preferred units)
 // Returns { age, missing } — age is number, missing is [] if computable; or { missing } if not enough data
@@ -2636,6 +2692,10 @@ export default function App() {
   // ── Report history state ──
   const [history,        setHistory]        = useState([]);
   const [historyLoading,   setHistoryLoading]   = useState(false);
+  const [events,         setEvents]         = useState([]);
+  const [eventModalOpen, setEventModalOpen] = useState(false);
+  const [eventForm,      setEventForm]      = useState({ date: "", label: "", type: "supplement" });
+  const [eventSaving,    setEventSaving]    = useState(false);
   const [deletingReportId,         setDeletingReportId]         = useState(null);
   const [refreshingInterpretation, setRefreshingInterpretation] = useState(false);
   const [editingNoteId,    setEditingNoteId]    = useState(null);
@@ -2790,12 +2850,14 @@ export default function App() {
     };
   }, []);
 
-  // ── Load history when user signs in ──
+  // ── Load history + events when user signs in ──
   useEffect(function() {
     if (user) {
       loadHistory();
+      loadEvents();
     } else {
       setHistory([]);
+      setEvents([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -2907,6 +2969,42 @@ export default function App() {
     }
   }
 
+  // ── Events CRUD ──
+  async function loadEvents() {
+    if (!user) return;
+    try {
+      var { data } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+      setEvents(data || []);
+    } catch (e) { /* fail silently */ }
+  }
+
+  async function saveEvent(e) {
+    e.preventDefault();
+    if (!eventForm.label.trim() || !eventForm.date) return;
+    setEventSaving(true);
+    try {
+      await supabase.from('events').insert({
+        user_id: user.id,
+        date:    eventForm.date,
+        label:   eventForm.label.trim(),
+        type:    eventForm.type,
+      });
+      await loadEvents();
+      setEventModalOpen(false);
+      setEventForm({ date: "", label: "", type: "supplement" });
+    } catch (e2) { /* fail silently */ }
+    setEventSaving(false);
+  }
+
+  async function deleteEvent(id) {
+    await supabase.from('events').delete().eq('id', id);
+    setEvents(function(ev) { return ev.filter(function(x) { return x.id !== id; }); });
+  }
+
   // ── Export debug table to Excel ──
   function exportDebugTable() {
     var cols = history.slice().sort(function(a, b) {
@@ -3010,6 +3108,7 @@ export default function App() {
     setStage("upload");
     setResults(null);
     setHistory([]);
+    setEvents([]);
     setProfile(null);
     setProfileLoaded(false);
   }
@@ -3933,6 +4032,12 @@ export default function App() {
                           {optLow !== null && optHigh !== null && (
                             <ReferenceArea y1={optLow} y2={optHigh} fill="rgba(14,165,233,0.15)" strokeOpacity={0} />
                           )}
+                          {getChartEventLines(events, trendData).map(function(ev) {
+                            return (
+                              <ReferenceLine key={ev.id} x={ev.date} stroke="rgba(249,115,22,0.55)" strokeDasharray="4 3"
+                                label={{ value: ev.icon, position: "insideTopRight", fontSize: 13, offset: 4 }} />
+                            );
+                          })}
                           <Line type="monotone" dataKey="value" stroke="var(--accent)" strokeWidth={2} dot={<TrendDot />} activeDot={{ r: 6 }} animationDuration={500} animationEasing="ease-out" />
                         </LineChart>
                       </ResponsiveContainer>
@@ -4012,6 +4117,36 @@ export default function App() {
                     {scoreHistory.length >= 2 && scoreDelta !== null && (
                       <ProgressCard scoreHistory={scoreHistory} scoreDelta={scoreDelta} />
                     )}
+
+                    {/* Life Events */}
+                    <div className="events-section">
+                      <div className="events-section-header">
+                        <span className="events-section-title">📅 Life Events</span>
+                        <button className="events-add-btn" onClick={function() {
+                          setEventForm({ date: new Date().toISOString().slice(0, 10), label: "", type: "supplement" });
+                          setEventModalOpen(true);
+                        }}>+ Add</button>
+                      </div>
+                      {events.length === 0 ? (
+                        <div className="events-empty">Pin supplements, diet changes, illnesses, or other events to see how they affect your markers over time.</div>
+                      ) : (
+                        <div className="events-list">
+                          {events.map(function(ev) {
+                            var typeObj = EVENT_TYPES.find(function(t) { return t.id === ev.type; }) || EVENT_TYPES[5];
+                            return (
+                              <div key={ev.id} className="event-item">
+                                <span className="event-icon">{typeObj.icon}</span>
+                                <div className="event-body">
+                                  <div className="event-label">{ev.label}</div>
+                                  <div className="event-date">{ev.date}</div>
+                                </div>
+                                <button className="event-delete" onClick={function() { deleteEvent(ev.id); }}>×</button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
 
                     {/* Watch List */}
                     {watchList.length > 0 && (
@@ -4240,6 +4375,50 @@ export default function App() {
 
         </main>
       </div>
+      {/* Event modal */}
+      {eventModalOpen && (
+        <div className="event-modal-overlay" onClick={function(e) { if (e.target === e.currentTarget) setEventModalOpen(false); }}>
+          <div className="event-modal">
+            <div className="event-modal-title">Log a Life Event</div>
+            <form onSubmit={saveEvent}>
+              <div className="form-group">
+                <label className="form-label">Date</label>
+                <input className="form-input" type="date" value={eventForm.date}
+                  onChange={function(e) { setEventForm(function(f) { return Object.assign({}, f, { date: e.target.value }); }); }}
+                  style={{ maxWidth: 200 }} required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Type</label>
+                <div className="event-type-row">
+                  {EVENT_TYPES.map(function(type) {
+                    return (
+                      <button key={type.id} type="button"
+                        className={"event-type-pill" + (eventForm.type === type.id ? " selected" : "")}
+                        onClick={function() { setEventForm(function(f) { return Object.assign({}, f, { type: type.id }); }); }}>
+                        {type.icon} {type.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <input className="form-input" type="text" placeholder='e.g. "Started Vitamin D 5000 IU"'
+                  value={eventForm.label}
+                  onChange={function(e) { setEventForm(function(f) { return Object.assign({}, f, { label: e.target.value }); }); }}
+                  required />
+              </div>
+              <div className="event-modal-actions">
+                <button className="btn-primary" type="submit" disabled={eventSaving} style={{ padding: "12px 28px" }}>
+                  {eventSaving ? "Saving…" : "Save Event"}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={function() { setEventModalOpen(false); }}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Chat FAB */}
       <button className="chat-fab" onClick={function() { setChatOpen(true); }} title={t("chat_title")}>
         💬
