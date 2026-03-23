@@ -824,6 +824,28 @@ const STYLES = `
   .onboarding-title { font-size: 15px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
   .onboarding-text  { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
+  /* ── Wellbeing Check-in ── */
+  .checkin-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 18px 18px 14px; margin-top: 20px; }
+  .checkin-header { display: flex; align-items: flex-start; margin-bottom: 14px; }
+  .checkin-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text); }
+  .checkin-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .checkin-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .checkin-row-label { font-size: 13px; font-weight: 600; width: 56px; flex-shrink: 0; color: var(--text); }
+  .checkin-dots { display: flex; gap: 7px; flex: 1; }
+  .checkin-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.12s; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); -webkit-tap-highlight-color: transparent; }
+  .checkin-dot.filled { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .checkin-save-row { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-top: 6px; }
+  .checkin-last { font-size: 12px; color: var(--muted); }
+  .checkin-logged-today { font-size: 12px; color: var(--ok); font-weight: 600; }
+
+  /* ── Wellbeing Trends section ── */
+  .wellbeing-section { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 16px 18px; margin-bottom: 16px; }
+  .wellbeing-section-header { display: flex; align-items: center; margin-bottom: 10px; }
+  .wellbeing-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--text); }
+  .wellbeing-empty { font-size: 13px; color: var(--muted); padding: 2px 0; }
+  .wellbeing-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+  .wellbeing-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+
   @media (max-width: 680px) {
     .markers-grid  { grid-template-columns: 1fr; }
     .main { padding: 24px 12px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
@@ -1289,6 +1311,16 @@ var STRINGS = {
     chat_starter_2: "What should I focus on improving?",
     chat_starter_3: "Explain my out-of-range markers",
     chat_error: "Something went wrong. Please try again.",
+    checkin_title: "Weekly Check-in",
+    checkin_sub: "How have you been feeling?",
+    checkin_energy: "Energy",
+    checkin_mood: "Mood",
+    checkin_sleep: "Sleep",
+    checkin_save: "Log it",
+    checkin_saved_today: "✓ Logged today",
+    checkin_last: "Last logged {{n}}d ago",
+    wellbeing_title: "Wellbeing Trends",
+    wellbeing_empty: "No check-ins yet — log how you feel on the Home tab.",
   },
   tr: {
     auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
@@ -1439,6 +1471,16 @@ var STRINGS = {
     chat_starter_2: "Neyi iyileştirmeye odaklanmalıyım?",
     chat_starter_3: "Aralık dışı belirteçlerimi açıkla",
     chat_error: "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+    checkin_title: "Haftalık Kontrol",
+    checkin_sub: "Bu dönemde kendinizi nasıl hissettiniz?",
+    checkin_energy: "Enerji",
+    checkin_mood: "Ruh Hali",
+    checkin_sleep: "Uyku",
+    checkin_save: "Kaydet",
+    checkin_saved_today: "✓ Bugün kaydedildi",
+    checkin_last: "Son kayıt {{n}} gün önce",
+    wellbeing_title: "Sağlık Eğilimleri",
+    wellbeing_empty: "Henüz kayıt yok — Ana ekranından nasıl hissettiğinizi kaydedin.",
   }
 };
 
@@ -2696,6 +2738,9 @@ export default function App() {
   const [eventModalOpen, setEventModalOpen] = useState(false);
   const [eventForm,      setEventForm]      = useState({ date: "", label: "", type: "supplement" });
   const [eventSaving,    setEventSaving]    = useState(false);
+  const [checkins,      setCheckins]      = useState([]);
+  const [checkinForm,   setCheckinForm]   = useState({ date: new Date().toISOString().slice(0, 10), energy: 3, mood: 3, sleep: 3 });
+  const [checkinSaving, setCheckinSaving] = useState(false);
   const [deletingReportId,         setDeletingReportId]         = useState(null);
   const [refreshingInterpretation, setRefreshingInterpretation] = useState(false);
   const [editingNoteId,    setEditingNoteId]    = useState(null);
@@ -2855,9 +2900,11 @@ export default function App() {
     if (user) {
       loadHistory();
       loadEvents();
+      loadCheckins();
     } else {
       setHistory([]);
       setEvents([]);
+      setCheckins([]);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -3005,6 +3052,37 @@ export default function App() {
     setEvents(function(ev) { return ev.filter(function(x) { return x.id !== id; }); });
   }
 
+  // ── Wellbeing check-ins CRUD ──
+  async function loadCheckins() {
+    if (!user) return;
+    try {
+      var { data } = await supabase
+        .from('checkins')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(90);
+      if (data) setCheckins(data);
+    } catch (e) { /* fail silently */ }
+  }
+
+  async function saveCheckin() {
+    if (!user || checkinSaving) return;
+    if (!checkinForm.energy || !checkinForm.mood || !checkinForm.sleep) return;
+    setCheckinSaving(true);
+    try {
+      await supabase.from('checkins').upsert({
+        user_id: user.id,
+        date:    checkinForm.date,
+        energy:  checkinForm.energy,
+        mood:    checkinForm.mood,
+        sleep:   checkinForm.sleep,
+      }, { onConflict: 'user_id,date' });
+      await loadCheckins();
+    } catch (e2) { /* fail silently */ }
+    setCheckinSaving(false);
+  }
+
   // ── Export debug table to Excel ──
   function exportDebugTable() {
     var cols = history.slice().sort(function(a, b) {
@@ -3109,6 +3187,7 @@ export default function App() {
     setResults(null);
     setHistory([]);
     setEvents([]);
+    setCheckins([]);
     setProfile(null);
     setProfileLoaded(false);
   }
@@ -3652,6 +3731,53 @@ export default function App() {
               </div>
               {error && <p style={{ color: "var(--danger)", marginTop: 20, fontSize: 14 }}>{error}</p>}
               <p style={{ marginTop: 20, fontSize: 12, color: "var(--muted)" }}>{t("upload_privacy")}</p>
+              {(function() {
+                var todayCheckin = checkins.find(function(c) { return c.date === checkinForm.date; });
+                var lastCheckin  = checkins[0];
+                var daysSince    = lastCheckin
+                  ? Math.round((Date.now() - new Date(lastCheckin.date + "T12:00:00").getTime()) / (1000 * 60 * 60 * 24))
+                  : null;
+                return (
+                  <div className="checkin-card">
+                    <div className="checkin-header">
+                      <div>
+                        <div className="checkin-title">💚 {t("checkin_title")}</div>
+                        <div className="checkin-sub">{t("checkin_sub")}</div>
+                      </div>
+                    </div>
+                    {["energy", "mood", "sleep"].map(function(field) {
+                      var labels = { energy: t("checkin_energy"), mood: t("checkin_mood"), sleep: t("checkin_sleep") };
+                      return (
+                        <div key={field} className="checkin-row">
+                          <div className="checkin-row-label">{labels[field]}</div>
+                          <div className="checkin-dots">
+                            {[1,2,3,4,5].map(function(n) {
+                              return (
+                                <div key={n}
+                                  className={"checkin-dot" + (checkinForm[field] >= n ? " filled" : "")}
+                                  onClick={function() { setCheckinForm(function(prev) { var r = Object.assign({}, prev); r[field] = n; return r; }); }}
+                                >{n}</div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="checkin-save-row">
+                      {todayCheckin
+                        ? <span className="checkin-logged-today">{t("checkin_saved_today")}</span>
+                        : daysSince !== null
+                          ? <span className="checkin-last">{tp("checkin_last", { n: daysSince })}</span>
+                          : null
+                      }
+                      <button className="btn btn-primary" style={{ padding: "8px 20px", fontSize: 13 }}
+                        disabled={checkinSaving}
+                        onClick={saveCheckin}
+                      >{checkinSaving ? "…" : t("checkin_save")}</button>
+                    </div>
+                  </div>
+                );
+              })()}
               {history.length > 0 && (function() {
                 var recent = history.slice().sort(function(a, b) {
                   var da = a.report_date ? new Date(a.report_date) : new Date(a.created_at);
@@ -4147,6 +4273,44 @@ export default function App() {
                         </div>
                       )}
                     </div>
+
+                    {/* Wellbeing Trends */}
+                    {(function() {
+                      var wbData = checkins.slice().reverse().map(function(c) {
+                        var d = new Date(c.date + "T12:00:00");
+                        var dateStr = isNaN(d.getTime()) ? c.date
+                          : d.toLocaleDateString("en", { month: "short", day: "numeric" });
+                        return { date: dateStr, energy: c.energy, mood: c.mood, sleep: c.sleep };
+                      });
+                      return (
+                        <div className="wellbeing-section">
+                          <div className="wellbeing-section-header">
+                            <span className="wellbeing-section-title">💚 {t("wellbeing_title")}</span>
+                          </div>
+                          {wbData.length < 2 ? (
+                            <div className="wellbeing-empty">{t("wellbeing_empty")}</div>
+                          ) : (
+                            <>
+                              <ResponsiveContainer width="100%" height={180}>
+                                <LineChart data={wbData} margin={{ top: 4, right: 12, left: 0, bottom: wbData.length >= 6 ? 24 : 4 }}>
+                                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--muted)", fontFamily: "Inter" }} angle={wbData.length >= 6 ? -35 : 0} textAnchor={wbData.length >= 6 ? "end" : "middle"} interval={0} />
+                                  <YAxis domain={[0.5, 5.5]} ticks={[1,2,3,4,5]} tick={{ fontSize: 10, fill: "var(--muted)", fontFamily: "Inter" }} width={20} />
+                                  <Tooltip formatter={function(val, name) { return [val + "/5", name.charAt(0).toUpperCase() + name.slice(1)]; }} contentStyle={{ borderRadius: 10, border: "1px solid var(--border)", fontSize: 12 }} />
+                                  <Line type="monotone" dataKey="energy" stroke="#F97316" strokeWidth={2} dot={{ r: 3, fill: "#F97316", strokeWidth: 0 }} animationDuration={400} />
+                                  <Line type="monotone" dataKey="mood"   stroke="#0EA5E9" strokeWidth={2} dot={{ r: 3, fill: "#0EA5E9", strokeWidth: 0 }} animationDuration={400} />
+                                  <Line type="monotone" dataKey="sleep"  stroke="#8B5CF6" strokeWidth={2} dot={{ r: 3, fill: "#8B5CF6", strokeWidth: 0 }} animationDuration={400} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                              <div className="wellbeing-legend">
+                                <div className="wellbeing-legend-item"><svg width="14" height="3"><line x1="0" y1="1.5" x2="14" y2="1.5" stroke="#F97316" strokeWidth="2" /></svg>{t("checkin_energy")}</div>
+                                <div className="wellbeing-legend-item"><svg width="14" height="3"><line x1="0" y1="1.5" x2="14" y2="1.5" stroke="#0EA5E9" strokeWidth="2" /></svg>{t("checkin_mood")}</div>
+                                <div className="wellbeing-legend-item"><svg width="14" height="3"><line x1="0" y1="1.5" x2="14" y2="1.5" stroke="#8B5CF6" strokeWidth="2" /></svg>{t("checkin_sleep")}</div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Watch List */}
                     {watchList.length > 0 && (
