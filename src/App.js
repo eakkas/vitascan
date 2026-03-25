@@ -1932,8 +1932,8 @@ function getTrendData(history, canonicalName, unitSystem) {
   var points = [];
   var norm = UNIT_NORMS[canonicalName];
   var preferredUnit = norm ? norm.preferred.toLowerCase() : null;
-  // history is sorted newest-first; reverse for chronological order
-  var sorted = history.slice().reverse();
+  // sort by actual report date (ascending) so chart x-axis is chronological
+  var sorted = history.slice().sort(function(a, b) { return parseReportDate(a) - parseReportDate(b); });
   sorted.forEach(function(report) {
     var markers = report.markers || [];
     var match = markers.find(function(m) { return normalizeMarkerName(m.name) === canonicalName; });
@@ -2481,27 +2481,37 @@ function TrendSparkline({ points }) {
   );
 }
 
-function ProgressCard({ scoreHistory, scoreDelta }) {
-  var cFor = function(pct) { return pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--accent)" : "var(--warn)"; };
+function BioAgeTrendCard({ bioAgeHistory, chronologicalAge }) {
+  // lower bio age = better; improving means delta is negative
   var fmtDate = function(str) {
     var d = new Date(str);
-    if (!isNaN(d.getTime())) return d.toLocaleDateString("en", { month: "short" });
+    if (!isNaN(d.getTime())) return d.toLocaleDateString("en", { month: "short", year: "2-digit" });
     return (str || "").split(/[\s,\-/]+/)[0] || str;
   };
-  var last = scoreHistory[scoreHistory.length - 1];
-  var improving = scoreDelta >= 0;
+  var first = bioAgeHistory[0];
+  var last  = bioAgeHistory[bioAgeHistory.length - 1];
+  var delta = parseFloat((last.age - first.age).toFixed(1));
+  var improving = delta <= 0;
+  // colour by how bio age compares to chronological age (if known)
+  var cFor = function(age) {
+    if (!chronologicalAge) return "var(--accent)";
+    var diff = age - chronologicalAge;
+    if (diff <= -2) return "var(--ok)";
+    if (diff <= 2)  return "var(--accent)";
+    return "var(--danger)";
+  };
   return (
     <div className="trends-progress-card">
-      <div className="trends-progress-label">Your Progress</div>
+      <div className="trends-progress-label">Biological Age Trend</div>
       <div className="trends-progress-timeline">
         <div className="trends-progress-line" />
-        {scoreHistory.map(function(s, i) {
-          var isLast = i === scoreHistory.length - 1;
-          var col = cFor(s.pct);
+        {bioAgeHistory.map(function(s, i) {
+          var isLast = i === bioAgeHistory.length - 1;
+          var col = cFor(s.age);
           var dotSize = isLast ? 14 : 10;
           return (
             <div key={i} className="trends-progress-point">
-              <div className="trends-progress-pct" style={{ color: isLast ? col : "var(--muted)", fontWeight: isLast ? 700 : 400 }}>{s.pct}%</div>
+              <div className="trends-progress-pct" style={{ color: isLast ? col : "var(--muted)", fontWeight: isLast ? 700 : 400 }}>{s.age}</div>
               <div className="trends-progress-dot" style={{ width: dotSize, height: dotSize, background: col }} />
               <div className="trends-progress-date">{fmtDate(s.date)}</div>
             </div>
@@ -2511,11 +2521,15 @@ function ProgressCard({ scoreHistory, scoreDelta }) {
       <div className="trends-progress-footer">
         <div className="trends-progress-delta" style={{ color: improving ? "var(--ok)" : "var(--danger)" }}>
           <div className="trends-progress-delta-arrow" style={{ background: improving ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)" }}>
-            {improving ? "↑" : "↓"}
+            {improving ? "↓" : "↑"}
           </div>
-          {improving ? "+" : ""}{scoreDelta} pts across {scoreHistory.length} reports
+          {improving ? "" : "+"}{delta} yrs across {bioAgeHistory.length} reports
         </div>
-        <div className="trends-progress-sub">{last.pct >= 80 ? "Good" : last.pct >= 60 ? "Fair" : "Needs attention"}</div>
+        <div className="trends-progress-sub">
+          {chronologicalAge
+            ? (last.age < chronologicalAge - 1 ? "Younger than calendar age" : last.age > chronologicalAge + 1 ? "Older than calendar age" : "On par with calendar age")
+            : "PhenoAge (Levine et al., 2018)"}
+        </div>
       </div>
     </div>
   );
@@ -4102,20 +4116,14 @@ export default function App() {
                   };
                 });
 
-                // Health score for each report (chronological)
-                var scoreHistory = history.slice().reverse().map(function(report) {
-                  var rm = report.markers || [];
-                  if (!rm.length) return null;
-                  var inRange = rm.filter(function(m) { return getStatus(m.value, m.low, m.high) === "ok"; }).length;
-                  var pct = Math.round((inRange / rm.length) * 100);
-                  var dateStr = report.report_date && report.report_date !== "Unknown"
-                    ? report.report_date
-                    : new Date(report.created_at).toLocaleDateString();
-                  return { pct: pct, date: dateStr };
+                // Bio age per report (strict single-report, chronological order)
+                var bioAgeHistory = history.slice().sort(function(a, b) { return parseReportDate(a) - parseReportDate(b); }).map(function(report) {
+                  var norm = normalizeMarkers(report.markers || []);
+                  var r = computeBioAge(norm);
+                  if (!r || r.age === undefined) return null;
+                  var rawDate = report.report_date || report.created_at;
+                  return { age: r.age, date: rawDate };
                 }).filter(Boolean);
-                var scoreDelta = scoreHistory.length >= 2
-                  ? scoreHistory[scoreHistory.length - 1].pct - scoreHistory[0].pct
-                  : null;
 
                 // Split markers
                 var watchList    = trendMarkers.filter(function(n) { return markerData[n].latestStatus !== "ok"; });
@@ -4239,9 +4247,9 @@ export default function App() {
 
                 return (
                   <>
-                    {/* Progress card */}
-                    {scoreHistory.length >= 2 && scoreDelta !== null && (
-                      <ProgressCard scoreHistory={scoreHistory} scoreDelta={scoreDelta} />
+                    {/* Bio age trend card */}
+                    {bioAgeHistory.length >= 2 && (
+                      <BioAgeTrendCard bioAgeHistory={bioAgeHistory} chronologicalAge={profile && profile.age} />
                     )}
 
                     {/* Life Events */}
