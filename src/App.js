@@ -1788,6 +1788,46 @@ var UNIT_NORMS = {
   "Zinc":                  { preferred: "µg/dL",  si: { unit: "µmol/L",  factor: 0.1530 }, alts: { "µmol/l": 6.54, "umol/l": 6.54 } },
   "IGF-1":                 { preferred: "ng/mL",  si: { unit: "nmol/L",  factor: 0.1307 }, alts: { "nmol/l": 7.647 } },
   "PTH":                   { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 0.1060 }, alts: { "pmol/l": 9.43 } },
+  // Liver enzymes — U/L and IU/L are numerically identical
+  "ALT":                   { preferred: "U/L",    alts: { "iu/l": 1, "units/l": 1 } },
+  "AST":                   { preferred: "U/L",    alts: { "iu/l": 1, "units/l": 1 } },
+  "ALP":                   { preferred: "U/L",    alts: { "iu/l": 1, "units/l": 1 } },
+  "GGT":                   { preferred: "U/L",    alts: { "iu/l": 1, "units/l": 1 } },
+  "LDH":                   { preferred: "U/L",    alts: { "iu/l": 1, "units/l": 1 } },
+  // Bilirubin
+  "Total Bilirubin":       { preferred: "mg/dL",  si: { unit: "µmol/L", factor: 17.10 }, alts: { "umol/l": 0.05848, "µmol/l": 0.05848 } },
+  "Direct Bilirubin":      { preferred: "mg/dL",  si: { unit: "µmol/L", factor: 17.10 }, alts: { "umol/l": 0.05848, "µmol/l": 0.05848 } },
+  "Indirect Bilirubin":    { preferred: "mg/dL",  si: { unit: "µmol/L", factor: 17.10 }, alts: { "umol/l": 0.05848, "µmol/l": 0.05848 } },
+  // Sex hormones
+  "SHBG":                  { preferred: "nmol/L", alts: { "nm": 1 } },
+  "Bioavailable Testosterone": { preferred: "ng/dL", si: { unit: "nmol/L", factor: 0.03467 }, alts: { "nmol/l": 28.818 } },
+  "Dihydrotestosterone (DHT)": { preferred: "pg/mL", alts: { "ng/dl": 10, "nmol/l": 290.4 } },
+  // Pituitary / reproductive hormones
+  "LH":                    { preferred: "mIU/mL", alts: { "miu/l": 1, "iu/l": 1 } },
+  "FSH":                   { preferred: "mIU/mL", alts: { "miu/l": 1, "iu/l": 1 } },
+  "Prolactin":             { preferred: "ng/mL",  alts: { "ug/l": 1, "µg/l": 1, "miu/l": 0.04717 } },
+  "AMH":                   { preferred: "ng/mL",  alts: { "pmol/l": 0.1399 } },
+  "PSA":                   { preferred: "ng/mL",  alts: { "ug/l": 1, "µg/l": 1 } },
+  // Kidney
+  "eGFR":                  { preferred: "mL/min/1.73m²", alts: {} },
+  "Cystatin C":            { preferred: "mg/L",   alts: { "mg/dl": 10 } },
+  "Microalbumin":          { preferred: "mg/L",   alts: { "mg/dl": 10, "µg/ml": 1, "ug/ml": 1 } },
+  // CBC
+  "WBC":                   { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "thou/ul": 1, "10e3/ul": 1, "k/ul": 1 } },
+  "RBC":                   { preferred: "M/µL",   alts: { "10^6/ul": 1, "x10^6/ul": 1, "10e6/ul": 1, "m/ul": 1 } },
+  "Platelets":             { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "thou/ul": 1, "10e3/ul": 1, "k/ul": 1 } },
+  "MCV":                   { preferred: "fL",     alts: { "fl": 1 } },
+  "MCH":                   { preferred: "pg",     alts: {} },
+  "MCHC":                  { preferred: "g/dL",   alts: { "g/l": 0.1 } },
+  "RDW":                   { preferred: "%",      alts: {} },
+  "MPV":                   { preferred: "fL",     alts: { "fl": 1 } },
+  // Inflammation / cardiac
+  "ESR":                   { preferred: "mm/hr",  alts: { "mm/h": 1 } },
+  "Procalcitonin":         { preferred: "ng/mL",  alts: { "µg/l": 1, "ug/l": 1 } },
+  "NT-proBNP":             { preferred: "pg/mL",  alts: { "ng/l": 1 } },
+  "BNP":                   { preferred: "pg/mL",  alts: { "ng/l": 1 } },
+  "Troponin":              { preferred: "ng/mL",  alts: { "µg/l": 1, "ug/l": 1, "ng/l": 0.001 } },
+  "D-Dimer":               { preferred: "mg/L",   alts: { "µg/ml": 1, "ug/ml": 1, "ng/ml": 0.001 } },
 };
 
 // Returns the canonical name for a raw marker name, or the cleaned raw name if no match.
@@ -1849,12 +1889,26 @@ function normalizeMarkers(markers) {
 
 // Converts value+unit to the preferred unit for a canonical marker.
 // Returns { value, unit } — unchanged if no conversion applies.
+// Normalise a unit string for comparison: lowercase, trim whitespace,
+// replace µ/μ with u and × with x so encoding variations don't cause mismatches.
+function normalizeUnitStr(u) {
+  return (u || "").toLowerCase().trim()
+    .replace(/\u00b5|\u03bc|\u03bc/g, "u")  // µ / μ → u
+    .replace(/\u00d7/g, "x")                // × → x
+    .replace(/\s+/g, "");                   // collapse whitespace
+}
+
 function convertToPreferred(value, rawUnit, canonicalName) {
   var norm = UNIT_NORMS[canonicalName];
   if (!norm) return { value: value, unit: rawUnit };
-  var unitLower = (rawUnit || "").toLowerCase().trim();
-  if (unitLower === norm.preferred.toLowerCase()) return { value: value, unit: norm.preferred };
-  var factor = norm.alts[unitLower];
+  var unitNorm = normalizeUnitStr(rawUnit);
+  if (unitNorm === normalizeUnitStr(norm.preferred)) return { value: value, unit: norm.preferred };
+  // Find matching alt by normalised key comparison
+  var altKeys = Object.keys(norm.alts);
+  var factor;
+  for (var ai = 0; ai < altKeys.length; ai++) {
+    if (normalizeUnitStr(altKeys[ai]) === unitNorm) { factor = norm.alts[altKeys[ai]]; break; }
+  }
   if (factor !== undefined) {
     // Support affine transforms { factor, offset } for conversions like HbA1c mmol/mol → %
     var converted = typeof factor === "object"
