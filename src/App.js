@@ -4141,9 +4141,17 @@ export default function App() {
                   var optRange = showOptimalRanges ? getOptimalRange(name) : null;
                   var optLow   = optRange ? displayConvert(optRange.low,  name, unitSystem) : null;
                   var optHigh  = optRange ? displayConvert(optRange.high, name, unitSystem) : null;
-                  var allY = yVals.concat(allLow).concat(allHigh);
-                  if (optLow  !== null) allY.push(optLow);
-                  if (optHigh !== null) allY.push(optHigh);
+                  // Anchor domain to actual data values, then expand only for ref/opt range
+                  // values that are within 4× the data range (ignore bad/mismatched ref ranges).
+                  var dataMin = Math.min.apply(null, yVals);
+                  var dataMax = Math.max.apply(null, yVals);
+                  var span    = dataMax - dataMin || dataMax * 0.5 || 1;
+                  var clamp   = function(v) { return v >= dataMin - span * 4 && v <= dataMax + span * 4; };
+                  var allY = yVals.slice();
+                  allLow.forEach(function(v)  { if (v !== undefined && clamp(v)) allY.push(v); });
+                  allHigh.forEach(function(v) { if (v !== undefined && clamp(v)) allY.push(v); });
+                  if (optLow  !== null && clamp(optLow))  allY.push(optLow);
+                  if (optHigh !== null && clamp(optHigh)) allY.push(optHigh);
                   var yMin    = parseFloat((Math.min.apply(null, allY) * 0.85).toFixed(2));
                   var yMax    = parseFloat((Math.max.apply(null, allY) * 1.15).toFixed(2));
                   var refLow  = allLow[0]  !== undefined ? allLow[0]  : sp.low;
