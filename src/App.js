@@ -1813,9 +1813,15 @@ var UNIT_NORMS = {
   "Cystatin C":            { preferred: "mg/L",   alts: { "mg/dl": 10 } },
   "Microalbumin":          { preferred: "mg/L",   alts: { "mg/dl": 10, "µg/ml": 1, "ug/ml": 1 } },
   // CBC
-  "WBC":                   { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "thou/ul": 1, "10e3/ul": 1, "k/ul": 1 } },
-  "RBC":                   { preferred: "M/µL",   alts: { "10^6/ul": 1, "x10^6/ul": 1, "10e6/ul": 1, "m/ul": 1 } },
-  "Platelets":             { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "thou/ul": 1, "10e3/ul": 1, "k/ul": 1 } },
+  // K/µL = 10⁹/L = 1000 cells/µL; /µL → K/µL factor 0.001; 10*9/L = K/µL factor 1
+  "WBC":                   { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "thou/ul": 1, "10e3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "x10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
+  "RBC":                   { preferred: "M/µL",   alts: { "10^6/ul": 1, "x10^6/ul": 1, "10e6/ul": 1, "m/ul": 1, "10*6/ul": 1, "10^12/l": 1 } },
+  "Platelets":             { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "thou/ul": 1, "10e3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
+  "Neutrophils":           { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
+  "Lymphocytes":           { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
+  "Monocytes":             { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
+  "Eosinophils":           { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
+  "Basophils":             { preferred: "K/µL",   alts: { "10^3/ul": 1, "x10^3/ul": 1, "k/ul": 1, "10*9/l": 1, "10^9/l": 1, "/ul": 0.001, "cells/ul": 0.001 } },
   "MCV":                   { preferred: "fL",     alts: { "fl": 1 } },
   "MCH":                   { preferred: "pg",     alts: {} },
   "MCHC":                  { preferred: "g/dL",   alts: { "g/l": 0.1 } },
@@ -1874,10 +1880,10 @@ function normalizeMarkers(markers) {
     } else {
       var norm = UNIT_NORMS[m.name];
       if (norm) {
-        var preferred = norm.preferred.toLowerCase();
+        var prefNorm = normalizeUnitStr(norm.preferred);
         var existing = result[indexByName[m.name]];
-        if ((m.unit || "").toLowerCase() === preferred &&
-            (existing.unit || "").toLowerCase() !== preferred) {
+        if (normalizeUnitStr(m.unit) === prefNorm &&
+            normalizeUnitStr(existing.unit) !== prefNorm) {
           result[indexByName[m.name]] = m; // replace with the preferred-unit entry
         }
       }
@@ -1997,7 +2003,7 @@ function getTrendData(history, canonicalName, unitSystem) {
       var convHigh  = convertToPreferred(match.high,  match.unit, canonicalName);
       // Skip points whose unit couldn't be normalized — plotting them alongside
       // converted values (e.g. nmol/L mixed with g/dL) would skew the graph.
-      if (preferredUnit && converted.unit.toLowerCase() !== preferredUnit) return;
+      if (preferredUnit && normalizeUnitStr(converted.unit) !== normalizeUnitStr(norm.preferred)) return;
       var dispVal  = displayConvert(converted.value,    canonicalName, unitSystem);
       var dispLow  = displayConvert(convLow.value,      canonicalName, unitSystem);
       var dispHigh = displayConvert(convHigh.value,     canonicalName, unitSystem);
