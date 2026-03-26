@@ -2209,6 +2209,68 @@ function getChartEventLines(events, trendData) {
   return results;
 }
 
+// Calculated Free Testosterone — Vermeulen et al. (1999)
+// J Clin Endocrinol Metab 84(10):3666-72
+// Uses mass-action equilibrium (quadratic solution) with:
+//   Ka_albumin = 3.6×10⁴ L/mol, Ka_SHBG = 1.0×10⁹ L/mol
+// Returns { value (pg/mL), albDefault } or null if Total T or SHBG missing.
+function computeFreeTVermeulen(report) {
+  var markers = report.markers || [];
+  var find = function(name) { return markers.find(function(m) { return normalizeMarkerName(m.name) === name; }); };
+
+  var tM    = find("Testosterone");
+  var shbgM = find("SHBG");
+  if (!tM || !shbgM) return null;
+
+  // Convert Total T to nmol/L
+  var tUnit = (tM.unit || "").toLowerCase().replace(/\s/g, "");
+  var tNmol;
+  if (tUnit === "ng/dl")         tNmol = tM.value * 0.03467;
+  else if (tUnit === "nmol/l")   tNmol = tM.value;
+  else if (tUnit === "pmol/l")   tNmol = tM.value * 0.001;
+  else return null; // unrecognised unit
+
+  // Convert SHBG to nmol/L (most labs report in nmol/L; handle nM alias)
+  var shbgUnit = (shbgM.unit || "").toLowerCase().replace(/\s/g, "");
+  var shbgNmol;
+  if (shbgUnit === "nmol/l" || shbgUnit === "nm") shbgNmol = shbgM.value;
+  else return null; // unrecognised unit
+
+  // Albumin in g/L (use measured value or default 4.3 g/dL = 43 g/L)
+  var albM = find("Albumin");
+  var albGL, albDefault = false;
+  if (albM) {
+    var albUnit = (albM.unit || "").toLowerCase().replace(/\s/g, "");
+    if (albUnit === "g/dl")        { albGL = albM.value * 10; }
+    else if (albUnit === "g/l")    { albGL = albM.value; }
+    else                           { albGL = 43; albDefault = true; } // unrecognised unit, use default
+  } else {
+    albGL = 43; albDefault = true;
+  }
+
+  // Constants
+  var Ka  = 3.6e4;   // L/mol, albumin association constant
+  var Kb  = 1.0e9;   // L/mol, SHBG association constant
+  var MW_alb = 66500; // g/mol
+
+  // Convert to mol/L for the quadratic
+  var T = tNmol    * 1e-9;
+  var S = shbgNmol * 1e-9;
+  var A = albGL / MW_alb;
+
+  // Quadratic: Kb(1 + Ka·A)·x² + (1 + Kb·S + Ka·A − Kb·T)·x − T = 0
+  var a   = Kb * (1 + Ka * A);
+  var b   = 1 + Kb * S + Ka * A - Kb * T;
+  var disc = b * b + 4 * a * T;
+  if (disc < 0) return null;
+  var ftMol = (-b + Math.sqrt(disc)) / (2 * a); // mol/L
+  if (ftMol <= 0) return null;
+
+  // Convert nmol/L → pg/mL (MW testosterone = 288.4 g/mol; 1 nmol/L = 288.4 pg/mL)
+  var ftPgml = ftMol * 1e9 * 288.4;
+  return { value: parseFloat(ftPgml.toFixed(1)), unit: "pg/mL", albDefault: albDefault };
+}
+
 // PhenoAge biological age algorithm (Levine et al., 2018, EBioMedicine)
 // Input: normalized markers (canonical names, US preferred units)
 // Returns { age, missing } — age is number, missing is [] if computable; or { missing } if not enough data
@@ -4066,6 +4128,35 @@ export default function App() {
                             </React.Fragment>
                           );
                         })}
+                        {/* Calculated values section */}
+                        {(function() {
+                          var anyFreeT = cols.some(function(r) { return computeFreeTVermeulen(r) !== null; });
+                          if (!anyFreeT) return null;
+                          return (
+                            <React.Fragment>
+                              <tr className="debug-section-row">
+                                <td className="debug-section-header" colSpan={cols.length + 1}>Calculated</td>
+                              </tr>
+                              <tr>
+                                <td className="col-marker" style={{ fontStyle: "italic" }}>
+                                  cFT (Vermeulen 1999)
+                                  <div style={{ fontSize: 10, fontStyle: "normal", color: "var(--muted)", fontWeight: 400 }}>Requires Total T + SHBG</div>
+                                </td>
+                                {cols.map(function(r) {
+                                  var res = computeFreeTVermeulen(r);
+                                  if (!res) return <td key={r.id} className="debug-cell-none">—</td>;
+                                  return (
+                                    <td key={r.id} className="debug-cell-ok" style={{ fontStyle: "italic" }}
+                                        title={"Vermeulen 1999 quadratic formula" + (res.albDefault ? " · Albumin defaulted to 4.3 g/dL" : "")}>
+                                      {res.value} {res.unit}
+                                      {res.albDefault && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>*</span>}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            </React.Fragment>
+                          );
+                        })()}
                       </tbody>
                     </table>
                   </div>
