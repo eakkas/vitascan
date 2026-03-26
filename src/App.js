@@ -2220,7 +2220,8 @@ function computeFreeTVermeulen(report) {
 
   var tM    = find("Testosterone");
   var shbgM = find("SHBG");
-  if (!tM || !shbgM) return null;
+  if (!tM)    return { error: "Total T not found" };
+  if (!shbgM) return { error: "SHBG not found" };
 
   // Convert Total T to nmol/L
   var tUnit = (tM.unit || "").toLowerCase().replace(/\s/g, "");
@@ -2228,13 +2229,13 @@ function computeFreeTVermeulen(report) {
   if (tUnit === "ng/dl")         tNmol = tM.value * 0.03467;
   else if (tUnit === "nmol/l")   tNmol = tM.value;
   else if (tUnit === "pmol/l")   tNmol = tM.value * 0.001;
-  else return null; // unrecognised unit
+  else return { error: "Total T unit not recognised: \"" + tM.unit + "\"" };
 
   // Convert SHBG to nmol/L (most labs report in nmol/L; handle nM alias)
   var shbgUnit = (shbgM.unit || "").toLowerCase().replace(/\s/g, "");
   var shbgNmol;
   if (shbgUnit === "nmol/l" || shbgUnit === "nm") shbgNmol = shbgM.value;
-  else return null; // unrecognised unit
+  else return { error: "SHBG unit not recognised: \"" + shbgM.unit + "\"" };
 
   // Albumin in g/L (use measured value or default 4.3 g/dL = 43 g/L)
   var albM = find("Albumin");
@@ -2262,9 +2263,9 @@ function computeFreeTVermeulen(report) {
   var a   = Kb * (1 + Ka * A);
   var b   = 1 + Kb * S + Ka * A - Kb * T;
   var disc = b * b + 4 * a * T;
-  if (disc < 0) return null;
+  if (disc < 0) return { error: "Negative discriminant" };
   var ftMol = (-b + Math.sqrt(disc)) / (2 * a); // mol/L
-  if (ftMol <= 0) return null;
+  if (ftMol <= 0) return { error: "Non-positive free T result" };
 
   // Convert nmol/L → pg/mL (MW testosterone = 288.4 g/mol; 1 nmol/L = 288.4 pg/mL)
   var ftPgml = ftMol * 1e9 * 288.4;
@@ -4125,7 +4126,7 @@ export default function App() {
                                   </tr>
                                 );
                               })}
-                              {label === "Hormones" && cols.some(function(r) { return computeFreeTVermeulen(r) !== null; }) && (
+                              {label === "Hormones" && cols.some(function(r) { var res = computeFreeTVermeulen(r); return res && !res.error; }) && (
                                 <tr>
                                   <td className="col-marker" style={{ fontStyle: "italic" }}>
                                     cFT (Vermeulen 1999)
@@ -4133,7 +4134,7 @@ export default function App() {
                                   </td>
                                   {cols.map(function(r) {
                                     var res = computeFreeTVermeulen(r);
-                                    if (!res) return <td key={r.id} className="debug-cell-none">—</td>;
+                                    if (!res || res.error) return <td key={r.id} className="debug-cell-none" title={res && res.error ? res.error : ""}>—</td>;
                                     return (
                                       <td key={r.id} className="debug-cell-ok" style={{ fontStyle: "italic" }}
                                           title={"Vermeulen 1999 quadratic formula" + (res.albDefault ? " · Albumin defaulted to 4.3 g/dL" : "")}>
