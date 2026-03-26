@@ -3844,9 +3844,14 @@ export default function App() {
                   <div className="results-title">{t("history_title")}</div>
                   <div className="results-meta">{tp("history_saved", { n: history.length, s: history.length !== 1 ? "s" : "" })}</div>
                 </div>
-                <button className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
-                  {t("btn_new_report")}
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button className="btn btn-ghost" disabled={history.length === 0} onClick={function() { setStage("debug"); }}>
+                    {t("hdr_debug")}
+                  </button>
+                  <button className="btn btn-ghost" onClick={function() { setStage("upload"); }}>
+                    {t("btn_new_report")}
+                  </button>
+                </div>
               </div>
 
               {historyLoading && (
