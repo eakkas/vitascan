@@ -1644,7 +1644,7 @@ var CANONICAL_MAP = [
   { keywords: ["albumin"],                                           canonical: "Albumin" },
   { keywords: ["total protein", "protein, total"],                  canonical: "Total Protein" },
   // SHBG must come before the generic "globulin" entry — "Sex Hormone Binding Globulin" contains "globulin"
-  { keywords: ["shbg", "sex hormone binding globulin", "sex hormone binding"], canonical: "SHBG" },
+  { keywords: ["shbg", "sex hormone binding globulin", "sex hormone-binding globulin", "sex hormone binding", "sex hormone-binding"], canonical: "SHBG" },
   { keywords: ["globulin"],                                         canonical: "Globulin" },
   { keywords: ["ldh", "lactate dehydrogenase"],                     canonical: "LDH" },
 
