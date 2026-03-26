@@ -4125,38 +4125,28 @@ export default function App() {
                                   </tr>
                                 );
                               })}
+                              {label === "Hormones" && cols.some(function(r) { return computeFreeTVermeulen(r) !== null; }) && (
+                                <tr>
+                                  <td className="col-marker" style={{ fontStyle: "italic" }}>
+                                    cFT (Vermeulen 1999)
+                                    <div style={{ fontSize: 10, fontStyle: "normal", color: "var(--muted)", fontWeight: 400 }}>Requires Total T + SHBG</div>
+                                  </td>
+                                  {cols.map(function(r) {
+                                    var res = computeFreeTVermeulen(r);
+                                    if (!res) return <td key={r.id} className="debug-cell-none">—</td>;
+                                    return (
+                                      <td key={r.id} className="debug-cell-ok" style={{ fontStyle: "italic" }}
+                                          title={"Vermeulen 1999 quadratic formula" + (res.albDefault ? " · Albumin defaulted to 4.3 g/dL" : "")}>
+                                        {res.value} {res.unit}
+                                        {res.albDefault && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>*</span>}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              )}
                             </React.Fragment>
                           );
                         })}
-                        {/* Calculated values section */}
-                        {(function() {
-                          var anyFreeT = cols.some(function(r) { return computeFreeTVermeulen(r) !== null; });
-                          if (!anyFreeT) return null;
-                          return (
-                            <React.Fragment>
-                              <tr className="debug-section-row">
-                                <td className="debug-section-header" colSpan={cols.length + 1}>Calculated</td>
-                              </tr>
-                              <tr>
-                                <td className="col-marker" style={{ fontStyle: "italic" }}>
-                                  cFT (Vermeulen 1999)
-                                  <div style={{ fontSize: 10, fontStyle: "normal", color: "var(--muted)", fontWeight: 400 }}>Requires Total T + SHBG</div>
-                                </td>
-                                {cols.map(function(r) {
-                                  var res = computeFreeTVermeulen(r);
-                                  if (!res) return <td key={r.id} className="debug-cell-none">—</td>;
-                                  return (
-                                    <td key={r.id} className="debug-cell-ok" style={{ fontStyle: "italic" }}
-                                        title={"Vermeulen 1999 quadratic formula" + (res.albDefault ? " · Albumin defaulted to 4.3 g/dL" : "")}>
-                                      {res.value} {res.unit}
-                                      {res.albDefault && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>*</span>}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            </React.Fragment>
-                          );
-                        })()}
                       </tbody>
                     </table>
                   </div>
