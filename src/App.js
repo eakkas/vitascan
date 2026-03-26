@@ -1744,7 +1744,7 @@ var CANONICAL_MAP = [
 // si        = { unit, factor } where factor converts FROM preferred TO si
 // alts      = { unit: factor } where factor converts FROM alt unit TO preferred (import-time)
 var UNIT_NORMS = {
-  "Testosterone":          { preferred: "ng/dL",  si: { unit: "nmol/L",  factor: 0.03467 }, alts: { "nmol/l": 28.818, "pmol/l": 0.02882 } },
+  "Testosterone":          { preferred: "ng/dL",  si: { unit: "nmol/L",  factor: 0.03467 }, alts: { "nmol/l": 28.818, "pmol/l": 0.02882, "ng/ml": 100 } },
   "Free Testosterone":     { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 3.467  }, alts: { "pmol/l": 0.2882, "nmol/l": 288.2 } },
   "Estradiol":             { preferred: "pg/mL",  si: { unit: "pmol/L",  factor: 3.671  }, alts: { "pmol/l": 0.2724, "nmol/l": 272.4 } },
   "Progesterone":          { preferred: "ng/mL",  si: { unit: "nmol/L",  factor: 3.180  }, alts: { "nmol/l": 0.3144 } },
@@ -2227,6 +2227,7 @@ function computeFreeTVermeulen(report) {
   var tUnit = (tM.unit || "").toLowerCase().replace(/\s/g, "");
   var tNmol;
   if (tUnit === "ng/dl")         tNmol = tM.value * 0.03467;
+  else if (tUnit === "ng/ml")    tNmol = tM.value * 3.467;   // ng/mL = 100 × ng/dL
   else if (tUnit === "nmol/l")   tNmol = tM.value;
   else if (tUnit === "pmol/l")   tNmol = tM.value * 0.001;
   else return { error: "Total T unit not recognised: \"" + tM.unit + "\"" };
