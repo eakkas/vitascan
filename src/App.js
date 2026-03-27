@@ -650,6 +650,7 @@ const STYLES = `
   .trends-section-title.danger .trends-section-badge { background: var(--danger); color: white; }
   .trends-section-title.ok     .trends-section-badge { background: rgba(16,185,129,0.12); color: var(--ok); }
   .trends-section-toggle { font-size: 12px; color: var(--accent); font-weight: 600; cursor: pointer; border: none; background: none; font-family: 'Inter', sans-serif; }
+  .trends-sys-header { display: flex; align-items: center; gap: 6px; padding: 8px 16px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); background: var(--bg); border-bottom: 1px solid var(--border); }
 
   /* ── Marker list ── */
   .trend-marker-list { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
@@ -4476,38 +4477,78 @@ export default function App() {
                       );
                     })()}
 
-                    {/* Watch List */}
-                    {watchList.length > 0 && (
-                      <>
-                        <div className="trends-section-header">
-                          <div className="trends-section-title danger">
-                            Watch List <span className="trends-section-badge">{watchList.length}</span>
-                          </div>
-                        </div>
-                        <div className="trend-marker-list">
-                          {watchList.map(function(name, i) { return renderRow(name, i === watchList.length - 1); })}
-                        </div>
-                      </>
-                    )}
+                    {(function() {
+                      // Groups a flat marker list by body system, preserving MARKER_SECTIONS order.
+                      var sectionOrder = MARKER_SECTIONS.map(function(s) { return s.label; });
+                      var groupBySystem = function(names) {
+                        var groups = {};
+                        names.forEach(function(name) {
+                          var cat = getMarkerCategory(name) || "Other";
+                          if (!groups[cat]) groups[cat] = [];
+                          groups[cat].push(name);
+                        });
+                        var ordered = sectionOrder.filter(function(l) { return groups[l]; }).concat(groups["Other"] ? ["Other"] : []);
+                        return ordered.map(function(label) {
+                          var sec = MARKER_SECTIONS.find(function(s) { return s.label === label; });
+                          return { label: label, emoji: sec ? sec.emoji : "🔬", markers: groups[label] };
+                        });
+                      };
 
-                    {/* Trending Well */}
-                    {trendingWell.length > 0 && (
-                      <>
-                        <div className="trends-section-header">
-                          <div className="trends-section-title ok">
-                            Trending Well <span className="trends-section-badge">{trendingWell.length}</span>
-                          </div>
-                          <button className="trends-section-toggle" onClick={function(e) { e.stopPropagation(); setTrendingWellExpanded(function(v) { return !v; }); }}>
-                            {trendingWellExpanded ? "Collapse ▲" : "Show all ▾"}
-                          </button>
-                        </div>
-                        {trendingWellExpanded && (
-                          <div className="trend-marker-list">
-                            {trendingWell.map(function(name, i) { return renderRow(name, i === trendingWell.length - 1); })}
-                          </div>
-                        )}
-                      </>
-                    )}
+                      var renderGrouped = function(names) {
+                        var groups = groupBySystem(names);
+                        return groups.map(function(g) {
+                          var allNames = names; // for isLast calculation
+                          return (
+                            <React.Fragment key={g.label}>
+                              {groups.length > 1 && (
+                                <div className="trends-sys-header">{g.emoji} {g.label}</div>
+                              )}
+                              {g.markers.map(function(name, i) {
+                                var globalIdx = allNames.indexOf(name);
+                                return renderRow(name, globalIdx === allNames.length - 1);
+                              })}
+                            </React.Fragment>
+                          );
+                        });
+                      };
+
+                      return (
+                        <>
+                          {/* Watch List */}
+                          {watchList.length > 0 && (
+                            <>
+                              <div className="trends-section-header">
+                                <div className="trends-section-title danger">
+                                  Watch List <span className="trends-section-badge">{watchList.length}</span>
+                                </div>
+                              </div>
+                              <div className="trend-marker-list">
+                                {renderGrouped(watchList)}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Trending Well */}
+                          {trendingWell.length > 0 && (
+                            <>
+                              <div className="trends-section-header">
+                                <div className="trends-section-title ok">
+                                  Trending Well <span className="trends-section-badge">{trendingWell.length}</span>
+                                </div>
+                                <button className="trends-section-toggle" onClick={function(e) { e.stopPropagation(); setTrendingWellExpanded(function(v) { return !v; }); }}>
+                                  {trendingWellExpanded ? "Collapse ▲" : "Show all ▾"}
+                                </button>
+                              </div>
+                              {trendingWellExpanded && (
+                                <div className="trend-marker-list">
+                                  {renderGrouped(trendingWell)}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
                   </>
                 );
               })()}
