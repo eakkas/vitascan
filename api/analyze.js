@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
   var { success, remaining } = await analyzeLimit.limit(user.id);
   if (!success) return res.status(429).json({ error: "You've reached the limit of 10 report analyses per hour. Please try again later." });
 
-  var { base64Data, mediaType, profileText, sectionLabels, historySummary } = req.body;
+  var { base64Data, mediaType, profileText, sectionLabels, historySummary, lang } = req.body;
   if (!base64Data || !mediaType) return res.status(400).json({ error: "Missing fields" });
   // Approx 10 MB file limit (base64 is ~33% larger than binary)
   if (base64Data.length > 14 * 1024 * 1024) return res.status(400).json({ error: "File too large (max 10 MB)" });
@@ -34,13 +34,21 @@ module.exports = async function handler(req, res) {
   var validTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"];
   if (!validTypes.includes(mediaType)) return res.status(400).json({ error: "Unsupported file type" });
 
+  var isTr = lang === "tr";
   var sections = Array.isArray(sectionLabels) ? sectionLabels : [];
   var sectionEnum = sections.concat(["Other"]).map(function(l) { return "\"" + l + "\""; }).join(", ");
   var profilePrefix = profileText ? profileText + "\n\n" : "";
   var historyPrefix = historySummary ? historySummary + "\n\n" : "";
   var interpretationInstruction = historySummary
-    ? "For the interpretation field write 3-4 sentences: summarise the current results and compare trends with previous reports, explicitly noting any improvements or deteriorations (e.g. 'LDL has decreased from X to Y')."
-    : "For the interpretation field write 2-3 sentences summarising the key findings.";
+    ? (isTr
+        ? "interpretation alanına 3-4 cümle yazın: mevcut sonuçları özetleyin ve önceki raporlarla eğilimleri karşılaştırın, iyileşmeleri veya kötüleşmeleri açıkça belirtin (ör. 'LDL X'ten Y'ye düştü')."
+        : "For the interpretation field write 3-4 sentences: summarise the current results and compare trends with previous reports, explicitly noting any improvements or deteriorations (e.g. 'LDL has decreased from X to Y').")
+    : (isTr
+        ? "interpretation alanına temel bulguları özetleyen 2-3 cümle yazın."
+        : "For the interpretation field write 2-3 sentences summarising the key findings.");
+  var langInstruction = isTr
+    ? "IMPORTANT: Write the 'interpretation' field and all 'lifestyle' item 'label' and 'desc' fields in Turkish. Marker names must remain in English. "
+    : "";
   var systemPrompt =
     profilePrefix +
     historyPrefix +
@@ -52,6 +60,7 @@ module.exports = async function handler(req, res) {
     "Rules: you MUST include every marker printed on the report — do not skip, summarise, or group any. " +
     "The report may be in any language — always output marker names in English using standard international clinical terminology (e.g. 'Glucose' not 'Glikoz', 'Hemoglobin' not 'Hemoglobin A', 'TSH' not 'TSH (Tiroid Stimülan Hormon)'). " +
     "If a reference range is missing, estimate a standard clinical range. Keep lifestyle to 4 items max with one sentence each. " +
+    langInstruction +
     interpretationInstruction + " Output ONLY the raw JSON object.";
 
   var geminiRes = await fetch(GEMINI_URL, {

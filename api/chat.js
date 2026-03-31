@@ -21,17 +21,20 @@ module.exports = async function handler(req, res) {
   var { success } = await chatLimit.limit(user.id);
   if (!success) return res.status(429).json({ error: "Too many requests. Please try again later." });
 
-  var { messages, context } = req.body;
+  var { messages, context, lang } = req.body;
   if (!messages || !messages.length) return res.status(400).json({ error: "Missing messages" });
 
+  var isTr = lang === "tr";
   var systemPrompt =
     "You are a health data assistant for VitaScan, a personal blood test tracking app. " +
-    "Help users understand their blood test results and health trends in clear, plain English. " +
+    "Help users understand their blood test results and health trends in clear, plain " + (isTr ? "Turkish" : "English") + ". " +
     "Be specific — always reference the user's actual values when answering. " +
     "Be concise. Use short paragraphs. When listing things, use short bullet points. " +
     "Always recommend consulting a doctor before changing medications, supplements, or for diagnosis. " +
     "Do not invent values or markers that are not in the provided data. " +
-    "If asked about something not in the user's data, say so clearly.\n\n";
+    "If asked about something not in the user's data, say so clearly." +
+    (isTr ? " Always respond in Turkish regardless of the language of the question." : "") +
+    "\n\n";
 
   if (context) {
     systemPrompt += "USER'S HEALTH DATA:\n" + context;

@@ -908,7 +908,7 @@ function HealthScoreCard({ markers }) {
         <div className="score-progress-track">
           <div className="score-progress-fill" style={{ width: score.pct + "%" }} />
         </div>
-        <div className="score-tally">{score.inRange} / {score.total} markers in range</div>
+        <div className="score-tally">{tp("markers_in_range", { inRange: score.inRange, total: score.total })}</div>
       </div>
     </div>
   );
@@ -1322,6 +1322,33 @@ var STRINGS = {
     checkin_last: "Last logged {{n}}d ago",
     wellbeing_title: "Wellbeing Trends",
     wellbeing_empty: "No check-ins yet — log how you feel on the Home tab.",
+    recent_reports: "Recent Reports",
+    bio_age_title: "Biological Age",
+    bio_age_unit: "years",
+    bio_age_younger: "{{n}} yrs younger than your age",
+    bio_age_older: "{{n}} yrs older than your age",
+    bio_age_consistent: "Consistent with your chronological age",
+    bio_age_add_profile: "Add your age in Profile to compare",
+    bio_age_footer: "Based on most recent values across your reports \u00b7 PhenoAge (Levine et al., 2018) \u00b7 Always consult your doctor",
+    bio_age_phenoage: "PhenoAge (Levine et al., 2018) uses 9 standard blood markers to estimate biological age.",
+    bio_age_needs_calc: "Need {{n}} more marker{{s}} to calculate",
+    bio_age_needs_ask: "Ask your doctor to include: {{markers}}",
+    markers_in_range: "{{inRange}} / {{total}} markers in range",
+    focus_quarter: "Focus This Quarter",
+    bio_age_trend: "Biological Age Trend",
+    bio_age_younger_cal: "Younger than calendar age",
+    bio_age_older_cal: "Older than calendar age",
+    bio_age_on_par: "On par with calendar age",
+    bio_age_yrs_across: "{{delta}} yrs across {{n}} reports",
+    life_events: "Life Events",
+    events_add: "+ Add",
+    events_empty: "Pin supplements, diet changes, illnesses, or other events to see how they affect your markers over time.",
+    watch_list: "Watch List",
+    trending_well: "Trending Well",
+    show_all: "Show all \u25be",
+    collapse_all: "Collapse \u25b2",
+    priority_above_range: "This marker is above range. Discuss the cause and next steps with your doctor.",
+    priority_below_range: "This marker is below range. Discuss the cause and next steps with your doctor.",
   },
   tr: {
     auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
@@ -1480,8 +1507,35 @@ var STRINGS = {
     checkin_save: "Kaydet",
     checkin_saved_today: "✓ Bugün kaydedildi",
     checkin_last: "Son kayıt {{n}} gün önce",
-    wellbeing_title: "Sağlık Eğilimleri",
-    wellbeing_empty: "Henüz kayıt yok — Ana ekranından nasıl hissettiğinizi kaydedin.",
+    wellbeing_title: "Sa\u011fl\u0131k E\u011filimleri",
+    wellbeing_empty: "Hen\u00fcz kay\u0131t yok \u2014 Ana ekran\u0131ndan nas\u0131l hissetti\u011finizi kaydedin.",
+    recent_reports: "Son Raporlar",
+    bio_age_title: "Biyolojik Ya\u015f",
+    bio_age_unit: "ya\u015f",
+    bio_age_younger: "ya\u015f\u0131n\u0131zdan {{n}} y\u0131l daha gen\u00e7",
+    bio_age_older: "ya\u015f\u0131n\u0131zdan {{n}} y\u0131l daha ya\u015fl\u0131",
+    bio_age_consistent: "Takvim ya\u015f\u0131n\u0131zla uyumlu",
+    bio_age_add_profile: "Kar\u015f\u0131la\u015ft\u0131rmak i\u00e7in Profil'de ya\u015f\u0131n\u0131z\u0131 ekleyin",
+    bio_age_footer: "En g\u00fcncel rapor de\u011ferlerinize g\u00f6re \u00b7 PhenoAge (Levine ve ark., 2018) \u00b7 Her zaman doktorunuza dan\u0131\u015f\u0131n",
+    bio_age_phenoage: "PhenoAge (Levine ve ark., 2018) biyolojik ya\u015f\u0131 tahmin etmek i\u00e7in 9 standart kan belirteci kullan\u0131r.",
+    bio_age_needs_calc: "Hesaplamak i\u00e7in {{n}} belirte\u00e7 daha gerekli",
+    bio_age_needs_ask: "Doktorunuzdan \u015funlar\u0131 eklemesini isteyin: {{markers}}",
+    markers_in_range: "{{inRange}} / {{total}} belirte\u00e7 aral\u0131kta",
+    focus_quarter: "Bu \u00c7eyrekte Odaklan\u0131n",
+    bio_age_trend: "Biyolojik Ya\u015f E\u011filimi",
+    bio_age_younger_cal: "Takvim ya\u015f\u0131ndan daha gen\u00e7",
+    bio_age_older_cal: "Takvim ya\u015f\u0131ndan daha ya\u015fl\u0131",
+    bio_age_on_par: "Takvim ya\u015f\u0131yla uyumlu",
+    bio_age_yrs_across: "{{n}} rapor genelinde {{delta}} y\u0131l",
+    life_events: "Ya\u015fam Olaylar\u0131",
+    events_add: "+ Ekle",
+    events_empty: "\u0130la\u00e7, diyet de\u011fi\u015fikli\u011fi, hastal\u0131k veya di\u011fer olaylar\u0131 belirte\u00e7lerinizi nas\u0131l etkiledi\u011fini g\u00f6rmek i\u00e7in ekleyin.",
+    watch_list: "Takip Listesi",
+    trending_well: "\u0130yi Seyir",
+    show_all: "T\u00fcm\u00fcn\u00fc g\u00f6ster \u25be",
+    collapse_all: "Daralt \u25b2",
+    priority_above_range: "Bu belirte\u00e7 aral\u0131\u011f\u0131n \u00fczerinde. Neden ve sonraki ad\u0131mlar\u0131 doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.",
+    priority_below_range: "Bu belirte\u00e7 aral\u0131\u011f\u0131n alt\u0131nda. Neden ve sonraki ad\u0131mlar\u0131 doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.",
   }
 };
 
@@ -2088,35 +2142,35 @@ var PRIORITY_WEIGHTS = [
 ];
 
 var ACTION_RULES = [
-  { match: ["hba1c", "a1c", "glycated"], high: "Reduce refined carbs and sugar; discuss diabetes screening with your doctor.", low: null },
-  { match: ["glucose", "blood sugar", "blood glucose"], high: "Reduce refined carbs; confirm fasting protocol and repeat the test.", low: "Eat regularly to prevent hypoglycemia; discuss with your doctor." },
-  { match: ["ldl"], high: "Review saturated fat intake; discuss cardiovascular risk management with your doctor.", low: null },
-  { match: ["hdl"], low: "Increase aerobic exercise and healthy fats (olive oil, nuts, fatty fish).", high: null },
-  { match: ["triglyceride"], high: "Reduce sugar, refined carbs, and alcohol; increase omega-3 intake.", low: null },
-  { match: ["tsh", "thyroid stimulating"], high: "Elevated TSH may indicate hypothyroidism; discuss thyroid evaluation with your doctor.", low: "Suppressed TSH may indicate hyperthyroidism; discuss with your doctor." },
-  { match: ["free t4", "thyroxine"], low: "Low T4 may indicate hypothyroidism; discuss with your doctor.", high: "Elevated T4; discuss thyroid evaluation with your doctor." },
-  { match: ["free t3", "triiodothyronine"], low: "Low T3; discuss thyroid function with your doctor.", high: null },
-  { match: ["vitamin d", "25-oh"], low: "Consider Vitamin D3 supplementation; discuss optimal dose with your doctor.", high: "Vitamin D is high; reduce supplementation and consult your doctor." },
-  { match: ["b12", "cobalamin"], low: "Increase B12-rich foods (meat, fish, dairy) or consider supplementation.", high: null },
-  { match: ["ferritin"], low: "Increase iron-rich foods or discuss iron supplementation with your doctor.", high: "High ferritin may indicate iron overload or inflammation; consult your doctor." },
-  { match: ["creatinine"], high: "Elevated creatinine suggests reduced kidney function; consult your doctor.", low: null },
-  { match: ["egfr", "glomerular"], low: "Low eGFR indicates reduced kidney function; follow up with your doctor.", high: null },
-  { match: ["alt", "alanine"], high: "Elevated liver enzyme; avoid alcohol, review medications, and consult your doctor.", low: null },
-  { match: ["ast", "aspartate"], high: "Elevated liver enzyme; avoid alcohol, review medications, and consult your doctor.", low: null },
-  { match: ["crp", "c-reactive"], high: "Elevated inflammation marker; work with your doctor to identify the underlying cause.", low: null },
-  { match: ["uric acid"], high: "Reduce purine-rich foods (red meat, shellfish) and alcohol.", low: null },
-  { match: ["hemoglobin", "haemoglobin", "hgb"], low: "Low hemoglobin may indicate anemia; check iron, B12, and folate levels.", high: null },
-  { match: ["wbc", "white blood", "leukocyte"], high: "Elevated WBC may indicate infection or inflammation; consult your doctor.", low: "Low WBC may indicate immune suppression; consult your doctor." },
-  { match: ["platelet"], low: "Low platelets; consult your doctor and avoid aspirin/NSAIDs.", high: "Elevated platelets; discuss follow-up with your doctor." },
-  { match: ["testosterone"], low: "Low testosterone; discuss sleep, exercise, and weight with your doctor.", high: null },
-  { match: ["homocysteine"], high: "Increase folate, B6, and B12-rich foods or discuss supplementation.", low: null },
-  { match: ["cholesterol"], high: "Review diet and lifestyle; discuss cardiovascular risk assessment with your doctor.", low: null },
-  { match: ["sodium"], high: "Reduce salt and processed food intake.", low: "Discuss fluid balance and diet with your doctor." },
-  { match: ["potassium"], high: "Reduce high-potassium foods; consult your doctor.", low: "Increase leafy greens and legumes; consult your doctor." },
-  { match: ["magnesium"], low: "Increase leafy greens, nuts, and seeds or consider supplementation.", high: null },
-  { match: ["iron"], low: "Increase red meat, legumes, or discuss iron supplementation with your doctor.", high: "High iron; reduce iron-rich foods and discuss with your doctor." },
-  { match: ["folate", "folic"], low: "Increase leafy greens and legumes or consider supplementation.", high: null },
-  { match: ["apob", "apolipoprotein b"], high: "Elevated ApoB is a key cardiovascular risk marker; discuss with your doctor.", low: null },
+  { match: ["hba1c", "a1c", "glycated"], high: "Reduce refined carbs and sugar; discuss diabetes screening with your doctor.", low: null, tr: { high: "Rafine karbonhidrat ve \u015feker al\u0131m\u0131n\u0131 azalt\u0131n; doktorunuzla diyabet tara\u0131mas\u0131n\u0131 g\u00f6r\u00fc\u015f\u00fcn.", low: null } },
+  { match: ["glucose", "blood sugar", "blood glucose"], high: "Reduce refined carbs; confirm fasting protocol and repeat the test.", low: "Eat regularly to prevent hypoglycemia; discuss with your doctor.", tr: { high: "Rafine karbonhidrat al\u0131m\u0131n\u0131 azalt\u0131n; a\u00e7l\u0131k protokol\u00fcn\u00fc do\u011frulay\u0131n ve testi tekrarlay\u0131n.", low: "Hipoglisemiyi \u00f6nlemek i\u00e7in d\u00fczzenli yiyin; doktorunuzla g\u00f6r\u00fc\u015f\u00fcn." } },
+  { match: ["ldl"], high: "Review saturated fat intake; discuss cardiovascular risk management with your doctor.", low: null, tr: { high: "Doymu\u015f ya\u011f al\u0131m\u0131n\u0131 g\u00f6zden ge\u00e7irin; doktorunuzla kardiyovask\u00fcler risk y\u00f6netimini g\u00f6r\u00fc\u015f\u00fcn.", low: null } },
+  { match: ["hdl"], low: "Increase aerobic exercise and healthy fats (olive oil, nuts, fatty fish).", high: null, tr: { low: "Aerobik egzersiz ve sa\u011fl\u0131kl\u0131 ya\u011flar\u0131 art\u0131r\u0131n (zeytinyal\u011f\u0131, kuruyemi\u015f, ya\u011fl\u0131 bal\u0131k).", high: null } },
+  { match: ["triglyceride"], high: "Reduce sugar, refined carbs, and alcohol; increase omega-3 intake.", low: null, tr: { high: "\u015eeker, rafine karbonhidrat ve alkol al\u0131m\u0131n\u0131 azalt\u0131n; omega-3 al\u0131m\u0131n\u0131 art\u0131r\u0131n.", low: null } },
+  { match: ["tsh", "thyroid stimulating"], high: "Elevated TSH may indicate hypothyroidism; discuss thyroid evaluation with your doctor.", low: "Suppressed TSH may indicate hyperthyroidism; discuss with your doctor.", tr: { high: "Y\u00fcksek TSH hipotiroidizmi g\u00f6sterebilir; doktorunuzla tiroid de\u011ferlendirmesini g\u00f6r\u00fc\u015f\u00fcn.", low: "Bask\u0131lanm\u0131\u015f TSH hipertiroidizmi g\u00f6sterebilir; doktorunuzla g\u00f6r\u00fc\u015f\u00fcn." } },
+  { match: ["free t4", "thyroxine"], low: "Low T4 may indicate hypothyroidism; discuss with your doctor.", high: "Elevated T4; discuss thyroid evaluation with your doctor.", tr: { low: "D\u00fc\u015f\u00fck T4 hipotiroidizmi g\u00f6sterebilir; doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.", high: "Y\u00fcksek T4; doktorunuzla tiroid de\u011ferlendirmesini g\u00f6r\u00fc\u015f\u00fcn." } },
+  { match: ["free t3", "triiodothyronine"], low: "Low T3; discuss thyroid function with your doctor.", high: null, tr: { low: "D\u00fc\u015f\u00fck T3; doktorunuzla tiroid fonksiyonunu g\u00f6r\u00fc\u015f\u00fcn.", high: null } },
+  { match: ["vitamin d", "25-oh"], low: "Consider Vitamin D3 supplementation; discuss optimal dose with your doctor.", high: "Vitamin D is high; reduce supplementation and consult your doctor.", tr: { low: "D3 vitamini takviyesi d\u00fc\u015f\u00fcn\u00fcn; optimal doz i\u00e7in doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.", high: "D vitamini y\u00fcksek; takviyeyi azalt\u0131n ve doktorunuza dan\u0131\u015f\u0131n." } },
+  { match: ["b12", "cobalamin"], low: "Increase B12-rich foods (meat, fish, dairy) or consider supplementation.", high: null, tr: { low: "B12 a\u00e7\u0131s\u0131ndan zengin besinleri art\u0131r\u0131n (et, bal\u0131k, s\u00fct \u00fcr\u00fcnleri) veya takviye almay\u0131 d\u00fc\u015f\u00fcn\u00fcn.", high: null } },
+  { match: ["ferritin"], low: "Increase iron-rich foods or discuss iron supplementation with your doctor.", high: "High ferritin may indicate iron overload or inflammation; consult your doctor.", tr: { low: "Demir a\u00e7\u0131s\u0131ndan zengin besinleri art\u0131r\u0131n veya doktorunuzla demir takviyesini g\u00f6r\u00fc\u015f\u00fcn.", high: "Y\u00fcksek ferritin, demir birikimini veya iltihabı g\u00f6sterebilir; doktorunuza dan\u0131\u015f\u0131n." } },
+  { match: ["creatinine"], high: "Elevated creatinine suggests reduced kidney function; consult your doctor.", low: null, tr: { high: "Y\u00fcksek kreatinin, b\u00f6brek fonksiyonunun azald\u0131\u011f\u0131n\u0131 g\u00f6sterebilir; doktorunuza dan\u0131\u015f\u0131n.", low: null } },
+  { match: ["egfr", "glomerular"], low: "Low eGFR indicates reduced kidney function; follow up with your doctor.", high: null, tr: { low: "D\u00fc\u015f\u00fck eGFR, b\u00f6brek fonksiyonunun azald\u0131\u011f\u0131n\u0131 g\u00f6sterir; doktorunuzla takip edin.", high: null } },
+  { match: ["alt", "alanine"], high: "Elevated liver enzyme; avoid alcohol, review medications, and consult your doctor.", low: null, tr: { high: "Y\u00fcksek karaci\u011fer enzimi; alkolden ka\u00e7\u0131n\u0131n, ila\u00e7lar\u0131n\u0131z\u0131 g\u00f6zden ge\u00e7irin ve doktorunuza dan\u0131\u015f\u0131n.", low: null } },
+  { match: ["ast", "aspartate"], high: "Elevated liver enzyme; avoid alcohol, review medications, and consult your doctor.", low: null, tr: { high: "Y\u00fcksek karaci\u011fer enzimi; alkolden ka\u00e7\u0131n\u0131n, ila\u00e7lar\u0131n\u0131z\u0131 g\u00f6zden ge\u00e7irin ve doktorunuza dan\u0131\u015f\u0131n.", low: null } },
+  { match: ["crp", "c-reactive"], high: "Elevated inflammation marker; work with your doctor to identify the underlying cause.", low: null, tr: { high: "Y\u00fcksek iltihaplanma belirteci; altta yatan nedeni belirlemek i\u00e7in doktorunuzla \u00e7al\u0131\u015f\u0131n.", low: null } },
+  { match: ["uric acid"], high: "Reduce purine-rich foods (red meat, shellfish) and alcohol.", low: null, tr: { high: "P\u00fcrin a\u00e7\u0131s\u0131ndan zengin besinleri (k\u0131rm\u0131z\u0131 et, kabuklu deniz \u00fcr\u00fcnleri) ve alkol\u00fc azalt\u0131n.", low: null } },
+  { match: ["hemoglobin", "haemoglobin", "hgb"], low: "Low hemoglobin may indicate anemia; check iron, B12, and folate levels.", high: null, tr: { low: "D\u00fc\u015f\u00fck hemoglobin anemiyi g\u00f6sterebilir; demir, B12 ve folat d\u00fczeylerini kontrol edin.", high: null } },
+  { match: ["wbc", "white blood", "leukocyte"], high: "Elevated WBC may indicate infection or inflammation; consult your doctor.", low: "Low WBC may indicate immune suppression; consult your doctor.", tr: { high: "Y\u00fcksek WBC, enfeksiyon veya iltihabı g\u00f6sterebilir; doktorunuza dan\u0131\u015f\u0131n.", low: "D\u00fc\u015f\u00fck WBC, ba\u011f\u0131\u015f\u0131kl\u0131k bask\u0131lanmas\u0131n\u0131 g\u00f6sterebilir; doktorunuza dan\u0131\u015f\u0131n." } },
+  { match: ["platelet"], low: "Low platelets; consult your doctor and avoid aspirin/NSAIDs.", high: "Elevated platelets; discuss follow-up with your doctor.", tr: { low: "D\u00fc\u015f\u00fck trombosit; doktorunuza dan\u0131\u015f\u0131n ve aspirin/NSAID kullanmaktan ka\u00e7\u0131n\u0131n.", high: "Y\u00fcksek trombosit; doktorunuzla takip g\u00f6r\u00fc\u015f\u00fcn." } },
+  { match: ["testosterone"], low: "Low testosterone; discuss sleep, exercise, and weight with your doctor.", high: null, tr: { low: "D\u00fc\u015f\u00fck testosteron; uyku, egzersiz ve kilo hakk\u0131nda doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.", high: null } },
+  { match: ["homocysteine"], high: "Increase folate, B6, and B12-rich foods or discuss supplementation.", low: null, tr: { high: "Folat, B6 ve B12 a\u00e7\u0131s\u0131ndan zengin besinleri art\u0131r\u0131n veya takviye almay\u0131 g\u00f6r\u00fc\u015f\u00fcn.", low: null } },
+  { match: ["cholesterol"], high: "Review diet and lifestyle; discuss cardiovascular risk assessment with your doctor.", low: null, tr: { high: "Diyet ve ya\u015fam tarz\u0131n\u0131 g\u00f6zden ge\u00e7irin; doktorunuzla kardiyovask\u00fcler risk de\u011ferlendirmesini g\u00f6r\u00fc\u015f\u00fcn.", low: null } },
+  { match: ["sodium"], high: "Reduce salt and processed food intake.", low: "Discuss fluid balance and diet with your doctor.", tr: { high: "Tuz ve i\u015flenmi\u015f g\u0131da al\u0131m\u0131n\u0131 azalt\u0131n.", low: "Doktorunuzla s\u0131v\u0131 dengesi ve diyeti g\u00f6r\u00fc\u015f\u00fcn." } },
+  { match: ["potassium"], high: "Reduce high-potassium foods; consult your doctor.", low: "Increase leafy greens and legumes; consult your doctor.", tr: { high: "Potasyumca zengin besinleri azalt\u0131n; doktorunuza dan\u0131\u015f\u0131n.", low: "Yaprakl\u0131 sebze ve baklagilleri art\u0131r\u0131n; doktorunuza dan\u0131\u015f\u0131n." } },
+  { match: ["magnesium"], low: "Increase leafy greens, nuts, and seeds or consider supplementation.", high: null, tr: { low: "Yaprakl\u0131 sebze, kuruyemi\u015f ve tohum al\u0131m\u0131n\u0131 art\u0131r\u0131n veya takviye almay\u0131 d\u00fc\u015f\u00fcn\u00fcn.", high: null } },
+  { match: ["iron"], low: "Increase red meat, legumes, or discuss iron supplementation with your doctor.", high: "High iron; reduce iron-rich foods and discuss with your doctor.", tr: { low: "K\u0131rm\u0131z\u0131 et ve baklagilleri art\u0131r\u0131n veya doktorunuzla demir takviyesini g\u00f6r\u00fc\u015f\u00fcn.", high: "Y\u00fcksek demir; demir a\u00e7\u0131s\u0131ndan zengin besinleri azalt\u0131n ve doktorunuzla g\u00f6r\u00fc\u015f\u00fcn." } },
+  { match: ["folate", "folic"], low: "Increase leafy greens and legumes or consider supplementation.", high: null, tr: { low: "Yaprakl\u0131 sebze ve baklagilleri art\u0131r\u0131n veya takviye almay\u0131 d\u00fc\u015f\u00fcn\u00fcn.", high: null } },
+  { match: ["apob", "apolipoprotein b"], high: "Elevated ApoB is a key cardiovascular risk marker; discuss with your doctor.", low: null, tr: { high: "Y\u00fcksek ApoB, \u00f6nemli bir kardiyovask\u00fcler risk belirtecidir; doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.", low: null } },
 ];
 
 function getMarkerClinicalWeight(name) {
@@ -2134,13 +2188,15 @@ function getMarkerAction(name, status) {
   for (var i = 0; i < ACTION_RULES.length; i++) {
     var rule = ACTION_RULES[i];
     if (rule.match.some(function(k) { return n.includes(k); })) {
+      if (_lang === "tr" && rule.tr) {
+        if (status === "high" && rule.tr.high) return rule.tr.high;
+        if (status === "low"  && rule.tr.low)  return rule.tr.low;
+      }
       if (status === "high" && rule.high) return rule.high;
       if (status === "low"  && rule.low)  return rule.low;
     }
   }
-  return status === "high"
-    ? "This marker is above range. Discuss the cause and next steps with your doctor."
-    : "This marker is below range. Discuss the cause and next steps with your doctor.";
+  return status === "high" ? t("priority_above_range") : t("priority_below_range");
 }
 
 function computePriorities(markers, history, unitSystem) {
@@ -2467,13 +2523,13 @@ function BioAgeCard({ history, chronologicalAge }) {
       <div className="bio-age-card">
         <div className="bio-age-header">
           <span className="bio-age-icon">🧬</span>
-          <span className="bio-age-title">Biological Age</span>
+          <span className="bio-age-title">{t("bio_age_title")}</span>
         </div>
         <div className="bio-age-needs">
-          <div className="bio-age-needs-title">Need {result.missing.length} more marker{result.missing.length !== 1 ? "s" : ""} to calculate</div>
-          <div className="bio-age-needs-markers">Ask your doctor to include: {result.missing.join(" · ")}</div>
+          <div className="bio-age-needs-title">{tp("bio_age_needs_calc", { n: result.missing.length, s: result.missing.length !== 1 ? "s" : "" })}</div>
+          <div className="bio-age-needs-markers">{tp("bio_age_needs_ask", { markers: result.missing.join(" \u00b7 ") })}</div>
         </div>
-        <div className="bio-age-footer">PhenoAge (Levine et al., 2018) uses 9 standard blood markers to estimate biological age.</div>
+        <div className="bio-age-footer">{t("bio_age_phenoage")}</div>
       </div>
     );
   }
@@ -2483,23 +2539,21 @@ function BioAgeCard({ history, chronologicalAge }) {
   var delta = chAge !== null ? Math.round((age - chAge) * 10) / 10 : null;
   var cls   = delta === null ? "ba-neutral" : delta < -2 ? "ba-younger" : delta > 2 ? "ba-older" : "ba-neutral";
   var deltaLabel = delta === null
-    ? "Add your age in Profile to compare"
-    : delta < -2 ? Math.abs(delta).toFixed(1) + " yrs younger than your age"
-    : delta >  2 ? delta.toFixed(1) + " yrs older than your age"
-    : "Consistent with your chronological age";
-
-  var footerNote = "Based on most recent values across your reports · PhenoAge (Levine et al., 2018) · Always consult your doctor";
+    ? t("bio_age_add_profile")
+    : delta < -2 ? tp("bio_age_younger", { n: Math.abs(delta).toFixed(1) })
+    : delta >  2 ? tp("bio_age_older",   { n: delta.toFixed(1) })
+    : t("bio_age_consistent");
 
   return (
     <div className="bio-age-card">
       <div className="bio-age-header">
         <span className="bio-age-icon">🧬</span>
-        <span className="bio-age-title">Biological Age</span>
+        <span className="bio-age-title">{t("bio_age_title")}</span>
       </div>
       <div className="bio-age-body">
         <div className={"bio-age-number " + cls}>{age.toFixed(1)}</div>
         <div className="bio-age-info">
-          <div className="bio-age-label">years</div>
+          <div className="bio-age-label">{t("bio_age_unit")}</div>
           <div className={"bio-age-delta " + cls}>{deltaLabel}</div>
         </div>
       </div>
@@ -2518,7 +2572,7 @@ function BioAgeCard({ history, chronologicalAge }) {
           })}
         </div>
       )}
-      <div className="bio-age-footer">{footerNote}</div>
+      <div className="bio-age-footer">{t("bio_age_footer")}</div>
     </div>
   );
 }
@@ -2627,7 +2681,7 @@ function BioAgeTrendCard({ bioAgeHistory, chronologicalAge }) {
   };
   return (
     <div className="trends-progress-card">
-      <div className="trends-progress-label">Biological Age Trend</div>
+      <div className="trends-progress-label">{t("bio_age_trend")}</div>
       <div className="trends-progress-timeline">
         <div className="trends-progress-line" />
         {bioAgeHistory.map(function(s, i) {
@@ -2648,11 +2702,11 @@ function BioAgeTrendCard({ bioAgeHistory, chronologicalAge }) {
           <div className="trends-progress-delta-arrow" style={{ background: improving ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.12)" }}>
             {improving ? "↓" : "↑"}
           </div>
-          {improving ? "" : "+"}{delta} yrs across {bioAgeHistory.length} reports
+          {improving ? "" : "+"}{tp("bio_age_yrs_across", { delta: delta, n: bioAgeHistory.length })}
         </div>
         <div className="trends-progress-sub">
           {chronologicalAge
-            ? (last.age < chronologicalAge - 1 ? "Younger than calendar age" : last.age > chronologicalAge + 1 ? "Older than calendar age" : "On par with calendar age")
+            ? (last.age < chronologicalAge - 1 ? t("bio_age_younger_cal") : last.age > chronologicalAge + 1 ? t("bio_age_older_cal") : t("bio_age_on_par"))
             : "PhenoAge (Levine et al., 2018)"}
         </div>
       </div>
@@ -2822,7 +2876,7 @@ function repairJSON(raw) {
   }
 }
 
-async function analyzeReport(base64Data, mediaType, profileText, historySummary) {
+async function analyzeReport(base64Data, mediaType, profileText, historySummary, lang) {
   var { data: { session } } = await supabase.auth.getSession();
   var token = session ? session.access_token : "";
 
@@ -2834,7 +2888,8 @@ async function analyzeReport(base64Data, mediaType, profileText, historySummary)
       mediaType: mediaType,
       profileText: profileText || null,
       sectionLabels: SECTION_LABELS,
-      historySummary: historySummary || null
+      historySummary: historySummary || null,
+      lang: lang || "en"
     })
   });
 
@@ -2956,7 +3011,7 @@ export default function App() {
       var res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-        body: JSON.stringify({ messages: newMessages, context: ctx }),
+        body: JSON.stringify({ messages: newMessages, context: ctx, lang: lang }),
       });
       var data = await res.json();
       setChatMessages(newMessages.concat([{ role: "model", text: data.reply || t("chat_error") }]));
@@ -2969,7 +3024,10 @@ export default function App() {
 
   // ── Language preference ──
   const [lang, setLang] = useState(function() {
-    return localStorage.getItem("vitascan_language") || "en";
+    var saved = localStorage.getItem("vitascan_language");
+    if (saved) return saved;
+    var navLang = (navigator.language || "").toLowerCase();
+    return navLang.startsWith("tr") ? "tr" : "en";
   });
   function handleLangChange(val) {
     setLang(val);
@@ -3359,7 +3417,7 @@ export default function App() {
       }
       var profileText = getProfileText(profile);
       var historySummary = buildHistorySummary(history);
-      var data = await analyzeReport(base64, mediaType, profileText, historySummary);
+      var data = await analyzeReport(base64, mediaType, profileText, historySummary, lang);
       data = Object.assign({}, data, {
         markers:    normalizeMarkers(data.markers || []),
         reportDate: normalizeDate(data.reportDate),
@@ -3403,7 +3461,7 @@ export default function App() {
       setStage("upload");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, profile, history]);
+  }, [user, profile, history, lang]);
 
   const onDrop = useCallback(function(e) {
     e.preventDefault();
@@ -3448,6 +3506,7 @@ export default function App() {
           markersSummary: markersSummary,
           historySummary: buildHistorySummary(otherReports),
           profileText:    getProfileText(profile),
+          lang:           lang,
         })
       });
       if (!res.ok) throw new Error("Failed to refresh");
@@ -3925,7 +3984,7 @@ export default function App() {
                 }).slice(0, 5);
                 return (
                   <div className="recent-strip">
-                    <div className="recent-strip-title">Recent Reports</div>
+                    <div className="recent-strip-title">{t("recent_reports")}</div>
                     {recent.map(function(item) {
                       var itemMarkers = item.markers || [];
                       var score = computeHealthScore(itemMarkers);
@@ -4412,14 +4471,14 @@ export default function App() {
                     {/* Life Events */}
                     <div className="events-section">
                       <div className="events-section-header">
-                        <span className="events-section-title">📅 Life Events</span>
+                        <span className="events-section-title">📅 {t("life_events")}</span>
                         <button className="events-add-btn" onClick={function() {
                           setEventForm({ date: new Date().toISOString().slice(0, 10), label: "", type: "supplement" });
                           setEventModalOpen(true);
-                        }}>+ Add</button>
+                        }}>{t("events_add")}</button>
                       </div>
                       {events.length === 0 ? (
-                        <div className="events-empty">Pin supplements, diet changes, illnesses, or other events to see how they affect your markers over time.</div>
+                        <div className="events-empty">{t("events_empty")}</div>
                       ) : (
                         <div className="events-list">
                           {events.map(function(ev) {
@@ -4519,7 +4578,7 @@ export default function App() {
                             <>
                               <div className="trends-section-header">
                                 <div className="trends-section-title danger">
-                                  Watch List <span className="trends-section-badge">{watchList.length}</span>
+                                  {t("watch_list")} <span className="trends-section-badge">{watchList.length}</span>
                                 </div>
                               </div>
                               <div className="trend-marker-list">
@@ -4533,10 +4592,10 @@ export default function App() {
                             <>
                               <div className="trends-section-header">
                                 <div className="trends-section-title ok">
-                                  Trending Well <span className="trends-section-badge">{trendingWell.length}</span>
+                                  {t("trending_well")} <span className="trends-section-badge">{trendingWell.length}</span>
                                 </div>
                                 <button className="trends-section-toggle" onClick={function(e) { e.stopPropagation(); setTrendingWellExpanded(function(v) { return !v; }); }}>
-                                  {trendingWellExpanded ? "Collapse ▲" : "Show all ▾"}
+                                  {trendingWellExpanded ? t("collapse_all") : t("show_all")}
                                 </button>
                               </div>
                               {trendingWellExpanded && (
@@ -4585,7 +4644,7 @@ export default function App() {
                   <div className="priorities-card">
                     <div className="priorities-card-header">
                       <span className="priorities-card-icon">🎯</span>
-                      <span className="priorities-card-title">Focus This Quarter</span>
+                      <span className="priorities-card-title">{t("focus_quarter")}</span>
                     </div>
                     {priorities.map(function(p, i) {
                       return (

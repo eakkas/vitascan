@@ -21,14 +21,20 @@ module.exports = async function handler(req, res) {
   var { success } = await interpretationLimit.limit(user.id);
   if (!success) return res.status(429).json({ error: "Too many requests. Please try again later." });
 
-  var { reportId, markersSummary, historySummary, profileText } = req.body;
+  var { reportId, markersSummary, historySummary, profileText, lang } = req.body;
   if (!reportId || !markersSummary) return res.status(400).json({ error: "Missing fields" });
 
+  var isTr = lang === "tr";
   var profilePrefix = profileText ? profileText + "\n\n" : "";
   var historyPrefix = historySummary ? "Patient's previous reports for context:\n" + historySummary + "\n\n" : "";
   var trendInstruction = historySummary
-    ? "Compare trends with previous reports, explicitly noting improvements or deteriorations (e.g. 'LDL has decreased from X to Y'). Write 3-4 sentences."
-    : "Write 2-3 sentences summarising the key findings.";
+    ? (isTr
+        ? "Önceki raporlarla eğilimleri karşılaştırın, iyileşmeleri veya kötüleşmeleri açıkça belirtin (ör. 'LDL X'ten Y'ye düştü'). 3-4 cümle yazın."
+        : "Compare trends with previous reports, explicitly noting improvements or deteriorations (e.g. 'LDL has decreased from X to Y'). Write 3-4 sentences.")
+    : (isTr
+        ? "Temel bulguları özetleyen 2-3 cümle yazın."
+        : "Write 2-3 sentences summarising the key findings.");
+  var langInstruction = isTr ? " Yanıtınızı Türkçe yazın." : "";
 
   var prompt =
     profilePrefix +
@@ -36,7 +42,8 @@ module.exports = async function handler(req, res) {
     "Current report markers: " + markersSummary + "\n\n" +
     "Write a concise clinical interpretation of these blood test results. " +
     trendInstruction +
-    " Plain text only — no JSON, no markdown, no bullet points.";
+    " Plain text only — no JSON, no markdown, no bullet points." +
+    langInstruction;
 
   var geminiRes = await fetch(GEMINI_URL, {
     method: "POST",
