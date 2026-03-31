@@ -643,6 +643,7 @@ const STYLES = `
 
   /* ── Section headers ── */
   .trends-section-header { display: flex; align-items: center; justify-content: space-between; padding: 0 2px; margin-top: 6px; }
+  .trends-section-header.has-toggle { padding-right: 80px; }
   .trends-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; display: flex; align-items: center; gap: 8px; }
   .trends-section-title.danger { color: var(--danger); }
   .trends-section-title.ok     { color: var(--ok); }
@@ -4590,7 +4591,7 @@ export default function App() {
                           {/* Trending Well */}
                           {trendingWell.length > 0 && (
                             <>
-                              <div className="trends-section-header">
+                              <div className="trends-section-header has-toggle">
                                 <div className="trends-section-title ok">
                                   {t("trending_well")} <span className="trends-section-badge">{trendingWell.length}</span>
                                 </div>
