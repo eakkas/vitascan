@@ -1561,6 +1561,24 @@ function localizeSection(englishLabel) {
   return (sec && sec.labelTr) || englishLabel;
 }
 
+// Format a date string for display using the current language.
+// Accepts ISO format (2026-03-02) or stored en-GB format (6 May 2024).
+// Returns "6 May 2024" in English or "6 May\u0131s 2024" in Turkish.
+var TR_MONTHS = ["Ocak","\u015eubat","Mart","Nisan","May\u0131s","Haziran","Temmuz","A\u011fustos","Eyl\u00fcl","Ekim","Kas\u0131m","Aral\u0131k"];
+function fmtLocalDate(dateStr) {
+  if (!dateStr || dateStr === "Unknown") return dateStr || "";
+  var d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    var parts = dateStr.split("-");
+    d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  } else {
+    d = new Date(dateStr);
+  }
+  if (isNaN(d.getTime())) return dateStr;
+  if (_lang === "tr") return d.getDate() + " " + TR_MONTHS[d.getMonth()] + " " + d.getFullYear();
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
 var OPTIMAL_RANGES = {
   "glucose":                          { low: 70,   high: 90   },
   "hba1c":                            { low: 4.6,  high: 5.4  },
@@ -3989,9 +4007,7 @@ export default function App() {
                     {recent.map(function(item) {
                       var itemMarkers = item.markers || [];
                       var score = computeHealthScore(itemMarkers);
-                      var dateLabel = item.report_date && item.report_date !== "Unknown"
-                        ? item.report_date
-                        : new Date(item.created_at).toLocaleDateString();
+                      var dateLabel = fmtLocalDate(item.report_date && item.report_date !== "Unknown" ? item.report_date : new Date(item.created_at).toISOString().slice(0, 10));
                       var pillCls = score ? "score-pill-" + score.cls.replace("score-", "") : "";
                       return (
                         <div key={item.id} className="recent-strip-item" onClick={function() { handleHistoryItem(item); }}>
@@ -4082,9 +4098,7 @@ export default function App() {
                             high:  itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "high"; }).length,
                             low:   itemMarkers.filter(function(m) { return getStatus(m.value, m.low, m.high) === "low"; }).length,
                           };
-                          var dateLabel = item.report_date && item.report_date !== "Unknown"
-                            ? item.report_date
-                            : new Date(item.created_at).toLocaleDateString();
+                          var dateLabel = fmtLocalDate(item.report_date && item.report_date !== "Unknown" ? item.report_date : new Date(item.created_at).toISOString().slice(0, 10));
                           var isConfirming = deletingReportId === item.id;
                           return (
                             <div key={item.id} className="report-card" onClick={function() { if (!isConfirming) handleHistoryItem(item); }}>
@@ -4489,7 +4503,7 @@ export default function App() {
                                 <span className="event-icon">{typeObj.icon}</span>
                                 <div className="event-body">
                                   <div className="event-label">{ev.label}</div>
-                                  <div className="event-date">{ev.date}</div>
+                                  <div className="event-date">{fmtLocalDate(ev.date)}</div>
                                 </div>
                                 <button className="event-delete" onClick={function() { deleteEvent(ev.id); }}>×</button>
                               </div>
@@ -4561,7 +4575,7 @@ export default function App() {
                           return (
                             <React.Fragment key={g.label}>
                               {groups.length > 1 && (
-                                <div className="trends-sys-header">{g.emoji} {g.label}</div>
+                                <div className="trends-sys-header">{g.emoji} {localizeSection(g.label)}</div>
                               )}
                               {g.markers.map(function(name, i) {
                                 var globalIdx = allNames.indexOf(name);
@@ -4622,7 +4636,7 @@ export default function App() {
                   <div className="results-title">{t("results_title")}</div>
                   <div className="results-meta">
                     {results.patientName && results.patientName !== "Unknown" ? results.patientName + " · " : ""}
-                    {results.reportDate  && results.reportDate  !== "Unknown" ? results.reportDate  + " · " : ""}
+                    {results.reportDate  && results.reportDate  !== "Unknown" ? fmtLocalDate(results.reportDate) + " \u00b7 " : ""}
                     {tp("results_n_markers", { n: counts.total })}
                     {fromCache && <span className="cached-badge">{t("badge_cached")}</span>}
                   </div>
