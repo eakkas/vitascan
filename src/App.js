@@ -3048,6 +3048,9 @@ export default function App() {
     var navLang = (navigator.language || "").toLowerCase();
     return navLang.startsWith("tr") ? "tr" : "en";
   });
+  // Sync lang to <html lang="..."> so CSS text-transform: uppercase uses correct
+  // locale casing rules (Turkish: i → İ, not I).
+  useEffect(function() { document.documentElement.lang = lang; }, [lang]);
   function handleLangChange(val) {
     setLang(val);
     localStorage.setItem("vitascan_language", val);
