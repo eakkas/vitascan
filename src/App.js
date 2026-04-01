@@ -942,8 +942,8 @@ function buildHistorySummary(history) {
 }
 
 function getStatus(value, low, high) {
-  if (value < low) return "low";
-  if (value > high) return "high";
+  if (low  != null && value < low)  return "low";
+  if (high != null && value > high) return "high";
   return "ok";
 }
 
@@ -1922,6 +1922,13 @@ function normalizeMarkerName(rawName) {
   return rawName;
 }
 
+// Reference range overrides for markers where the clinical threshold is universally known
+// and Gemini frequently extracts the wrong direction (e.g. ">= 60 normal" → high:60 instead of low:60).
+var RANGE_OVERRIDES = {
+  // eGFR: ≥60 = normal; Gemini often stores {low:0, high:60} or creatinine's range by mistake.
+  "eGFR": { low: 60, high: null },
+};
+
 // Normalises every marker: canonical name + converts value/low/high to US Conventional unit.
 // Deduplicates: if the same canonical name appears multiple times (e.g. HbA1c as both %
 // and mmol/mol), keeps the entry with the UNIT_NORMS preferred unit; first occurrence wins on ties.
@@ -1963,6 +1970,12 @@ function normalizeMarkers(markers) {
       }
       // else keep first occurrence
     }
+  });
+  // Apply known-correct reference ranges for markers where Gemini frequently errs
+  result = result.map(function(m) {
+    var override = RANGE_OVERRIDES[m.name];
+    if (!override) return m;
+    return Object.assign({}, m, { low: override.low, high: override.high });
   });
   return result;
 }
