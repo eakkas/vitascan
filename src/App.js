@@ -1883,7 +1883,7 @@ var UNIT_NORMS = {
   "AMH":                   { preferred: "ng/mL",  alts: { "pmol/l": 0.1399 } },
   "PSA":                   { preferred: "ng/mL",  alts: { "ug/l": 1, "µg/l": 1 } },
   // Kidney
-  "eGFR":                  { preferred: "mL/min/1.73m²", alts: {} },
+  "eGFR":                  { preferred: "mL/min/1.73m\u00b2", alts: { "ml/min/1.73m2": 1, "ml/min/1.73 m2": 1, "ml/min/1.73m": 1, "ml/min": 1, "ml/min/1.73": 1 } },
   "Cystatin C":            { preferred: "mg/L",   alts: { "mg/dl": 10 } },
   "Microalbumin":          { preferred: "mg/L",   alts: { "mg/dl": 10, "µg/ml": 1, "ug/ml": 1 } },
   // CBC
@@ -1975,6 +1975,8 @@ function normalizeUnitStr(u) {
   return (u || "").toLowerCase().trim()
     .replace(/\u00b5|\u03bc|\u03bc/g, "u")  // µ / μ → u
     .replace(/\u00d7/g, "x")                // × → x
+    .replace(/\u00b2/g, "2")               // ² → 2
+    .replace(/\u00b3/g, "3")               // ³ → 3
     .replace(/\s+/g, "");                   // collapse whitespace
 }
 
