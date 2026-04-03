@@ -862,7 +862,73 @@ const STYLES = `
     .auth-card { padding: 36px 24px; }
     .lifestyle-grid { grid-template-columns: 1fr; }
   }
+
+  /* ── Onboarding Styles ── */
+  .onboarding { display: flex; flex-direction: column; height: 100vh; padding: 56px 24px 32px; background: var(--bg); }
+  .onboarding-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .onboarding-logo { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -0.5px; color: var(--text); }
+  .onboarding-logo span { color: var(--accent); }
+  .onboarding-lang-toggle { background: none; border: none; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); padding: 6px 12px; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+  .onboarding-lang-toggle.active { color: var(--accent); }
+
+  .onb-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
+  .onb-dot { height: 8px; width: 8px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+  .onb-dot.active { width: 24px; border-radius: 4px; background: var(--accent); }
+  .onb-dot.done { background: var(--accent); }
+
+  .onboarding-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+  .onb-h1 { font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; color: var(--text); }
+  .onb-h2 { font-size: 21px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; color: var(--text); }
+  .onb-sub { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 22px; }
+  .onb-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+
+  .onb-input { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; font-size: 16px; color: var(--text); outline: none; font-family: inherit; transition: all 0.2s; }
+  .onb-input:focus { border-color: var(--accent); }
+
+  .onb-sex-group { display: flex; gap: 12px; }
+  .onb-sex { flex: 1; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; cursor: pointer; font-size: 15px; color: var(--text); transition: all 0.2s; font-weight: 500; }
+  .onb-sex:hover { border-color: rgba(14,165,233,0.4); }
+  .onb-sex.selected { border-color: var(--accent); color: var(--accent); background: rgba(14,165,233,0.08); font-weight: 600; }
+
+  .onb-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .onb-chip { background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 10px 18px; font-size: 14px; color: var(--text); cursor: pointer; transition: all 0.2s; }
+  .onb-chip:hover { border-color: rgba(14,165,233,0.4); }
+  .onb-chip.selected { background: rgba(14,165,233,0.08); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .onb-chip.none { border-style: dashed; border-color: var(--muted); color: var(--muted); }
+  .onb-chip.none.selected { border-style: solid; border-color: var(--accent); color: var(--accent); background: rgba(14,165,233,0.08); }
+
+  .onb-radio-group { display: flex; flex-direction: column; gap: 12px; }
+  .onb-radio { background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; padding: 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+  .onb-radio:hover { border-color: rgba(14,165,233,0.4); }
+  .onb-radio.selected { background: rgba(14,165,233,0.08); border-color: var(--accent); }
+  .onb-radio-circle { width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid var(--border); transition: all 0.2s; flex-shrink: 0; }
+  .onb-radio.selected .onb-radio-circle { border-color: var(--accent); background: var(--accent); }
+  .onb-radio-label { flex: 1; color: var(--text); font-weight: 500; }
+
+  .onb-cta { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; padding: 16px 32px; border-radius: 14px; font-size: 17px; font-weight: 600; cursor: pointer; width: 100%; margin-top: auto; transition: all 0.2s; }
+  .onb-cta:hover { opacity: 0.95; }
+  .onb-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .onb-hero { display: flex; gap: 24px; justify-content: center; align-items: center; margin: 40px 0; }
+  .onb-hero-card { background: var(--surface); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .onb-hero-pdf { width: 100px; height: 130px; background: #f0f0f0; border-radius: 8px; transform: rotate(-4deg); display: flex; align-items: center; justify-content: center; flex-direction: column; font-size: 12px; color: #999; border: 2px solid #ddd; }
+  .onb-hero-pdf-lines { width: 80%; height: 80%; display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+  .onb-hero-pdf-line { height: 3px; background: #e0e0e0; border-radius: 2px; }
+  .onb-hero-pdf-line:last-child { width: 70%; }
+  .onb-hero-arrow { font-size: 28px; color: var(--muted); }
+  .onb-hero-result { width: 100px; height: 130px; background: var(--surface2); border-radius: 8px; transform: rotate(2deg); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border); }
+  .onb-hero-score { font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+  .onb-hero-trend { width: 90px; height: 30px; }
+
+  .onb-frequency-hint { font-size: 14px; color: var(--ok); font-weight: 500; margin-top: 16px; opacity: 0; transition: opacity 0.3s; }
+  .onb-frequency-hint.show { opacity: 1; }
+
+  .onb-skip-link { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 14px; text-decoration: underline; padding: 12px 0; margin-top: 12px; transition: color 0.2s; }
+  .onb-skip-link:hover { color: var(--text); }
+
+  .onb-legal-text { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; margin-top: 20px; }
 `;
+
 
 function computeHealthScore(markers) {
   if (!markers || markers.length === 0) return null;
@@ -1350,6 +1416,41 @@ var STRINGS = {
     collapse_all: "Collapse \u25b2",
     priority_above_range: "This marker is above range. Discuss the cause and next steps with your doctor.",
     priority_below_range: "This marker is below range. Discuss the cause and next steps with your doctor.",
+    onb_headline_1: "Your blood tests tell a story.",
+    onb_subtitle_1: "Kanvas analyzes your results, shows trends, and explains what they mean.",
+    onb_cta_start: "Let's begin",
+    onb_headline_2: "Let's get to know you.",
+    onb_subtitle_2: "Your age and sex help us interpret your results accurately.",
+    onb_label_age: "AGE",
+    onb_placeholder_age: "e.g. 35",
+    onb_label_sex: "BIOLOGICAL SEX",
+    onb_sex_male: "Male",
+    onb_sex_female: "Female",
+    onb_sex_other: "Other",
+    onb_headline_3: "Do you have any known health conditions?",
+    onb_subtitle_3: "If so, we'll tailor our analysis. If not, you can skip this.",
+    onb_cond_diabetes: "Diabetes",
+    onb_cond_hypertension: "Hypertension",
+    onb_cond_cholesterol: "High Cholesterol",
+    onb_cond_thyroid: "Thyroid Disorder",
+    onb_cond_anemia: "Anemia",
+    onb_cond_other: "Other",
+    onb_cond_none: "I don't have any known conditions",
+    onb_headline_4: "How often do you get blood tests?",
+    onb_freq_2plus: "2+ times per year",
+    onb_freq_once: "Once per year",
+    onb_freq_rarely: "Rarely",
+    onb_freq_never: "Never",
+    onb_freq_hint: "Great — we'll tailor your analysis just for you.",
+    onb_headline_5: "Create your account",
+    onb_subtitle_5: "Sign in quickly with Google. Your data is safe.",
+    onb_legal_footer: "By signing in, you accept our Terms of Service.",
+    onb_headline_6: "Ready?",
+    onb_subtitle_6: "Upload your first blood test PDF — your results in seconds.",
+    onb_upload_label: "Upload PDF, JPG, or PNG",
+    onb_upload_hint: "Drag and drop or click",
+    onb_skip_upload: "Not now, let me explore first",
+    onb_cta_continue: "Continue",
   },
   tr: {
     auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
@@ -1537,6 +1638,41 @@ var STRINGS = {
     collapse_all: "Daralt \u25b2",
     priority_above_range: "Bu belirte\u00e7 aral\u0131\u011f\u0131n \u00fczerinde. Neden ve sonraki ad\u0131mlar\u0131 doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.",
     priority_below_range: "Bu belirte\u00e7 aral\u0131\u011f\u0131n alt\u0131nda. Neden ve sonraki ad\u0131mlar\u0131 doktorunuzla g\u00f6r\u00fc\u015f\u00fcn.",
+    onb_headline_1: "Kan tahlilleriniz bir hikaye anlatıyor.",
+    onb_subtitle_1: "Kanvas, sonuçlarınızı analiz eder, trendleri gösterir ve ne anlama geldiğini açıklar.",
+    onb_cta_start: "Başlayalım",
+    onb_headline_2: "Sizi biraz tanıyalım.",
+    onb_subtitle_2: "Yaşınız ve cinsiyetiniz, sonuçlarınızı doğru yorumlamamız için önemli.",
+    onb_label_age: "YAŞ",
+    onb_placeholder_age: "örn. 35",
+    onb_label_sex: "BİYOLOJİK CİNSİYET",
+    onb_sex_male: "Erkek",
+    onb_sex_female: "Kadın",
+    onb_sex_other: "Diğer",
+    onb_headline_3: "Bilinen bir sağlık durumunuz var mı?",
+    onb_subtitle_3: "Varsa, analizlerimizi buna göre uyarlıyoruz. Yoksa, geçebilirsiniz.",
+    onb_cond_diabetes: "Diyabet",
+    onb_cond_hypertension: "Hipertansiyon",
+    onb_cond_cholesterol: "Yüksek Kolesterol",
+    onb_cond_thyroid: "Tiroid Bozukluğu",
+    onb_cond_anemia: "Anemi",
+    onb_cond_other: "Diğer",
+    onb_cond_none: "Bilinen bir durumum yok",
+    onb_headline_4: "Ne sıklıkla kan tahlili yaptırıyorsunuz?",
+    onb_freq_2plus: "Yılda 2+ kez",
+    onb_freq_once: "Yılda 1 kez",
+    onb_freq_rarely: "Nadiren",
+    onb_freq_never: "Hiç yaptırmadım",
+    onb_freq_hint: "Harika — analizlerinizi size özel hazırlayacağız.",
+    onb_headline_5: "Hesabınızı oluşturun",
+    onb_subtitle_5: "Google ile hızlıca giriş yapın. Verileriniz güvende.",
+    onb_legal_footer: "Giriş yaparak Kullanım Koşullarını kabul ediyorsunuz.",
+    onb_headline_6: "Hazır mısınız?",
+    onb_subtitle_6: "İlk kan tahlili PDF'inizi yükleyin — sonuçlarınız saniyeler içinde hazır.",
+    onb_upload_label: "PDF, JPG veya PNG yükleyin",
+    onb_upload_hint: "Sürükleyip bırakın veya tıklayın",
+    onb_skip_upload: "Şimdi değil, önce uygulamayı keşfedeyim",
+    onb_cta_continue: "Devam",
   }
 };
 
@@ -2959,6 +3095,16 @@ export default function App() {
   const [authError,   setAuthError]   = useState(null);
   const [authBusy,    setAuthBusy]    = useState(false);
 
+  // ── Onboarding state ──
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  // 0=value hook, 1=age/sex, 2=conditions, 3=frequency, 4=auth, 5=first upload
+  const [onboardingData, setOnboardingData] = useState({
+    age: "",
+    biological_sex: "",
+    conditions: [],
+    testing_frequency: null,
+  });
+
   // ── Report history state ──
   const [history,        setHistory]        = useState([]);
   const [historyLoading,   setHistoryLoading]   = useState(false);
@@ -3150,18 +3296,36 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // ── Save onboarding data when user authenticates during onboarding ──
+  useEffect(function() {
+    if (user && onboardingStep === 4 && profileLoaded && !profile) {
+      saveOnboardingData();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, onboardingStep, profileLoaded]);
+
   // ── Profile loader ──
   async function loadProfile() {
     try {
       var { data, error: err } = await supabase
         .from('profiles')
-        .select('full_name, age, biological_sex, conditions')
+        .select('full_name, age, biological_sex, conditions, onboarding_completed, testing_frequency')
         .eq('user_id', user.id)
         .single();
       if (err || !data) {
         setProfile(null);
         setStage("profile");
+        setOnboardingStep(0);
       } else {
+        // Auto-flag existing users as onboarding_completed
+        if (!data.onboarding_completed) {
+          try {
+            await supabase.from('profiles').update({ onboarding_completed: true }).eq('user_id', user.id);
+            data.onboarding_completed = true;
+          } catch (e2) {
+            // fail silently — not critical
+          }
+        }
         setProfile(data);
         setProfileForm({
           full_name:      data.full_name      || "",
@@ -3173,6 +3337,7 @@ export default function App() {
     } catch (e) {
       setProfile(null);
       setStage("profile");
+      setOnboardingStep(0);
     } finally {
       setProfileLoaded(true);
     }
@@ -3381,6 +3546,28 @@ export default function App() {
       Sentry.captureException(e);
     } finally {
       setNormalizing(false);
+    }
+  }
+
+  // ── Onboarding save ──
+  async function saveOnboardingData() {
+    if (!user) return;
+    try {
+      var payload = {
+        user_id: user.id,
+        age: onboardingData.age ? parseInt(onboardingData.age, 10) : null,
+        biological_sex: onboardingData.biological_sex || null,
+        conditions: onboardingData.conditions.length > 0 ? onboardingData.conditions : null,
+        testing_frequency: onboardingData.testing_frequency || null,
+        onboarding_completed: true,
+        updated_at: new Date().toISOString(),
+      };
+      var { error: err } = await supabase.from('profiles').upsert(payload);
+      if (err) throw err;
+      setOnboardingStep(5);
+      setProfile(payload);
+    } catch (e) {
+      Sentry.captureException(e);
     }
   }
 
@@ -3602,6 +3789,299 @@ export default function App() {
   // Apply current language before any render
   _lang = lang;
 
+  // ── Onboarding screen renders ──
+  function renderOnboardingScreen0() {
+    // Screen 1: Value Hook
+    return (
+      <div className="onboarding">
+        <div className="onboarding-header">
+          <div className="onboarding-logo">vita<span>scan</span></div>
+          <button className={"onboarding-lang-toggle" + (lang === "tr" ? " active" : "")} onClick={function() { handleLangChange("tr"); }}>TR</button>
+          <button className={"onboarding-lang-toggle" + (lang === "en" ? " active" : "")} onClick={function() { handleLangChange("en"); }}>EN</button>
+        </div>
+        <div className="onb-dots">
+          {[0, 1, 2, 3, 4, 5].map(function(i) {
+            var cls = "onb-dot";
+            if (i === 0) cls += " active";
+            else if (i < 0) cls += " done";
+            return <div key={i} className={cls} />;
+          })}
+        </div>
+        <div className="onboarding-content">
+          <h1 className="onb-h1">{t("onb_headline_1")}</h1>
+          <p className="onb-sub">{t("onb_subtitle_1")}</p>
+          <div className="onb-hero">
+            <div className="onb-hero-card">
+              <div className="onb-hero-pdf">
+                <div style={{ fontSize: 11, fontWeight: 600, marginBottom: 6 }}>PDF</div>
+                <div className="onb-hero-pdf-lines">
+                  <div className="onb-hero-pdf-line" />
+                  <div className="onb-hero-pdf-line" />
+                  <div className="onb-hero-pdf-line" />
+                </div>
+              </div>
+            </div>
+            <div className="onb-hero-arrow">→</div>
+            <div className="onb-hero-card">
+              <div className="onb-hero-score">87%</div>
+              <svg className="onb-hero-trend" viewBox="0 0 90 30" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="onb-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="var(--accent)" />
+                    <stop offset="100%" stopColor="var(--accent2)" />
+                  </linearGradient>
+                </defs>
+                <polyline points="0,25 15,20 30,22 45,14 60,10 75,8 90,5" fill="none" stroke="url(#onb-grad)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <button className="onb-cta" onClick={function() { setOnboardingStep(1); }}>{t("onb_cta_start")}</button>
+      </div>
+    );
+  }
+
+  function renderOnboardingScreen1() {
+    // Screen 2: Age & Sex
+    return (
+      <div className="onboarding">
+        <div className="onb-dots">
+          {[0, 1, 2, 3, 4, 5].map(function(i) {
+            var cls = "onb-dot";
+            if (i === 1) cls += " active";
+            else if (i < 1) cls += " done";
+            return <div key={i} className={cls} />;
+          })}
+        </div>
+        <div className="onboarding-content">
+          <h1 className="onb-h1">{t("onb_headline_2")}</h1>
+          <p className="onb-sub">{t("onb_subtitle_2")}</p>
+          <div style={{ marginBottom: 28 }}>
+            <div className="onb-label">{t("onb_label_age")}</div>
+            <input
+              className="onb-input"
+              type="number"
+              min="1"
+              max="120"
+              placeholder={t("onb_placeholder_age")}
+              value={onboardingData.age}
+              onChange={function(e) { setOnboardingData(function(d) { return Object.assign({}, d, { age: e.target.value }); }); }}
+            />
+          </div>
+          <div>
+            <div className="onb-label">{t("onb_label_sex")}</div>
+            <div className="onb-sex-group">
+              {[
+                { val: "M", label: t("onb_sex_male") },
+                { val: "F", label: t("onb_sex_female") },
+                { val: "O", label: t("onb_sex_other") }
+              ].map(function(opt) {
+                return (
+                  <button
+                    key={opt.val}
+                    className={"onb-sex" + (onboardingData.biological_sex === opt.val ? " selected" : "")}
+                    onClick={function() { setOnboardingData(function(d) { return Object.assign({}, d, { biological_sex: opt.val }); }); }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(0); }}>← {t("onb_cta_continue")}</button>
+          <button className="onb-cta" style={{ marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(2); }}>{t("onb_cta_continue")} →</button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderOnboardingScreen2() {
+    // Screen 3: Conditions
+    var conditions = ["diabetes", "hypertension", "cholesterol", "thyroid", "anemia", "other"];
+    return (
+      <div className="onboarding">
+        <div className="onb-dots">
+          {[0, 1, 2, 3, 4, 5].map(function(i) {
+            var cls = "onb-dot";
+            if (i === 2) cls += " active";
+            else if (i < 2) cls += " done";
+            return <div key={i} className={cls} />;
+          })}
+        </div>
+        <div className="onboarding-content">
+          <h1 className="onb-h1">{t("onb_headline_3")}</h1>
+          <p className="onb-sub">{t("onb_subtitle_3")}</p>
+          <div className="onb-chips">
+            {conditions.map(function(cond) {
+              var isSelected = onboardingData.conditions.indexOf(cond) !== -1;
+              return (
+                <button
+                  key={cond}
+                  className={"onb-chip" + (isSelected ? " selected" : "")}
+                  onClick={function() {
+                    setOnboardingData(function(d) {
+                      var next = isSelected
+                        ? d.conditions.filter(function(c) { return c !== cond; })
+                        : d.conditions.filter(function(c) { return c !== "none"; }).concat(cond);
+                      return Object.assign({}, d, { conditions: next });
+                    });
+                  }}
+                >
+                  {t("onb_cond_" + cond)}
+                </button>
+              );
+            })}
+            <button
+              className={"onb-chip none" + (onboardingData.conditions.indexOf("none") !== -1 ? " selected" : "")}
+              onClick={function() {
+                setOnboardingData(function(d) {
+                  var hasNone = d.conditions.indexOf("none") !== -1;
+                  return Object.assign({}, d, { conditions: hasNone ? [] : ["none"] });
+                });
+              }}
+            >
+              {t("onb_cond_none")}
+            </button>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(1); }}>← {t("onb_cta_continue")}</button>
+          <button className="onb-cta" style={{ marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(3); }}>{t("onb_cta_continue")} →</button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderOnboardingScreen3() {
+    // Screen 4: Testing Frequency
+    return (
+      <div className="onboarding">
+        <div className="onb-dots">
+          {[0, 1, 2, 3, 4, 5].map(function(i) {
+            var cls = "onb-dot";
+            if (i === 3) cls += " active";
+            else if (i < 3) cls += " done";
+            return <div key={i} className={cls} />;
+          })}
+        </div>
+        <div className="onboarding-content">
+          <h1 className="onb-h1">{t("onb_headline_4")}</h1>
+          <div className="onb-radio-group" style={{ marginTop: 28 }}>
+            {[
+              { val: "2_plus_per_year", label: t("onb_freq_2plus") },
+              { val: "once_per_year", label: t("onb_freq_once") },
+              { val: "rarely", label: t("onb_freq_rarely") },
+              { val: "never", label: t("onb_freq_never") }
+            ].map(function(opt) {
+              var isSelected = onboardingData.testing_frequency === opt.val;
+              return (
+                <button
+                  key={opt.val}
+                  className={"onb-radio" + (isSelected ? " selected" : "")}
+                  onClick={function() { setOnboardingData(function(d) { return Object.assign({}, d, { testing_frequency: opt.val }); }); }}
+                >
+                  <div className="onb-radio-circle" />
+                  <div className="onb-radio-label">{opt.label}</div>
+                </button>
+              );
+            })}
+          </div>
+          {onboardingData.testing_frequency && <div className={"onb-frequency-hint show"}>{t("onb_freq_hint")}</div>}
+        </div>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(2); }}>← {t("onb_cta_continue")}</button>
+          <button className="onb-cta" style={{ marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(4); }}>{t("onb_cta_continue")} →</button>
+        </div>
+      </div>
+    );
+  }
+
+  function renderOnboardingScreen4() {
+    // Screen 5: Google OAuth
+    return (
+      <div className="onboarding">
+        <div className="onb-dots">
+          {[0, 1, 2, 3, 4, 5].map(function(i) {
+            var cls = "onb-dot";
+            if (i === 4) cls += " active";
+            else if (i < 4) cls += " done";
+            return <div key={i} className={cls} />;
+          })}
+        </div>
+        <div className="onboarding-content">
+          <h1 className="onb-h1">{t("onb_headline_5")}</h1>
+          <p className="onb-sub">{t("onb_subtitle_5")}</p>
+          <div style={{ marginTop: 40 }}>
+            <button className="btn-google" onClick={handleGoogleSignIn} disabled={authBusy} style={{ width: "100%" }}>
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+              </svg>
+              {t("auth_google")}
+            </button>
+          </div>
+          <p className="onb-legal-text">{t("onb_legal_footer")}</p>
+        </div>
+        <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0 }} onClick={function() { setOnboardingStep(3); }}>← {t("onb_cta_continue")}</button>
+      </div>
+    );
+  }
+
+  function renderOnboardingScreen5() {
+    // Screen 6: First Upload
+    return (
+      <div className="onboarding">
+        <div className="onb-dots">
+          {[0, 1, 2, 3, 4, 5].map(function(i) {
+            var cls = "onb-dot";
+            if (i === 5) cls += " active";
+            else if (i <= 5) cls += " done";
+            return <div key={i} className={cls} />;
+          })}
+        </div>
+        <div className="onboarding-content">
+          <h1 className="onb-h1">{t("onb_headline_6")}</h1>
+          <p className="onb-sub">{t("onb_subtitle_6")}</p>
+          <div className="drop-zone" style={{ marginTop: 40, marginBottom: 20 }}
+            onDragOver={function(e) { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={function() { setDragOver(false); }}
+            onDrop={function(e) {
+              e.preventDefault();
+              setDragOver(false);
+              var files = e.dataTransfer.files;
+              if (files.length > 0) {
+                handleFile(files[0]);
+              }
+            }}
+            onClick={function() {
+              var input = document.createElement("input");
+              input.type = "file";
+              input.accept = ".pdf,.jpg,.jpeg,.png";
+              input.onchange = function(e) {
+                if (e.target.files && e.target.files.length > 0) {
+                  handleFile(e.target.files[0]);
+                }
+              };
+              input.click();
+            }}
+          >
+            <div className="drop-icon">📄</div>
+            <div className="drop-label">{t("onb_upload_label")}</div>
+            <div className="drop-hint">{t("onb_upload_hint")}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <button className="onb-cta" onClick={function() { setStage("upload"); }}>{t("onb_cta_continue")}</button>
+          <button className="onb-skip-link" onClick={function() { setStage("upload"); }}>{t("onb_skip_upload")}</button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Render: loading spinner (auth bootstrap) ──
   if (authLoading) {
     return (
@@ -3616,7 +4096,31 @@ export default function App() {
     );
   }
 
-  // ── Render: auth screen ──
+  // ── Render: onboarding screens or auth screen ──
+  if (!user && onboardingStep < 4) {
+    // Onboarding screens 0-3 (before auth)
+    return (
+      <>
+        <style>{STYLES}</style>
+        {onboardingStep === 0 && renderOnboardingScreen0()}
+        {onboardingStep === 1 && renderOnboardingScreen1()}
+        {onboardingStep === 2 && renderOnboardingScreen2()}
+        {onboardingStep === 3 && renderOnboardingScreen3()}
+      </>
+    );
+  }
+
+  if (!user && onboardingStep >= 4) {
+    // Onboarding screen 4: Google OAuth
+    return (
+      <>
+        <style>{STYLES}</style>
+        {renderOnboardingScreen4()}
+      </>
+    );
+  }
+
+  // ── Render: auth screen (fallback, shouldn't normally reach here) ──
   if (!user) {
     return (
       <>
@@ -3688,6 +4192,16 @@ export default function App() {
             <div className="pulse-ring" />
           </div>
         </div>
+      </>
+    );
+  }
+
+  // ── Render: onboarding screen 5 (first upload) ──
+  if (onboardingStep === 5 && user && profile && profile.onboarding_completed) {
+    return (
+      <>
+        <style>{STYLES}</style>
+        {renderOnboardingScreen5()}
       </>
     );
   }
