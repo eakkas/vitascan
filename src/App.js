@@ -1451,6 +1451,7 @@ var STRINGS = {
     onb_upload_hint: "Drag and drop or click",
     onb_skip_upload: "Not now, let me explore first",
     onb_cta_continue: "Continue",
+    onb_cta_back: "Back",
   },
   tr: {
     auth_tagline: "Kan tahlilleriniz, yorumland\u0131.",
@@ -1673,6 +1674,7 @@ var STRINGS = {
     onb_upload_hint: "Sürükleyip bırakın veya tıklayın",
     onb_skip_upload: "Şimdi değil, önce uygulamayı keşfedeyim",
     onb_cta_continue: "Devam",
+    onb_cta_back: "Geri",
   }
 };
 
@@ -3096,7 +3098,10 @@ export default function App() {
   const [authBusy,    setAuthBusy]    = useState(false);
 
   // ── Onboarding state ──
-  const [onboardingStep, setOnboardingStep] = useState(0);
+  // Returning users (have completed onboarding before) skip straight to auth (step 4).
+  const [onboardingStep, setOnboardingStep] = useState(function() {
+    return localStorage.getItem("vitascan_onboarding_done") ? 4 : 0;
+  });
   // 0=value hook, 1=age/sex, 2=conditions, 3=frequency, 4=auth, 5=first upload
   const [onboardingData, setOnboardingData] = useState({
     age: "",
@@ -3203,11 +3208,11 @@ export default function App() {
   }
 
   // ── Language preference ──
+  // Default to Turkish (Turkish-first product). User can toggle on onboarding Screen 1.
   const [lang, setLang] = useState(function() {
     var saved = localStorage.getItem("vitascan_language");
     if (saved) return saved;
-    var navLang = (navigator.language || "").toLowerCase();
-    return navLang.startsWith("tr") ? "tr" : "en";
+    return "tr";
   });
   // Sync lang to <html lang="..."> so CSS text-transform: uppercase uses correct
   // locale casing rules (Turkish: i → İ, not I).
@@ -3326,6 +3331,8 @@ export default function App() {
             // fail silently — not critical
           }
         }
+        // Ensure returning users always skip onboarding screens on next visit
+        localStorage.setItem("vitascan_onboarding_done", "1");
         setProfile(data);
         setProfileForm({
           full_name:      data.full_name      || "",
@@ -3564,6 +3571,7 @@ export default function App() {
       };
       var { error: err } = await supabase.from('profiles').upsert(payload);
       if (err) throw err;
+      localStorage.setItem("vitascan_onboarding_done", "1");
       setOnboardingStep(5);
       setProfile(payload);
     } catch (e) {
@@ -3890,7 +3898,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
-          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(0); }}>← {t("onb_cta_continue")}</button>
+          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(0); }}>← {t("onb_cta_back")}</button>
           <button className="onb-cta" style={{ marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(2); }}>{t("onb_cta_continue")} →</button>
         </div>
       </div>
@@ -3947,7 +3955,7 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
-          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(1); }}>← {t("onb_cta_continue")}</button>
+          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(1); }}>← {t("onb_cta_back")}</button>
           <button className="onb-cta" style={{ marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(3); }}>{t("onb_cta_continue")} →</button>
         </div>
       </div>
@@ -3991,7 +3999,7 @@ export default function App() {
           {onboardingData.testing_frequency && <div className={"onb-frequency-hint show"}>{t("onb_freq_hint")}</div>}
         </div>
         <div style={{ display: "flex", gap: 12 }}>
-          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(2); }}>← {t("onb_cta_continue")}</button>
+          <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(2); }}>← {t("onb_cta_back")}</button>
           <button className="onb-cta" style={{ marginTop: 0, flex: 1 }} onClick={function() { setOnboardingStep(4); }}>{t("onb_cta_continue")} →</button>
         </div>
       </div>
@@ -4026,7 +4034,7 @@ export default function App() {
           </div>
           <p className="onb-legal-text">{t("onb_legal_footer")}</p>
         </div>
-        <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0 }} onClick={function() { setOnboardingStep(3); }}>← {t("onb_cta_continue")}</button>
+        <button className="onb-cta" style={{ background: "rgba(15,23,42,0.1)", color: "var(--text)", marginTop: 0 }} onClick={function() { setOnboardingStep(3); }}>← {t("onb_cta_back")}</button>
       </div>
     );
   }
